@@ -1,77 +1,86 @@
-import React, { useState } from "react";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import app from "../firebase-config";
-
-const auth = getAuth(app);
+import React, { useState } from 'react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase-config';
+import { useUser } from '../UserContext';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { setUser } = useUser();
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // חשוב מאוד
-    console.log("🟢 Trying to login with:", email, password);
-
+    e.preventDefault();
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      console.log("✅ Logged in as:", user.email);
-      setError(""); // ננקה שגיאות קודמות
-
-      // כאן נוכל להעביר את המשתמש לדשבורד בעתיד
-      alert(`ברוך הבא ${user.email}!`);
-    } catch (err) {
-      console.error("❌ Firebase Error:", err.message);
-      setError("Firebase: " + err.message);
+      setUser(userCredential.user);
+      navigate('/'); // 🔹 נשלח את המשתמש לדף הבית
+    } catch (error) {
+      alert('שגיאה: ' + error.message);
     }
   };
 
+  const styles = {
+    container: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '80vh',
+      backgroundColor: '#f2f2f2',
+    },
+    form: {
+      backgroundColor: '#fff',
+      padding: '2rem',
+      borderRadius: '12px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+      display: 'flex',
+      flexDirection: 'column',
+      width: '300px',
+    },
+    title: {
+      textAlign: 'center',
+      marginBottom: '1.5rem',
+      color: '#333',
+    },
+    input: {
+      marginBottom: '1rem',
+      padding: '0.8rem',
+      fontSize: '1rem',
+      borderRadius: '6px',
+      border: '1px solid #ccc',
+    },
+    button: {
+      backgroundColor: '#007bff',
+      color: 'white',
+      border: 'none',
+      padding: '0.8rem',
+      fontSize: '1rem',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      transition: 'background-color 0.3s ease',
+    },
+  };
+
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-      <form
-        onSubmit={handleLogin}
-        style={{
-          padding: "2rem",
-          border: "1px solid #ccc",
-          borderRadius: "8px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          width: "320px",
-          textAlign: "center"
-        }}
-      >
-        <h2 style={{ marginBottom: "1.5rem" }}>🔐 Login</h2>
-        {error && <p style={{ color: "red", marginBottom: "1rem" }}>❌ {error}</p>}
+    <div style={styles.container}>
+      <form onSubmit={handleLogin} style={styles.form}>
+        <h2 style={styles.title}>התחברות</h2>
         <input
           type="email"
-          placeholder="Email"
+          placeholder="אימייל"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
+          style={styles.input}
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder="סיסמה"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ width: "100%", padding: "0.5rem", marginBottom: "1.5rem" }}
+          style={styles.input}
         />
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: "0.5rem",
-            backgroundColor: "#007bff",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}
-        >
-          Login
-        </button>
+        <button type="submit" style={styles.button}>התחבר</button>
       </form>
     </div>
   );
