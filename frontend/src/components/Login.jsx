@@ -1,23 +1,67 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase-config';
+import { auth, db } from '../firebase-config';
+import { doc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import { useUser } from '../UserContext';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const { setUser } = useUser();
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+
+    let emailToUse = identifier;
+
+    // אם המשתמש כתב שם משתמש במקום אימייל
+    if (!identifier.includes('@')) {
+      try {
+        const q = query(collection(db, 'users'), where('username', '==', identifier));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          emailToUse = snapshot.docs[0].data().email;
+        } else {
+          setErrorMsg('שם משתמש לא נמצא');
+          return;
+        }
+      } catch (error) {
+        setErrorMsg('שגיאה באחזור אימייל לפי שם משתמש');
+        return;
+      }
+    }
+
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      setUser(userCredential.user);
-      navigate('/'); // 🔹 נשלח את המשתמש לדף הבית
+      const userCredential = await signInWithEmailAndPassword(auth, emailToUse, password);
+      const user = userCredential.user;
+
+      if (!user.emailVerified) {
+        setErrorMsg('נא לאמת את כתובת האימייל לפני ההתחברות');
+        return;
+      }
+
+      // שליפת username ו־role מ־Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        setUser({
+          uid: user.uid,
+          email: user.email,
+          username: userData.username,
+          role: userData.role
+        });
+        navigate('/');
+      } else {
+        setErrorMsg('לא נמצאו נתוני משתמש במסד הנתונים');
+      }
     } catch (error) {
-      alert('שגיאה: ' + error.message);
+      setErrorMsg('שגיאה: ' + error.message);
     }
   };
 
@@ -60,6 +104,12 @@ const Login = () => {
       cursor: 'pointer',
       transition: 'background-color 0.3s ease',
     },
+    error: {
+      color: 'red',
+      marginBottom: '1rem',
+      fontSize: '0.9rem',
+      textAlign: 'center'
+    }
   };
 
   return (
@@ -67,11 +117,12 @@ const Login = () => {
       <form onSubmit={handleLogin} style={styles.form}>
         <h2 style={styles.title}>התחברות</h2>
         <input
-          type="email"
-          placeholder="אימייל"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          placeholder="שם משתמש או אימייל"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           style={styles.input}
+          required
         />
         <input
           type="password"
@@ -79,7 +130,9 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={styles.input}
+          required
         />
+        {errorMsg && <div style={styles.error}>{errorMsg}</div>}
         <button type="submit" style={styles.button}>התחבר</button>
       </form>
     </div>
