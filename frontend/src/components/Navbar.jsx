@@ -82,7 +82,7 @@ const Navbar = () => {
         <>
           <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
           <Link to="/open-loans" style={linkStyle}>השאלות פתוחות</Link>
-          <Link to="/loan-history" style={linkStyle}>היסטוריית שאלות</Link>
+          <Link to="/loan-history" style={linkStyle}>היסטוריית השאלות</Link>
         </>
       )}
 
@@ -91,7 +91,7 @@ const Navbar = () => {
         <>
           <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
           <Link to="/open-loans" style={linkStyle}>השאלות פתוחות</Link>
-          <Link to="/loan-history" style={linkStyle}>היסטוריית שאלות</Link>
+          <Link to="/loan-history" style={linkStyle}>היסטוריית השאלות</Link>
           <Link to="/manage-users" style={linkStyle}>ניהול משתמשים</Link>
         </>
       )}
