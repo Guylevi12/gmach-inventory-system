@@ -61,7 +61,17 @@ const Login = () => {
         setErrorMsg('לא נמצאו נתוני משתמש במסד הנתונים');
       }
     } catch (error) {
-      setErrorMsg('שגיאה: ' + error.message);
+      switch (error.code) {
+        case 'auth/invalid-credential':
+        case 'auth/wrong-password':
+          setErrorMsg('סיסמה שגויה');
+          break;
+        case 'auth/user-not-found':
+          setErrorMsg('המשתמש לא נמצא');
+          break;
+        default:
+          setErrorMsg('שגיאה: ' + error.message);
+      }
     }
   };
 

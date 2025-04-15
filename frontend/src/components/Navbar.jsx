@@ -1,11 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../UserContext';
 import { signOut } from 'firebase/auth';
-import { auth } from '../firebase-config';
+import { auth, db } from '../firebase-config';
+import { useEffect, useState } from 'react';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 const Navbar = () => {
   const { user, setUser } = useUser();
   const navigate = useNavigate();
+  const [onlineOrdering, setOnlineOrdering] = useState(null);
 
   const handleLogout = async () => {
     try {
@@ -14,6 +17,41 @@ const Navbar = () => {
       navigate('/login');
     } catch (error) {
       alert('שגיאה בהתנתקות: ' + error.message);
+    }
+  };
+
+  const getRoleLabel = (role) => {
+    switch (role) {
+      case 'MainAdmin': return 'מנהל ראשי';
+      case 'GmachAdmin': return 'מנהל גמח';
+      default: return 'משתמש';
+    }
+  };
+
+  useEffect(() => {
+    const fetchSetting = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'onlineOrdering');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setOnlineOrdering(docSnap.data().enabled);
+        }
+      } catch (err) {
+        console.error("שגיאה בטעינת ההגדרה:", err);
+      }
+    };
+    fetchSetting();
+  }, []);
+
+  const toggleOrdering = async () => {
+    try {
+      const newValue = !onlineOrdering;
+      await updateDoc(doc(db, 'settings', 'onlineOrdering'), {
+        enabled: newValue
+      });
+      setOnlineOrdering(newValue);
+    } catch (err) {
+      alert("שגיאה בעדכון ההגדרה: " + err.message);
     }
   };
 
@@ -55,48 +93,68 @@ const Navbar = () => {
     fontSize: '14px',
   };
 
-  const getRoleLabel = (role) => {
-    switch (role) {
-      case 'MainAdmin': return 'מנהל ראשי';
-      case 'GmachAdmin': return 'מנהל גמח';
-      default: return 'משתמש';
-    }
+  const toggleContainerStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginRight: '20px',
+    verticalAlign: 'middle',
+    userSelect: 'none',
+    direction: 'ltr',
+    position: 'absolute',
+    left: '20px',
+    top: '10px',
+    cursor: 'pointer'
+  };
+
+  const toggleSwitchStyle = {
+    width: '42px',
+    height: '24px',
+    borderRadius: '50px',
+    backgroundColor: onlineOrdering ? '#4caf50' : '#e74c3c',
+    position: 'relative',
+    transition: '0.3s',
+  };
+
+  const toggleCircleStyle = {
+    position: 'absolute',
+    top: '3px',
+    left: onlineOrdering ? '22px' : '3px',
+    width: '18px',
+    height: '18px',
+    borderRadius: '50%',
+    backgroundColor: 'white',
+    transition: '0.3s',
   };
 
   return (
     <div style={navbarStyle}>
-      {/* קישורים עבור כל המשתמשים */}
       <Link to="/" style={linkStyle}>דף הבית</Link>
       <Link to="/products" style={linkStyle}>קטלוג מוצרים</Link>
 
-      {/* למשתמש רגיל */}
-      {user?.role === 'User' && (
+      {/* משתמש רגיל (רק אם ההגדרה פעילה) */}
+      {user?.role === 'User' && onlineOrdering && (
         <>
           <Link to="/my-orders" style={linkStyle}>ההזמנות שלי</Link>
           <Link to="/request" style={linkStyle}>בקשת השאלה</Link>
         </>
       )}
 
-      {/* למנהל גמח */}
-      {user?.role === 'GmachAdmin' && (
+      {/* מנהל גמח ומעלה */}
+      {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
         <>
+          <Link to="/new-loan" style={linkStyle}>הזמנה חדשה</Link>
           <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
           <Link to="/open-loans" style={linkStyle}>השאלות פתוחות</Link>
-          <Link to="/loan-history" style={linkStyle}>היסטוריית השאלות</Link>
+          <Link to="/loan-history" style={linkStyle}>היסטוריית שאלות</Link>
         </>
       )}
 
-      {/* למנהל ראשי */}
+      {/* MainAdmin בלבד */}
       {user?.role === 'MainAdmin' && (
-        <>
-          <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
-          <Link to="/open-loans" style={linkStyle}>השאלות פתוחות</Link>
-          <Link to="/loan-history" style={linkStyle}>היסטוריית השאלות</Link>
-          <Link to="/manage-users" style={linkStyle}>ניהול משתמשים</Link>
-        </>
+        <Link to="/manage-users" style={linkStyle}>ניהול משתמשים</Link>
       )}
 
-      {/* התחברות/הרשמה + הודעת שלום */}
       {!user && (
         <>
           <Link to="/login" style={linkStyle}>התחברות</Link>
@@ -108,6 +166,16 @@ const Navbar = () => {
         <div style={greetingStyle}>
           שלום {user.username} ({getRoleLabel(user.role)})
           <button style={logoutButtonStyle} onClick={handleLogout}>התנתק</button>
+        </div>
+      )}
+
+      {/* מתג - רק למנהל ראשי */}
+      {user?.role === 'MainAdmin' && onlineOrdering !== null && (
+        <div style={toggleContainerStyle} onClick={toggleOrdering}>
+          <span>הזמנות דרך האתר:</span>
+          <div style={toggleSwitchStyle}>
+            <div style={toggleCircleStyle}></div>
+          </div>
         </div>
       )}
     </div>
