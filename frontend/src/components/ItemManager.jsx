@@ -4,8 +4,8 @@ import { collection, getDocs, query, where, doc, deleteDoc, updateDoc } from 'fi
 import { db } from '../firebase-config';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { confirmAlert } from 'react-confirm-alert'; // 🛑 New import
-import 'react-confirm-alert/src/react-confirm-alert.css'; // 🛑 Default styling
+import { confirmAlert } from 'react-confirm-alert';
+import 'react-confirm-alert/src/react-confirm-alert.css';
 
 const ItemManager = () => {
   const [name, setName] = useState('');
@@ -15,11 +15,33 @@ const ItemManager = () => {
   const [quantityError, setQuantityError] = useState('');
   const [isFormValid, setIsFormValid] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [touchedName, setTouchedName] = useState(false);
+  const [touchedQuantity, setTouchedQuantity] = useState(false);
+  const [nameDir, setNameDir] = useState('ltr');
 
-  // Filtered items based on search
+
+
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+useEffect(() => {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  `;
+  document.head.appendChild(style);
+  return () => document.head.removeChild(style);
+}, []);
+
+
 
   useEffect(() => {
     fetchItems();
@@ -28,7 +50,7 @@ const ItemManager = () => {
   useEffect(() => {
     let valid = true;
 
-    const nameRegex = /^[A-Za-z\s]+$/;
+    const nameRegex = /^[A-Za-z\u0590-\u05FF\s]+$/;
     if (!name) {
       setNameError('Name is required.');
       valid = false;
@@ -51,7 +73,6 @@ const ItemManager = () => {
     }
 
     setIsFormValid(valid);
-
   }, [name, quantity]);
 
   const fetchItems = async () => {
@@ -66,17 +87,20 @@ const ItemManager = () => {
 
   const handleNameChange = (e) => {
     const value = e.target.value;
-    if (/^[A-Za-z\s]*$/.test(value)) {
-      setName(value);
-    }
+    setName(value.trimStart());
+  
+    // Detect Hebrew characters
+    const firstChar = value.trim().charAt(0);
+    const isHebrew = /^[\u0590-\u05FF]$/.test(firstChar);
+    setNameDir(isHebrew ? 'rtl' : 'ltr');
   };
+  
+  
+  
 
   const handleQuantityChange = (e) => {
-    const value = e.target.value;
-    if (/^\d*$/.test(value)) {
-      setQuantity(value);
-    }
-  };
+    setQuantity(e.target.value.trimStart());
+  };  
 
   const handleQuantityChangeForItem = (id, value) => {
     setItems(prevItems =>
@@ -120,7 +144,6 @@ const ItemManager = () => {
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
-        // Item already exists → show custom modal
         const existingDoc = snapshot.docs[0];
         const existingData = existingDoc.data();
 
@@ -153,7 +176,6 @@ const ItemManager = () => {
         });
 
       } else {
-        // Item does not exist → add normally
         await addItem({
           name,
           quantity: parseInt(quantity),
@@ -168,6 +190,8 @@ const ItemManager = () => {
       console.error(err);
       toast.error('Failed to add item.');
     }
+    setTouchedName(false);
+    setTouchedQuantity(false);
   };
 
   return (
@@ -192,20 +216,22 @@ const ItemManager = () => {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
+             dir={nameDir}
             placeholder="Name"
             value={name}
             onChange={handleNameChange}
+            onBlur={() => setTouchedName(true)}
             style={{
               padding: '10px',
               borderRadius: '6px',
               fontSize: '1rem',
               border: '1px solid #ccc',
               width: '100%',
-              boxShadow: nameError ? '0 0 0 2px rgba(255, 0, 0, 0.2)' : 'none',
-              backgroundColor: nameError ? '#fff5f5' : 'white'
+              boxShadow: touchedName && nameError ? '0 0 0 2px rgba(255, 0, 0, 0.2)' : 'none',
+              backgroundColor: touchedName && nameError ? '#fff5f5' : 'white'
             }}
           />
-          {nameError && <div style={{ color: '#cc0000', fontSize: '0.85rem', marginTop: '4px' }}>{nameError}</div>}
+          {touchedName && nameError && <div style={{ color: '#cc0000', fontSize: '0.85rem', marginTop: '4px' }}>{nameError}</div>}
           <br /><br />
 
           <input
@@ -213,17 +239,20 @@ const ItemManager = () => {
             placeholder="Quantity"
             value={quantity}
             onChange={handleQuantityChange}
+            onBlur={() => setTouchedQuantity(true)}
             style={{
               padding: '10px',
               borderRadius: '6px',
               fontSize: '1rem',
               border: '1px solid #ccc',
               width: '100%',
-              boxShadow: quantityError ? '0 0 0 2px rgba(255, 0, 0, 0.2)' : 'none',
-              backgroundColor: quantityError ? '#fff5f5' : 'white'
-            }}
+              boxShadow: touchedQuantity && quantityError ? '0 0 0 2px rgba(255, 0, 0, 0.2)' : 'none',
+              backgroundColor: touchedQuantity && quantityError ? '#fff5f5' : 'white',
+              MozAppearance: 'textfield',
+              appearance: 'textfield'
+            }}            
           />
-          {quantityError && <div style={{ color: '#cc0000', fontSize: '0.85rem', marginTop: '4px' }}>{quantityError}</div>}
+          {touchedQuantity && quantityError && <div style={{ color: '#cc0000', fontSize: '0.85rem', marginTop: '4px' }}>{quantityError}</div>}
           <br /><br />
 
           <button type="submit" disabled={!isFormValid} style={{
@@ -243,7 +272,6 @@ const ItemManager = () => {
       <div style={{ flex: '0 0 55%', textAlign: 'left' }}>
         <h2>All Items</h2>
 
-        {/* Search bar */}
         <input
           type="text"
           placeholder="Search items..."
@@ -259,7 +287,6 @@ const ItemManager = () => {
           }}
         />
 
-        {/* Items in cards */}
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -321,7 +348,6 @@ const ItemManager = () => {
         </div>
       </div>
 
-      {/* Toast container */}
       <ToastContainer
         position="bottom-right"
         autoClose={3000}
