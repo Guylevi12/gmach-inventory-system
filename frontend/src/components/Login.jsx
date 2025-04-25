@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '../firebase-config';
 import { doc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import { useUser } from '../UserContext';
@@ -11,6 +11,20 @@ const Login = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const { setUser } = useUser();
   const navigate = useNavigate();
+
+  const handlePasswordReset = async () => {
+    if (!identifier || !identifier.includes('@')) {
+      setErrorMsg('יש להזין אימייל תקין לשחזור סיסמה');
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, identifier);
+      setErrorMsg('קישור לאיפוס סיסמה נשלח לאימייל');
+    } catch (error) {
+      setErrorMsg('שגיאה בשליחת קישור לאיפוס סיסמה: ' + error.message);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -144,6 +158,22 @@ const Login = () => {
         />
         {errorMsg && <div style={styles.error}>{errorMsg}</div>}
         <button type="submit" style={styles.button}>התחבר</button>
+
+       <button
+        type="button"
+        onClick={handlePasswordReset}
+        style={{
+        marginTop: '0.5rem',
+        backgroundColor: 'transparent',
+        border: 'none',
+        color: '#007bff',
+        textDecoration: 'underline',
+        cursor: 'pointer',
+        fontSize: '0.9rem'
+        }}>
+         שכחת סיסמה?
+        </button>
+
       </form>
     </div>
   );
