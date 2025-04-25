@@ -159,19 +159,19 @@ const Login = () => {
         {errorMsg && <div style={styles.error}>{errorMsg}</div>}
         <button type="submit" style={styles.button}>התחבר</button>
 
-       <button
-        type="button"
-        onClick={handlePasswordReset}
-        style={{
-        marginTop: '0.5rem',
-        backgroundColor: 'transparent',
-        border: 'none',
-        color: '#007bff',
-        textDecoration: 'underline',
-        cursor: 'pointer',
-        fontSize: '0.9rem'
-        }}>
-         שכחת סיסמה?
+        <button
+          type="button"
+          onClick={handlePasswordReset}
+          style={{
+            marginTop: '0.5rem',
+            backgroundColor: 'transparent',
+            border: 'none',
+            color: '#007bff',
+            textDecoration: 'underline',
+            cursor: 'pointer',
+            fontSize: '0.9rem'
+          }}>
+          שכחת סיסמה?
         </button>
 
       </form>

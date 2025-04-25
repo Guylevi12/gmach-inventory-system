@@ -25,9 +25,9 @@ const ItemManager = () => {
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-useEffect(() => {
-  const style = document.createElement('style');
-  style.innerHTML = `
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button {
       -webkit-appearance: none;
@@ -37,9 +37,9 @@ useEffect(() => {
       -moz-appearance: textfield;
     }
   `;
-  document.head.appendChild(style);
-  return () => document.head.removeChild(style);
-}, []);
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
 
 
@@ -88,19 +88,19 @@ useEffect(() => {
   const handleNameChange = (e) => {
     const value = e.target.value;
     setName(value.trimStart());
-  
+
     // Detect Hebrew characters
     const firstChar = value.trim().charAt(0);
     const isHebrew = /^[\u0590-\u05FF]$/.test(firstChar);
     setNameDir(isHebrew ? 'rtl' : 'ltr');
   };
-  
-  
-  
+
+
+
 
   const handleQuantityChange = (e) => {
     setQuantity(e.target.value.trimStart());
-  };  
+  };
 
   const handleQuantityChangeForItem = (id, value) => {
     setItems(prevItems =>
@@ -216,7 +216,7 @@ useEffect(() => {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-             dir={nameDir}
+            dir={nameDir}
             placeholder="Name"
             value={name}
             onChange={handleNameChange}
@@ -250,7 +250,7 @@ useEffect(() => {
               backgroundColor: touchedQuantity && quantityError ? '#fff5f5' : 'white',
               MozAppearance: 'textfield',
               appearance: 'textfield'
-            }}            
+            }}
           />
           {touchedQuantity && quantityError && <div style={{ color: '#cc0000', fontSize: '0.85rem', marginTop: '4px' }}>{quantityError}</div>}
           <br /><br />
