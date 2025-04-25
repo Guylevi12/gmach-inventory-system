@@ -147,7 +147,7 @@ const Navbar = () => {
           <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
           <Link to="/open-loans" style={linkStyle}>השאלות פתוחות</Link>
           <Link to="/loan-history" style={linkStyle}>היסטוריית שאלות</Link>
-          <Link to="/add-product" style={linkStyle}>ניהול מוצרים</Link>
+          <Link to="/manage-product" style={linkStyle}>ניהול מוצרים</Link>
         </>
       )}
 

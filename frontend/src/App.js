@@ -8,7 +8,7 @@ import { UserProvider } from './UserContext';
 import ManageUsers from './components/ManageUsers';
 import NewLoan from './components/NewLoan';
 import Request from './components/Request';
-import AddProduct from './components/AddProduct';
+import ItemManager from './components/ItemManager';
 
 function App() {
   return (
@@ -22,7 +22,7 @@ function App() {
           <Route path="/manage-users" element={<ManageUsers />} />
           <Route path="/new-loan" element={<NewLoan />} />
           <Route path="/request" element={<Request />} />
-          <Route path="/add-product" element={<AddProduct />} />
+          <Route path="/manage-product" element={<ItemManager />} />
         </Routes>
       </Router>
     </UserProvider>
