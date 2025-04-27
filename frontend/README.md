@@ -1,3 +1,54 @@
+# 📦 Gmach Inventory System - Frontend
+
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and customized with [Craco](https://github.com/dilanx/craco) to support aliasing (`@/` ➔ `src/`).
+
+## ⚡ Quick Setup
+
+After cloning the repository:
+
+1. Navigate into the frontend folder:
+    ```bash
+    cd frontend
+    ```
+2. Install all dependencies:
+    ```bash
+    npm install
+    ```
+3. Copy the environment variables template:
+    ```bash
+    cp .env.example .env
+    ```
+4. Fill in your Firebase credentials inside the new `.env` file:
+    ```dotenv
+    REACT_APP_FIREBASE_API_KEY=your_api_key_here
+    REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain_here
+    REACT_APP_FIREBASE_PROJECT_ID=your_project_id_here
+    REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket_here
+    REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
+    REACT_APP_FIREBASE_APP_ID=your_app_id_here
+    REACT_APP_FIREBASE_MEASUREMENT_ID=your_measurement_id_here
+    ```
+5. Start the development server:
+    ```bash
+    npm start
+    ```
+
+## 📂 Project Structure Highlights
+
+- `src/components/` ➔ React components (pages, layouts, features)
+- `src/services/` ➔ Firebase services and API communication
+- `src/firebase/` ➔ Firebase configuration
+- `src/contexts/` ➔ React Context Providers
+- `src/css/` ➔ Stylesheets
+- `public/` ➔ Static files (favicon, manifest, images)
+
+**Important:**  
+- Use alias imports (e.g., `@/firebase/firebase-config`) instead of relative paths (`../../`) to keep code clean.
+- Never commit your personal `.env` file! Use `.env.example` as the shared template.
+
+---
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

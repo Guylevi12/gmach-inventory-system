@@ -5,13 +5,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD2okbjcvN3V4Qpd4deo59qZZNNRBIWX58",
-  authDomain: "gmach-inventory-system.firebaseapp.com",
-  projectId: "gmach-inventory-system",
-  storageBucket: "gmach-inventory-system.appspot.com",
-  messagingSenderId: "687472851540",
-  appId: "1:687472851540:web:f846506cccaaefc1e74bc1",
-  measurementId: "G-ZM8S3K7E2V"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
