@@ -130,7 +130,7 @@ const Navbar = () => {
   return (
     <div style={navbarStyle}>
       <Link to="/" style={linkStyle}>דף הבית</Link>
-      <Link to="/products" style={linkStyle}>קטלוג מוצרים</Link>
+      <Link to="/Catalog" style={linkStyle}>קטלוג מוצרים</Link>
 
       {/* משתמש רגיל (רק אם ההגדרה פעילה) */}
       {user?.role === 'User' && onlineOrdering && (

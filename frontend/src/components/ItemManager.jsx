@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { addItem } from '../services/firebase/itemsService';
 import { collection, getDocs, query, where, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/firebase/firebase-config';
+import { db, storage } from '@/firebase/firebase-config';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
+import imageCompression from 'browser-image-compression';
+
 
 const ItemManager = () => {
   const [name, setName] = useState('');
@@ -18,6 +20,10 @@ const ItemManager = () => {
   const [touchedName, setTouchedName] = useState(false);
   const [touchedQuantity, setTouchedQuantity] = useState(false);
   const [nameDir, setNameDir] = useState('ltr');
+  const [imageFile, setImageFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState('');
+
+
 
 
 
@@ -143,6 +149,23 @@ const ItemManager = () => {
       const q = query(itemsCol, where('name', '==', name.trim()));
       const snapshot = await getDocs(q);
 
+      let finalImageUrl = imageUrl; // take the pasted URL
+
+      if (imageFile) {
+        const storageRef = storage.ref(`items/${Date.now()}-${imageFile.name}`);
+        const compressedImage = await imageCompression(imageFile, {
+          maxSizeMB: 0.2,         // Compress to ~200KB
+          maxWidthOrHeight: 1024, // Resize max dimension to 1024px
+          useWebWorker: true
+        });
+
+        await storageRef.put(compressedImage);
+
+        finalImageUrl = await storageRef.getDownloadURL(); // override only if file uploaded
+      }
+
+
+
       if (!snapshot.empty) {
         const existingDoc = snapshot.docs[0];
         const existingData = existingDoc.data();
@@ -158,12 +181,15 @@ const ItemManager = () => {
                   name,
                   quantity: parseInt(quantity),
                   allowMerge: true,
-                  existingItemId: existingDoc.id
+                  existingItemId: existingDoc.id,
+                  imageUrl: finalImageUrl,
                 });
                 toast.success(`Quantity updated successfully!`);
                 setName('');
                 setQuantity('');
                 fetchItems();
+                setImageFile(null);
+                setImageUrl('');
               }
             },
             {
@@ -179,11 +205,14 @@ const ItemManager = () => {
         await addItem({
           name,
           quantity: parseInt(quantity),
+          imageUrl: finalImageUrl,
         });
         toast.success(`Item "${name}" added successfully.`);
         setName('');
         setQuantity('');
         fetchItems();
+        setImageFile(null);
+        setImageUrl('');
       }
 
     } catch (err) {
@@ -214,6 +243,68 @@ const ItemManager = () => {
       }}>
         <h2>Add New Item</h2>
         <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Paste Image URL here"
+            value={imageUrl}
+            onChange={(e) => {
+              let value = e.target.value;
+
+              // Auto-convert imgur gallery links
+              if (value.includes('imgur.com/gallery/')) {
+                const id = value.split('/').pop();
+                value = `https://i.imgur.com/${id}.jpg`;
+                toast.info('Auto-converted Imgur gallery link to direct image!');
+              }
+
+              const isValidImage = /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(value);
+
+              if (isValidImage || value === '') {
+                setImageUrl(value);
+              } else {
+                toast.error('Please paste a direct link to an image (ending with .jpg, .png, etc.)');
+              }
+            }}
+
+            style={{
+              padding: '10px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              fontSize: '1rem',
+              width: '100%',
+              marginBottom: '1rem'
+            }}
+          />
+          {(imageUrl || imageFile) && (
+            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+              <h4>Image Preview:</h4>
+              <img
+                src={
+                  imageFile
+                    ? URL.createObjectURL(imageFile)
+                    : (/\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(imageUrl)
+                      ? imageUrl
+                      : '/no-image-available.png')
+                }
+                alt="Preview"
+                style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '8px', objectFit: 'contain' }}
+              />
+            </div>
+          )}
+
+
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files[0])}
+            style={{
+              marginTop: '1rem',
+              marginBottom: '1rem'
+            }}
+          />
+          <br />
+
           <input
             type="text"
             dir={nameDir}
@@ -297,13 +388,29 @@ const ItemManager = () => {
           ) : (
             filteredItems.map(item => (
               <div key={item.id} style={{
+                flex: '1 1 220px', 
+                maxWidth: '150px', 
                 border: '1px solid #ccc',
-                padding: '1rem',
+                padding: '0.8rem', 
                 borderRadius: '8px',
-                width: 'calc(50% - 1rem)',
                 boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
-                backgroundColor: 'white'
+                backgroundColor: 'white',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                transition: 'transform 0.2s ease-in-out'
               }}>
+                <img
+                  src={item.imageUrl || '/no-image-available.png'}
+                  alt={item.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block'
+                  }}
+                />
+
                 <h3 style={{ margin: '0 0 0.5rem' }}>{item.name}</h3>
 
                 <div style={{ marginBottom: '0.5rem' }}>

@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@craco/craco": "^7.1.0",
+    "browser-image-compression": "^2.0.2",
     "firebase": "^11.6.0"
   }
 }

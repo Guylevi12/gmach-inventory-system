@@ -9,6 +9,9 @@ import ManageUsers from './components/ManageUsers';
 import NewLoan from './components/NewLoan';
 import Request from './components/Request';
 import ItemManager from './components/ItemManager';
+import Catalog from './components/Catalog';
+import ItemDetails from './components/ItemDetails';
+
 
 function App() {
   return (
@@ -23,6 +26,8 @@ function App() {
           <Route path="/new-loan" element={<NewLoan />} />
           <Route path="/request" element={<Request />} />
           <Route path="/manage-product" element={<ItemManager />} />
+          <Route path="/catalog" element={<Catalog />} />
+          <Route path="/catalog/:id" element={<ItemDetails />} />
         </Routes>
       </Router>
     </UserProvider>

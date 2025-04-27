@@ -10,12 +10,13 @@ export async function addItem({ name, quantity, allowMerge = false, existingItem
     const existingData = snapshot.docs[0].data();
 
     const newQuantity = existingData.quantity + quantity;
-    await updateDoc(itemRef, { quantity: newQuantity });
 
-    // Also update image if a new one was provided
+    const updateData = { quantity: newQuantity };
     if (imageUrl) {
-      await updateDoc(itemRef, { imageUrl });
+      updateData.imageUrl = imageUrl;
     }
+
+    await updateDoc(itemRef, updateData);
 
     return { merged: true, newQuantity };
   }
@@ -24,11 +25,10 @@ export async function addItem({ name, quantity, allowMerge = false, existingItem
   const docRef = await addDoc(collection(db, 'items'), {
     name,
     quantity,
-    imageUrl, // ✨ save image URL
+    imageUrl,
     isActive: true,
     createdAt: serverTimestamp()
   });
 
   return { added: true, id: docRef.id };
 }
-
