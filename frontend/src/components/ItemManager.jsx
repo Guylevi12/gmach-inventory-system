@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { addItem } from '../services/firebase/itemsService';
 import { collection, getDocs, query, where, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase-config';
+import { db } from '@/firebase/firebase-config';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { confirmAlert } from 'react-confirm-alert';

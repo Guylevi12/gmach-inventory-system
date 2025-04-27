@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../UserContext';
 import { signOut } from 'firebase/auth';
-import { auth, db } from '../firebase-config';
+import { auth, db } from '@/firebase/firebase-config';
 import { useEffect, useState } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 

@@ -1,7 +1,7 @@
 // src/components/Request.jsx
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase-config';
+import { db } from '@/firebase/firebase-config';
 
 const Request = () => {
   const [isOrderingEnabled, setIsOrderingEnabled] = useState(null);

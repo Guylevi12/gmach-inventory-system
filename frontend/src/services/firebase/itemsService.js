@@ -1,4 +1,4 @@
-import { db } from '../../firebase-config';
+import { db } from '@/firebase/firebase-config';
 import { collection, addDoc, getDocs, query, where, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 
 export async function addItem({ name, quantity, allowMerge = false, existingItemId = null, imageUrl = null }) {
