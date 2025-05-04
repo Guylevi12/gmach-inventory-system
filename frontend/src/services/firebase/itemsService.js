@@ -1,5 +1,5 @@
 import { db } from '@/firebase/firebase-config';
-import { collection, addDoc, getDocs, query, where, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, setDoc, getDocs, query, where, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 
 export async function addItem({ name, quantity, allowMerge = false, existingItemId = null, imageUrl = null }) {
   name = name.trim();
@@ -21,8 +21,14 @@ export async function addItem({ name, quantity, allowMerge = false, existingItem
     return { merged: true, newQuantity };
   }
 
-  // Otherwise add new item
-  const docRef = await addDoc(collection(db, 'items'), {
+  // 🔥 1. Create empty document reference to get ID first
+  const itemsRef = collection(db, 'items');
+  const newDocRef = doc(itemsRef);
+  const newId = newDocRef.id;
+
+  // 🔥 2. Add document with explicit ID field
+  await setDoc(newDocRef, {
+    id: newId,
     name,
     quantity,
     imageUrl,
@@ -30,5 +36,5 @@ export async function addItem({ name, quantity, allowMerge = false, existingItem
     createdAt: serverTimestamp()
   });
 
-  return { added: true, id: docRef.id };
+  return { added: true, id: newId };
 }

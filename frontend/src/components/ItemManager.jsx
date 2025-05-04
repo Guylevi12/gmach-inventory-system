@@ -241,11 +241,11 @@ const ItemManager = () => {
         borderRadius: '10px',
         border: '1px solid #eee'
       }}>
-        <h2>Add New Item</h2>
+        <h2>הוספת מוצר חדש</h2>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            placeholder="Paste Image URL here"
+            placeholder="הכנס קישור לתמונה"
             value={imageUrl}
             onChange={(e) => {
               let value = e.target.value;
@@ -294,21 +294,35 @@ const ItemManager = () => {
 
 
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files[0])}
+          <label
+            htmlFor="imageUpload"
             style={{
+              display: 'inline-block',
+              padding: '10px 16px',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              borderRadius: '6px',
+              cursor: 'pointer',
               marginTop: '1rem',
-              marginBottom: '1rem'
+              marginBottom: '1rem',
+              textAlign: 'center'
             }}
-          />
-          <br />
+          >
+            בחר תמונה
+            <input
+              id="imageUpload"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files[0])}
+              style={{ display: 'none' }}
+            />
+          </label>
+
 
           <input
             type="text"
             dir={nameDir}
-            placeholder="Name"
+            placeholder="שם המוצר"
             value={name}
             onChange={handleNameChange}
             onBlur={() => setTouchedName(true)}
@@ -327,7 +341,7 @@ const ItemManager = () => {
 
           <input
             type="number"
-            placeholder="Quantity"
+            placeholder="כמות"
             value={quantity}
             onChange={handleQuantityChange}
             onBlur={() => setTouchedQuantity(true)}
@@ -354,18 +368,18 @@ const ItemManager = () => {
             borderRadius: '6px',
             cursor: isFormValid ? 'pointer' : 'not-allowed'
           }}>
-            Add Item
+            הוסף מוצר
           </button>
         </form>
       </div>
 
       {/* RIGHT SIDE: Items */}
       <div style={{ flex: '0 0 55%', textAlign: 'left' }}>
-        <h2>All Items</h2>
+        <h2>מוצרים</h2>
 
         <input
           type="text"
-          placeholder="Search items..."
+          placeholder="...חיפוש מוצר"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{
@@ -388,10 +402,10 @@ const ItemManager = () => {
           ) : (
             filteredItems.map(item => (
               <div key={item.id} style={{
-                flex: '1 1 220px', 
-                maxWidth: '150px', 
+                flex: '1 1 220px',
+                maxWidth: '150px',
                 border: '1px solid #ccc',
-                padding: '0.8rem', 
+                padding: '0.8rem',
                 borderRadius: '8px',
                 boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
                 backgroundColor: 'white',
@@ -412,9 +426,13 @@ const ItemManager = () => {
                 />
 
                 <h3 style={{ margin: '0 0 0.5rem' }}>{item.name}</h3>
+                <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.5rem' }}>
+                  מזהה: {item.id}
+                </p>
+
 
                 <div style={{ marginBottom: '0.5rem' }}>
-                  <label style={{ fontSize: '0.9rem' }}>Quantity:</label><br />
+                  <label style={{ fontSize: '0.9rem' }}>כמות:</label><br />
                   <input
                     type="number"
                     value={item.newQuantity !== undefined ? item.newQuantity : item.quantity}
