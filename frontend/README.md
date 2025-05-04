@@ -1,7 +1,5 @@
 # 📦 Gmach Inventory System - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and customized with [Craco](https://github.com/dilanx/craco) to support aliasing (`@/` ➔ `src/`).
-
 ## ⚡ Quick Setup
 
 After cloning the repository:
@@ -20,17 +18,17 @@ After cloning the repository:
     ```
 4. Fill in your Firebase credentials inside the new `.env` file:
     ```dotenv
-    REACT_APP_FIREBASE_API_KEY=your_api_key_here
-    REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain_here
-    REACT_APP_FIREBASE_PROJECT_ID=your_project_id_here
-    REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket_here
-    REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
-    REACT_APP_FIREBASE_APP_ID=your_app_id_here
-    REACT_APP_FIREBASE_MEASUREMENT_ID=your_measurement_id_here
+    VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MEASUREMENT_ID=
     ```
 5. Start the development server:
     ```bash
-    npm start
+    npm run dev
     ```
 
 ## 📂 Project Structure Highlights

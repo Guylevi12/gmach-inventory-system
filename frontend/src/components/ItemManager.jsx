@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import imageCompression from 'browser-image-compression';
+import BarcodeScanner from './BarcodeScanner';
 
 
 const ItemManager = () => {
@@ -22,6 +23,8 @@ const ItemManager = () => {
   const [nameDir, setNameDir] = useState('ltr');
   const [imageFile, setImageFile] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [barcode, setBarcode] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
 
 
 
@@ -183,6 +186,7 @@ const ItemManager = () => {
                   allowMerge: true,
                   existingItemId: existingDoc.id,
                   imageUrl: finalImageUrl,
+                  barcode,
                 });
                 toast.success(`Quantity updated successfully!`);
                 setName('');
@@ -206,6 +210,7 @@ const ItemManager = () => {
           name,
           quantity: parseInt(quantity),
           imageUrl: finalImageUrl,
+          barcode,
         });
         toast.success(`Item "${name}" added successfully.`);
         setName('');
@@ -222,6 +227,8 @@ const ItemManager = () => {
     setTouchedName(false);
     setTouchedQuantity(false);
   };
+
+
 
   return (
     <div style={{
@@ -275,6 +282,48 @@ const ItemManager = () => {
               marginBottom: '1rem'
             }}
           />
+          <input
+            type="text"
+            placeholder="ברקוד (אופציונלי)"
+            value={barcode}
+            onChange={(e) => setBarcode(e.target.value)}
+            style={{
+              padding: '10px',
+              borderRadius: '6px',
+              fontSize: '1rem',
+              border: '1px solid #ccc',
+              width: '100%',
+              marginBottom: '1rem'
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowScanner(true)}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#555',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              marginBottom: '1rem'
+            }}
+          >
+            📷 סרוק ברקוד
+          </button>
+
+          {showScanner && (
+            <BarcodeScanner
+              onScanSuccess={(scannedCode) => {
+                setBarcode(scannedCode);
+                setShowScanner(false);
+                toast.success(`ברקוד נסרק: ${scannedCode}`);
+              }}
+              onClose={() => setShowScanner(false)}
+            />
+          )}
+
+
           {(imageUrl || imageFile) && (
             <div style={{ marginTop: '1rem', textAlign: 'center' }}>
               <h4>Image Preview:</h4>
