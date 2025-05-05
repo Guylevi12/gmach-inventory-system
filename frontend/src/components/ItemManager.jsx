@@ -231,7 +231,7 @@ const ItemManager = () => {
           ]
         });
 
-      } else {
+      } else {  
         await addItem({
           name,
           quantity: parseInt(quantity),
@@ -443,7 +443,7 @@ const ItemManager = () => {
 
       {/* RIGHT SIDE: Items */}
       <div style={{ flex: '0 0 55%', textAlign: 'right', direction: 'rtl' , marginTop: '24px' }}>
-      <h2 dir="rtl" style={{ textAlign: 'right', marginRight: '30px' }}>מוצרים</h2>
+      <h2 dir="rtl" style={{ textAlign: 'right', marginRight: '40px' }}>מוצרים</h2>
 
 
         <input
@@ -457,16 +457,16 @@ const ItemManager = () => {
             borderRadius: '6px',
             fontSize: '1rem',
             border: '1px solid #ccc',
-            width: '93%',
+            width: '90%',
             marginBottom: '1rem',
-            marginRight: '30px' 
+            marginRight: '40px' 
           }}
         />
 
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '1rem'
+          gap: '0.4rem'
         }}>
           {filteredItems.length === 0 ? (
             <p>No matching items found.</p>
@@ -486,7 +486,7 @@ const ItemManager = () => {
                 transition: 'transform 0.2s ease-in-out',
                 textAlign: 'right',
                 direction: 'rtl',
-                marginRight: '30px'
+                marginRight: '40px'
               }}>
                 <img
                   src={item.imageUrl || '/no-image-available.png'}

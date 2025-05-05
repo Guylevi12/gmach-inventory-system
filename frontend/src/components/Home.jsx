@@ -9,7 +9,10 @@ const Home = () => {
     padding: '2rem',
     textAlign: 'center',
     direction: 'rtl',
+    maxWidth: '1000px',
+    margin: '0 auto',
   };
+
 
   const sectionTitle = {
     fontSize: '24px',
@@ -32,11 +35,13 @@ const Home = () => {
   };
 
   const mapStyle = {
-    width: '80%',
-    height: '350px',
+    width: '100%',
+    minHeight: '300px',
+    aspectRatio: '16/9',
     border: '1px solid #ccc',
     borderRadius: '12px',
   };
+
 
   const contactBox = {
     position: 'fixed',
@@ -50,7 +55,10 @@ const Home = () => {
     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
     zIndex: 1000,
     fontSize: '15px',
+    maxWidth: 'calc(100% - 40px)',
+    wordWrap: 'break-word',
   };
+
 
   return (
     <div style={containerStyle}>
@@ -59,7 +67,13 @@ const Home = () => {
       <img
         src="https://images.unsplash.com/photo-1520931737576-7b0b77c98a2a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzMjM3fDB8MXxzZWFyY2h8Mnx8Y2VsZWJyYXRpb258ZW58MHx8fHwxNzEyMjE0MDI0&ixlib=rb-4.0.3&q=80&w=800"
         alt='תמונה זמנית של גמ"ח'
-        style={{ maxWidth: '100%', borderRadius: '12px', marginBottom: '2rem' }}
+        style={{
+          width: '100%',
+          height: 'auto',
+          borderRadius: '12px',
+          marginBottom: '2rem',
+          maxWidth: '800px'
+        }}
       />
 
       <div style={descriptionStyle}>
