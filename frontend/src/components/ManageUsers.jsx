@@ -6,6 +6,7 @@ import { useUser } from '../UserContext';
 const ManageUsers = () => {
   const { user } = useUser();
   const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -37,6 +38,7 @@ const ManageUsers = () => {
     table: {
       width: '100%',
       borderCollapse: 'collapse',
+      marginTop: '1rem'
     },
     th: {
       border: '1px solid #ccc',
@@ -61,6 +63,14 @@ const ManageUsers = () => {
     demoteBtn: {
       backgroundColor: '#dc3545',
       color: 'white',
+    },
+    searchBox: {
+      padding: '10px',
+      width: '19.4%',
+      borderRadius: '6px',
+      border: '1px solid #ccc',
+      fontSize: '1rem',
+      marginBottom: '1rem'
     }
   };
 
@@ -68,9 +78,24 @@ const ManageUsers = () => {
     return <p style={{ padding: '2rem', textAlign: 'center' }}>אין לך גישה לעמוד זה</p>;
   }
 
+  // מסנן את המשתמשים לפי מה שמכניסים בתיבת חיפוש
+  const filteredUsers = users.filter(u =>
+    u.username && u.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div style={styles.container}>
       <h2>ניהול משתמשים</h2>
+
+      <input
+        type="text"
+        placeholder="חיפוש משתמש..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={styles.searchBox}
+        dir="rtl"
+      />
+
       <table style={styles.table}>
         <thead>
           <tr>
@@ -81,33 +106,45 @@ const ManageUsers = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map(u => (
-            <tr key={u.id}>
-              <td style={styles.td}>{u.username}</td>
-              <td style={styles.td}>{u.email}</td>
-              <td style={styles.td}>{u.role}</td>
-              <td style={styles.td}>
-                {u.role !== 'MainAdmin' && (
-                  u.role === 'User' ? (
-                    <button
-                      style={{ ...styles.button, ...styles.promoteBtn }}
-                      onClick={() => updateRole(u.id, 'GmachAdmin')}
-                    >
-                      שדרג למנהל גמח
-                    </button>
-                  ) : (
-                    <button
-                      style={{ ...styles.button, ...styles.demoteBtn }}
-                      onClick={() => updateRole(u.id, 'User')}
-                    >
-                      החזר למשתמש רגיל
-                    </button>
-                  )
-                )}
-                {u.role === 'MainAdmin' && '---'}
-              </td>
+          {filteredUsers.length === 0 ? (
+            <tr>
+              <td colSpan="4" style={{ textAlign: 'center', padding: '1rem' }}>לא נמצאו משתמשים תואמים</td>
             </tr>
-          ))}
+          ) : (
+            filteredUsers.map(u => (
+              <tr key={u.id}>
+                <td style={styles.td}>{u.username}</td>
+                <td style={styles.td}>{u.email}</td>
+                <td style={styles.td}>
+                  {u.role === 'User' ? 'משתמש רגיל' :
+                    u.role === 'GmachAdmin' ? 'מנהל גמ"ח' :
+                      u.role === 'MainAdmin' ? 'מנהל ראשי' :
+                        u.role}
+                </td>
+
+                <td style={styles.td}>
+                  {u.role !== 'MainAdmin' && (
+                    u.role === 'User' ? (
+                      <button
+                        style={{ ...styles.button, ...styles.promoteBtn }}
+                        onClick={() => updateRole(u.id, 'GmachAdmin')}
+                      >
+                        שדרג למנהל גמ"ח
+                      </button>
+                    ) : (
+                      <button
+                        style={{ ...styles.button, ...styles.demoteBtn }}
+                        onClick={() => updateRole(u.id, 'User')}
+                      >
+                        החזר למשתמש רגיל
+                      </button>
+                    )
+                  )}
+                  {u.role === 'MainAdmin' && '---'}
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

@@ -9,6 +9,19 @@ import 'react-confirm-alert/src/react-confirm-alert.css';
 import imageCompression from 'browser-image-compression';
 import BarcodeScanner from './BarcodeScanner';
 
+const uniformButtonStyle = {
+  padding: '10px 16px',
+  backgroundColor: '#1976d2',
+  color: 'white',
+  border: 'none',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  width: '100%',
+  maxWidth: '180px',
+  height: '40px',
+  fontSize: '16px',
+  fontWeight: 'normal'
+};
 
 const ItemManager = () => {
   const [name, setName] = useState('');
@@ -34,6 +47,19 @@ const ItemManager = () => {
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const buttonStyle = {
+    padding: '10px 16px',
+    backgroundColor: '#1976d2',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    marginBottom: '1rem',
+    width: '100%',
+    maxWidth: '180px',
+    height: '40px'
+  };
+  
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -248,8 +274,9 @@ const ItemManager = () => {
         borderRadius: '10px',
         border: '1px solid #eee'
       }}>
-        <h2>הוספת מוצר חדש</h2>
-        <form onSubmit={handleSubmit}>
+        <h2 dir="rtl">הוספת מוצר חדש</h2>
+        <form onSubmit={handleSubmit} dir="rtl">
+
           <input
             type="text"
             placeholder="הכנס קישור לתמונה"
@@ -296,21 +323,6 @@ const ItemManager = () => {
               marginBottom: '1rem'
             }}
           />
-          <button
-            type="button"
-            onClick={() => setShowScanner(true)}
-            style={{
-              padding: '8px 12px',
-              backgroundColor: '#555',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              marginBottom: '1rem'
-            }}
-          >
-            📷 סרוק ברקוד
-          </button>
 
           {showScanner && (
             <BarcodeScanner
@@ -340,37 +352,44 @@ const ItemManager = () => {
               />
             </div>
           )}
+<div style={{ display: 'flex', gap: '10px', marginBottom: '1rem' }}>
+
+  <button
+    type="button"
+    onClick={() => setShowScanner(true)}
+    style={uniformButtonStyle}
+  >
+    📷 סרוק ברקוד
+  </button>
+
+  <label
+  htmlFor="imageUpload"
+  style={{
+    ...uniformButtonStyle,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '0.2px 14px',
+    maxWidth: '150px',
+    height: '40px'
+  }}
+>
+  בחר תמונה
+  <input
+    id="imageUpload"
+    type="file"
+    accept="image/*"
+    onChange={(e) => setImageFile(e.target.files[0])}
+    style={{ display: 'none' }}
+  />
+</label>
 
 
-
-          <label
-            htmlFor="imageUpload"
-            style={{
-              display: 'inline-block',
-              padding: '10px 16px',
-              backgroundColor: '#1976d2',
-              color: 'white',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              marginTop: '1rem',
-              marginBottom: '1rem',
-              textAlign: 'center'
-            }}
-          >
-            בחר תמונה
-            <input
-              id="imageUpload"
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-              style={{ display: 'none' }}
-            />
-          </label>
-
+</div>
 
           <input
             type="text"
-            dir={nameDir}
+            dir="rtl"
             placeholder="שם המוצר"
             value={name}
             onChange={handleNameChange}
@@ -423,12 +442,14 @@ const ItemManager = () => {
       </div>
 
       {/* RIGHT SIDE: Items */}
-      <div style={{ flex: '0 0 55%', textAlign: 'left' }}>
-        <h2>מוצרים</h2>
+      <div style={{ flex: '0 0 55%', textAlign: 'right', direction: 'rtl' , marginTop: '24px' }}>
+      <h2 dir="rtl" style={{ textAlign: 'right', marginRight: '30px' }}>מוצרים</h2>
+
 
         <input
           type="text"
-          placeholder="...חיפוש מוצר"
+          dir="rtl"
+          placeholder="חיפוש מוצר..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{
@@ -436,8 +457,9 @@ const ItemManager = () => {
             borderRadius: '6px',
             fontSize: '1rem',
             border: '1px solid #ccc',
-            width: '100%',
-            marginBottom: '1rem'
+            width: '93%',
+            marginBottom: '1rem',
+            marginRight: '30px' 
           }}
         />
 
@@ -461,7 +483,10 @@ const ItemManager = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                transition: 'transform 0.2s ease-in-out'
+                transition: 'transform 0.2s ease-in-out',
+                textAlign: 'right',
+                direction: 'rtl',
+                marginRight: '30px'
               }}>
                 <img
                   src={item.imageUrl || '/no-image-available.png'}
@@ -495,27 +520,33 @@ const ItemManager = () => {
                   />
                 </div>
 
-                <button onClick={() => handleUpdateQuantity(item.id)} style={{
-                  backgroundColor: '#1976d2',
-                  color: 'white',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  marginRight: '8px'
-                }}>
-                  Save
-                </button>
-                <button onClick={() => handleDeleteItem(item.id)} style={{
-                  backgroundColor: '#d32f2f',
-                  color: 'white',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}>
-                  Delete
-                </button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+  <button onClick={() => handleUpdateQuantity(item.id)} style={{
+    flex: 1,
+    backgroundColor: '#1976d2',
+    color: 'white',
+    border: 'none',
+    padding: '8px 12px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    height: '36px'
+  }}>
+    Save
+  </button>
+  <button onClick={() => handleDeleteItem(item.id)} style={{
+    flex: 1,
+    backgroundColor: '#d32f2f',
+    color: 'white',
+    border: 'none',
+    padding: '8px 12px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    height: '36px'
+  }}>
+    Delete
+  </button>
+</div>
+
               </div>
             ))
           )}

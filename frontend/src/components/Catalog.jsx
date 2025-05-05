@@ -35,7 +35,7 @@ const Catalog = () => {
   );
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ padding: '2rem', direction: 'rtl', textAlign: 'right' }}>
       <h2>קטלוג</h2>
 
       <input
@@ -43,6 +43,7 @@ const Catalog = () => {
         placeholder="חיפוש פריט"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
+        dir="rtl"
         style={{
           padding: '10px',
           width: '100%',
