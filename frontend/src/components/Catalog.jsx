@@ -10,13 +10,13 @@ const Catalog = () => {
   useEffect(() => {
     const itemsCol = collection(db, 'items');
     const unsubscribe = onSnapshot(itemsCol, (snapshot) => {
-      const itemList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const itemList = snapshot.docs
+        .map(doc => doc.data())
+        .filter(item => item.isActive !== false);
       setItems(itemList);
       setLoading(false);
     });
+
 
     return () => unsubscribe();
   }, []);
@@ -62,12 +62,12 @@ const Catalog = () => {
       }}>
         {filteredItems.length === 0 ? (
           <div style={{ textAlign: 'center', width: '100%', marginTop: '2rem' }}>
-            <h3>No matching items found.</h3>
-            <p>Try searching something else.</p>
+            <h3>לא נמצאו פריטים.</h3>
+            <p>אנה נסה לחפש שוב.</p>
           </div>
         ) : (
           filteredItems.map(item => (
-            <div key={item.id} style={{
+            <div key={item.ItemId} style={{
               flex: '1 1 220px',
               maxWidth: '150px',
               border: '1px solid #ccc',
@@ -79,7 +79,6 @@ const Catalog = () => {
               flexDirection: 'column',
               justifyContent: 'space-between',
               transition: 'transform 0.2s ease-in-out',
-              cursor: 'default'  // 👈 disables pointer style
             }}>
               <img
                 src={item.imageUrl || '/no-image-available.png'}
@@ -93,6 +92,12 @@ const Catalog = () => {
               />
               <h3 style={{ marginBottom: '0.5rem' }}>{item.name}</h3>
               <p>כמות: {item.quantity}</p>
+
+              {item.publicComment && (
+                <p style={{ fontSize: '0.85rem', color: '#444' }}>
+                  📝 {item.publicComment}
+                </p>
+              )}
             </div>
           ))
         )}

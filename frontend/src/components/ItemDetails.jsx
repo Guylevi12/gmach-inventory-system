@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
 
 const ItemDetails = () => {
-    const { id } = useParams(); // Get item ID from URL
+    const { id } = useParams();
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchItem = async () => {
-            const docRef = doc(db, 'items', id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
+            const q = query(collection(db, 'items'), where('ItemId', '==', parseInt(id)));
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+                const docSnap = snapshot.docs[0];
                 setItem({ id: docSnap.id, ...docSnap.data() });
             } else {
                 setItem(null);
@@ -47,9 +48,19 @@ const ItemDetails = () => {
                 }}
             />
 
-            <h2>{item.name}</h2>
-            <p><strong>Quantity:</strong> {item.quantity}</p>
+            <p><strong>Item ID:</strong> {item.ItemId}</p>
+            {item.publicComment && <p><strong>הערה:</strong> {item.publicComment}</p>}
 
+            {/* Internal info (would not be shown in catalog, but okay in ItemDetails) */}
+            {item.internalComment && <p style={{ color: '#777' }}><strong>הערה פנימית:</strong> {item.internalComment}</p>}
+            <p style={{ fontSize: '0.85rem', color: '#666' }}>נוצר על ידי: {item.createdBy || 'לא ידוע'}</p>
+            <p style={{ fontSize: '0.85rem', color: '#666' }}>עודכן לאחרונה על ידי: {item.updatedBy || 'לא ידוע'}</p>
+            {item.createdAt && (
+              <p style={{ fontSize: '0.85rem', color: '#666' }}>נוצר בתאריך: {new Date(item.createdAt.seconds * 1000).toLocaleString('he-IL')}</p>
+            )}
+            {item.updatedAt && (
+              <p style={{ fontSize: '0.85rem', color: '#666' }}>עודכן בתאריך: {new Date(item.updatedAt.seconds * 1000).toLocaleString('he-IL')}</p>
+            )}
         </div>
     );
 };
