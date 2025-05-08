@@ -65,7 +65,7 @@ const Home = () => {
       <h2 style={sectionTitle}>ברוכים הבאים לגמ"ח שמחת זקנתי</h2>
 
       <img
-        src="https://images.unsplash.com/photo-1520931737576-7b0b77c98a2a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzMjM3fDB8MXxzZWFyY2h8Mnx8Y2VsZWJyYXRpb258ZW58MHx8fHwxNzEyMjE0MDI0&ixlib=rb-4.0.3&q=80&w=800"
+        src="https://www.loan4all.co.il/wp-content/uploads/elementor/thumbs/%D7%A2%D7%99%D7%A6%D7%95%D7%91-%D7%9C%D7%9C%D7%90-%D7%A9%D7%9D-66-pk7bw0x4rbkrwfq7lsj9ow3fqrr6og52r04ld4c6uw.jpg"
         alt='תמונה זמנית של גמ"ח'
         style={{
           width: '100%',
