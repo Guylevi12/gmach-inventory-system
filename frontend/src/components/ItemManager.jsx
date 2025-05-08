@@ -37,6 +37,22 @@ const ItemManager = () => {
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const uploadToCloudinary = async (file) => {
+    const url = `https://api.cloudinary.com/v1_1/dpegnxew7/image/upload`;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'GmachSystem');
+  
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+  
+    const data = await response.json();
+    return data.secure_url;
+  };
+  
+
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `

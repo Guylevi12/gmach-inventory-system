@@ -1,5 +1,21 @@
 import React, { useEffect, useRef } from 'react';
 
+const uploadToCloudinary = async (file) => {
+    const url = `https://api.cloudinary.com/v1_1/dpegnxew7/image/upload`;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'GmachSystem');
+  
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+  
+    const data = await response.json();
+    return data.secure_url;
+  };
+  
+
 const ItemFormModal = ({
     editingItem,
     name,
@@ -110,8 +126,14 @@ const ItemFormModal = ({
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={onImageFileChange}
-                        style={{ marginBottom: '1rem' }}
+                        onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                                const uploadedUrl = await uploadToCloudinary(file);
+                                onImageUrlChange({ target: { value: uploadedUrl } });
+                                toast.success('התמונה הועלתה בהצלחה!');
+                            }
+                        }}
                     />
 
                     {(imageUrl || imageFile) && (
