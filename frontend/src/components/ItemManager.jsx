@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { addItem } from '../services/firebase/itemsService';
-import { collection, getDocs, query, where, doc, updateDoc } from 'firebase/firestore';
+import React, { useEffect, useState, useRef } from 'react';
+import { addItem, moveToDeletedItem, restoreDeletedItem } from '../services/firebase/itemsService';
+import { collection, getDocs, query, where, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/firebase/firebase-config';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,139 +8,142 @@ import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import imageCompression from 'browser-image-compression';
 import ItemFormModal from './ItemFormModal';
-import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
-import { serverTimestamp } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { FaEdit, FaTrash, FaPlus, FaUndo } from 'react-icons/fa';
 import { useUser } from '../UserContext';
-
 
 const ItemManager = () => {
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [items, setItems] = useState([]);
+  const [deletedItems, setDeletedItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletedSearch, setDeletedSearch] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
   const [showPopup, setShowPopup] = useState(false);
+  const [showDeletedPopup, setShowDeletedPopup] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [publicComment, setPublicComment] = useState('');
   const [internalComment, setInternalComment] = useState('');
   const { user } = useUser();
+  const userName = user?.username || 'משתמש לא ידוע';
 
+  const deletedModalRef = useRef(null);
 
-
-  const handlePublicCommentChange = (e) => setPublicComment(e.target.value);
-  const handleInternalCommentChange = (e) => setInternalComment(e.target.value);
-
-
-  const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const uploadToCloudinary = async (file) => {
-    const url = `https://api.cloudinary.com/v1_1/dpegnxew7/image/upload`;
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'GmachSystem');
-  
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData
-    });
-  
-    const data = await response.json();
-    return data.secure_url;
-  };
-  
-
+  // Remove spinner arrows on number inputs
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
-  `;
+      input[type=number]::-webkit-inner-spin-button,
+      input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type=number] { -moz-appearance: textfield; }
+    `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
   }, []);
 
-
+  // Fetch active & deleted items
+  const fetchItems = async () => {
+    const q = query(collection(db, 'items'), where('isActive', '==', true));
+    const snap = await getDocs(q);
+    setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  };
+  const fetchDeletedItems = async () => {
+    const snap = await getDocs(collection(db, 'deletedItems'));
+    setDeletedItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  };
 
   useEffect(() => {
     fetchItems();
+    fetchDeletedItems();
   }, []);
 
-  const fetchItems = async () => {
-    const itemsCol = collection(db, 'items');
-    const q = query(itemsCol, where('isActive', '==', true));
-    const itemsSnapshot = await getDocs(q);
-    const itemList = itemsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    setItems(itemList);
-  };
+  // Close deleted modal on outside click or Escape
+  useEffect(() => {
+    const handleClickOutside = e => {
+      if (showDeletedPopup && deletedModalRef.current && !deletedModalRef.current.contains(e.target)) {
+        setShowDeletedPopup(false);
+      }
+    };
+    const handleEsc = e => {
+      if (e.key === 'Escape') setShowDeletedPopup(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [showDeletedPopup]);
 
+  const filteredItems = items.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const filteredDeleted = deletedItems.filter(item =>
+    item.name.toLowerCase().includes(deletedSearch.toLowerCase())
+  );
 
-  const handleNameChange = (e) => setName(e.target.value.trimStart());
-  const handleQuantityChange = (e) => setQuantity(e.target.value.trimStart());
-
-  const handleDeleteItem = async (id) => {
+  const handleDeleteItem = async id => {
     if (!window.confirm('האם את/ה בטוח/ה שברצונך למחוק את המוצר?')) return;
-    const itemRef = doc(db, 'items', id);
-    await updateDoc(itemRef, { isActive: false });
-    toast.success('המוצר הוסר מהרשימה.');
-    fetchItems();
+    try {
+      await moveToDeletedItem(id, userName);
+      toast.success('המוצר הוסר מהרשימה.');
+      fetchItems();
+      fetchDeletedItems();
+    } catch {
+      toast.error('שגיאה במחיקת המוצר');
+    }
   };
 
+  const handleRestoreItem = async id => {
+    if (!window.confirm('האם ברצונך להשיב את המוצר למלאי?')) return;
+    try {
+      await restoreDeletedItem(id, userName);
+      toast.success('המוצר הושב למלאי בהצלחה.');
+      fetchItems();
+      fetchDeletedItems();
+    } catch {
+      toast.error('שגיאה בהחזרת המוצר');
+    }
+  };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const itemsCol = collection(db, 'items');
-      const q = query(itemsCol, where('name', '==', name.trim()));
-      const snapshot = await getDocs(q);
-      const userName = user?.username || 'משתמש לא ידוע';
+      const q = query(collection(db, 'items'), where('name', '==', name.trim()));
+      const snap = await getDocs(q);
 
-
-      let finalImageUrl = imageUrl;
-
+      let finalImage = imageUrl;
       if (imageFile) {
-        const storageRef = storage.ref(`items/${Date.now()}-${imageFile.name}`);
-        const compressedImage = await imageCompression(imageFile, {
+        const compressed = await imageCompression(imageFile, {
           maxSizeMB: 0.2,
           maxWidthOrHeight: 1024,
           useWebWorker: true
         });
-
-        await storageRef.put(compressedImage);
-        finalImageUrl = await storageRef.getDownloadURL();
+        const ref = storage.ref(`items/${Date.now()}-${imageFile.name}`);
+        await ref.put(compressed);
+        finalImage = await ref.getDownloadURL();
       }
 
       if (editingItem) {
-        const itemRef = doc(db, 'items', editingItem.id);
-        await updateDoc(itemRef, {
+        await updateDoc(doc(db, 'items', editingItem.id), {
           name,
           quantity: parseInt(quantity),
-          imageUrl: finalImageUrl,
+          imageUrl: finalImage,
           publicComment,
           internalComment,
           updatedBy: userName,
-          updatedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         });
-        toast.success(`המוצר עודכן בהצלחה`);
-      } else if (!snapshot.empty) {
-        const existingDoc = snapshot.docs[0];
-        const existingData = existingDoc.data();
-
+        toast.success('המוצר עודכן בהצלחה');
+      } else if (!snap.empty) {
+        const data = snap.docs[0].data();
         confirmAlert({
           title: 'המוצר כבר קיים',
-          message: `המוצר "${name}" כבר קיים עם כמות ${existingData.quantity}.\nהאם להוסיף ${quantity} אליו?\nסה"כ חדש יהיה ${existingData.quantity + parseInt(quantity)}.`,
+          message: `המוצר "${name}" כבר קיים בכמות ${data.quantity}.\nהאם להוסיף ${quantity}?`,
           buttons: [
             {
               label: 'כן',
@@ -148,33 +151,28 @@ const ItemManager = () => {
                 await addItem({
                   name,
                   quantity: parseInt(quantity),
-                  imageUrl: finalImageUrl,
+                  imageUrl: finalImage,
                   publicComment,
                   internalComment,
                   createdBy: userName,
                   updatedBy: userName,
                   createdAt: serverTimestamp(),
-                  updatedAt: serverTimestamp(),
+                  updatedAt: serverTimestamp()
                 });
-
-                toast.success(`הכמות עודכנה בהצלחה`);
+                toast.success('הכמות עודכנה בהצלחה');
                 fetchItems();
+                fetchDeletedItems();
               }
             },
-            {
-              label: 'לא',
-              onClick: () => {
-                toast.info('לא נעשו שינויים');
-              }
-            }
+            { label: 'לא', onClick: () => toast.info('בוטל') }
           ]
         });
-        return; // עצר כאן, שלא יריץ את הקוד מתחת
+        return;
       } else {
         await addItem({
           name,
           quantity: parseInt(quantity),
-          imageUrl: finalImageUrl,
+          imageUrl: finalImage,
           publicComment,
           internalComment,
           createdBy: userName,
@@ -184,109 +182,118 @@ const ItemManager = () => {
         });
         toast.success(`המוצר "${name}" נוסף בהצלחה`);
       }
-      setName('');
-      setQuantity('');
-      setImageFile(null);
-      setImageUrl('');
-      setPublicComment('');
-      setInternalComment('');
-      setShowPopup(false);
-      setEditingItem(null);
-      fetchItems();
 
-    } catch (err) {
-      console.error(err);
-      alert("Error: " + err.message);
+      // Reset
+      setName(''); setQuantity(''); setImageFile(null);
+      setImageUrl(''); setPublicComment(''); setInternalComment('');
+      setShowPopup(false); setEditingItem(null);
+      fetchItems(); fetchDeletedItems();
+    } catch {
       toast.error('הוספת המוצר נכשלה');
-
     }
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      padding: '2rem',
-      width: '100%'
-    }}>
-      {/* Items Section */}
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
+        padding: '2rem',
+        width: '100%'
+      }}
+    >
+      {/* Active Items Section */}
       <div style={{ width: '100%', direction: 'rtl', padding: '2rem' }}>
-        <button
-          onClick={() => {
-            setEditingItem(null);
-            setName('');
-            setQuantity('');
-            setImageUrl('');
-            setImageFile(null);
-            setShowPopup(true);
-            setPublicComment('');
-            setInternalComment('');
-          }}
-          style={{
-            backgroundColor: '#1976d2',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            cursor: 'pointer',
-            minWidth: 'fit-content'
-          }}
-          className="add-product-button"
-        >
-          <FaPlus size={14} />
-          <span className="button-text">הוספת מוצר</span>
-        </button>
+        <h2>ניהול מוצרים</h2>
+        <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
+          <button
+            onClick={() => {
+              setEditingItem(null);
+              setName(''); setQuantity(''); setImageUrl(''); setImageFile(null);
+              setShowPopup(true); setPublicComment(''); setInternalComment('');
+            }}
+            style={{
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '8px 12px',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <FaPlus size={14} /> הוספת מוצר
+          </button>
+          <button
+            onClick={() => setShowDeletedPopup(true)}
+            style={{
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '8px 12px',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <FaTrash size={14} /> מוצרים שנמחקו
+          </button>
+        </div>
 
         <input
           type="text"
           dir="rtl"
           placeholder="חיפוש מוצר..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
           style={{
             padding: '10px',
             borderRadius: '6px',
             fontSize: '1rem',
             border: '1px solid #ccc',
             width: '100%',
-            margin: '1rem 0'
+            marginBottom: '1rem'
           }}
         />
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-          gap: '1.5rem',
-          paddingTop: '1rem',
-          justifyItems: 'center'
-        }}>
-
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+            gap: '1.5rem',
+            justifyItems: 'center'
+          }}
+        >
           {filteredItems.length === 0 ? (
             <p>לא נמצא מוצרים במלאי.</p>
           ) : (
             filteredItems.map(item => (
-              <div key={item.id} style={{
-                width: '100%',
-                maxWidth: '240px',
-                minHeight: '420px',
-                border: '1px solid #e0e0e0',
-                borderRadius: '10px',
-                backgroundColor: '#fff',
-                padding: '1rem',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                textAlign: 'center',
-                transition: 'transform 0.2s ease-in-out',
-              }}>
-
+              <div
+                key={item.id}
+                style={{
+                  width: '100%',
+                  maxWidth: '240px',
+                  minHeight: '420px',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '10px',
+                  backgroundColor: '#fff',
+                  padding: '1rem',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s'
+                }}
+              >
                 <img
                   src={item.imageUrl || '/no-image-available.png'}
                   alt={item.name}
@@ -298,7 +305,6 @@ const ItemManager = () => {
                     marginBottom: '0.5rem'
                   }}
                 />
-
                 <h3>{item.name}</h3>
                 <p>כמות: {item.quantity}</p>
                 {item.internalComment && (
@@ -309,8 +315,7 @@ const ItemManager = () => {
                 <p style={{ fontSize: '0.85rem', color: '#555' }}>
                   מזהה מוצר: {item.ItemId}
                 </p>
-
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: 'auto' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                   <button
                     onClick={() => {
                       setEditingItem(item);
@@ -334,8 +339,8 @@ const ItemManager = () => {
                     }}
                   >
                     <FaEdit size={14} /> עריכה
-                  </button>
 
+                  </button>
                   <button
                     onClick={() => handleDeleteItem(item.id)}
                     style={{
@@ -358,28 +363,157 @@ const ItemManager = () => {
             ))
           )}
         </div>
-
-        {/* Popup Modal */}
-        {showPopup && (
-          <ItemFormModal
-            editingItem={editingItem}
-            name={name}
-            quantity={quantity}
-            imageUrl={imageUrl}
-            imageFile={imageFile}
-            publicComment={publicComment}
-            internalComment={internalComment}
-            onNameChange={handleNameChange}
-            onQuantityChange={handleQuantityChange}
-            onImageUrlChange={(e) => setImageUrl(e.target.value)}
-            onImageFileChange={(e) => setImageFile(e.target.files[0])}
-            onPublicCommentChange={handlePublicCommentChange}
-            onInternalCommentChange={handleInternalCommentChange}
-            onCancel={() => setShowPopup(false)}
-            onSubmit={handleSubmit}
-          />
-        )}
       </div>
+
+      {/* Deleted Items Modal */}
+      {showDeletedPopup && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div
+            ref={deletedModalRef}
+            style={{
+              position: 'relative',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              width: '80%',
+              maxHeight: '80%',
+              overflowY: 'auto',
+              padding: '2rem',
+              direction: 'rtl'
+            }}
+          >
+            <h2>מוצרים שנמחקו</h2>
+            <button
+              onClick={() => setShowDeletedPopup(false)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer'
+              }}
+            >
+              &times;
+            </button>
+
+            <input
+              type="text"
+              dir="rtl"
+              placeholder="חיפוש מוצרים שנמחקו..."
+              value={deletedSearch}
+              onChange={e => setDeletedSearch(e.target.value)}
+              style={{
+                padding: '10px',
+                borderRadius: '6px',
+                fontSize: '1rem',
+                border: '1px solid #ccc',
+                width: '100%',
+                margin: '1rem 0'
+              }}
+            />
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                gap: '1.5rem',
+                justifyItems: 'center'
+              }}
+            >
+              {filteredDeleted.length === 0 ? (
+                <p>אין פריטים שנמחקו.</p>
+              ) : (
+                filteredDeleted.map(item => (
+                  <div
+                    key={item.id}
+                    style={{
+                      width: '100%',
+                      maxWidth: '240px',
+                      minHeight: '300px',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '10px',
+                      backgroundColor: '#fff',
+                      padding: '1rem',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <img
+                      src={item.imageUrl || '/no-image-available.png'}
+                      alt={item.name}
+                      style={{
+                        width: '100%',
+                        height: '120px',
+                        objectFit: 'cover',
+                        borderRadius: '6px',
+                        marginBottom: '0.5rem'
+                      }}
+                    />
+                    <h3>{item.name}</h3>
+                    <p>כמות: {item.quantity}</p>
+                    <button
+                      onClick={() => handleRestoreItem(item.id)}
+                      style={{
+                        backgroundColor: '#28a745',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 10px',
+                        borderRadius: '5px',
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <FaUndo size={14} /> השבה
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
+      {showPopup && (
+        <ItemFormModal
+          editingItem={editingItem}
+          name={name}
+          quantity={quantity}
+          imageUrl={imageUrl}
+          imageFile={imageFile}
+          publicComment={publicComment}
+          internalComment={internalComment}
+          onNameChange={e => setName(e.target.value.trimStart())}
+          onQuantityChange={e => setQuantity(e.target.value.trimStart())}
+          onImageUrlChange={e => setImageUrl(e.target.value)}
+          onImageFileChange={e => setImageFile(e.target.files[0])}
+          onPublicCommentChange={e => setPublicComment(e.target.value)}
+          onInternalCommentChange={e => setInternalComment(e.target.value)}
+          onCancel={() => setShowPopup(false)}
+          onSubmit={handleSubmit}
+        />
+      )}
 
       <ToastContainer
         position="bottom-right"

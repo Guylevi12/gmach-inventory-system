@@ -1,196 +1,213 @@
 import React, { useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import imageCompression from 'browser-image-compression';
 
 const uploadToCloudinary = async (file) => {
-    const url = `https://api.cloudinary.com/v1_1/dpegnxew7/image/upload`;
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'GmachSystem');
-  
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData
-    });
-  
-    const data = await response.json();
-    return data.secure_url;
-  };
-  
+  const url = `https://api.cloudinary.com/v1_1/dpegnxew7/image/upload`;
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'GmachSystem');
+
+  const response = await fetch(url, {
+    method: 'POST',
+    body: formData
+  });
+
+  const data = await response.json();
+  return data.secure_url;
+};
 
 const ItemFormModal = ({
-    editingItem,
-    name,
-    quantity,
-    imageUrl,
-    imageFile,
-    onNameChange,
-    onQuantityChange,
-    onImageUrlChange,
-    onImageFileChange,
-    onCancel,
-    onSubmit,
-    publicComment,
-    internalComment,
-    onPublicCommentChange,
-    onInternalCommentChange,
+  editingItem,
+  name,
+  quantity,
+  imageUrl,
+  imageFile,
+  onNameChange,
+  onQuantityChange,
+  onImageUrlChange,
+  onImageFileChange,
+  onCancel,
+  onSubmit,
+  publicComment,
+  internalComment,
+  onPublicCommentChange,
+  onInternalCommentChange,
 }) => {
-    const modalRef = useRef(null);
+  const modalRef = useRef(null);
 
-    // Close modal when clicking outside or pressing Escape
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (modalRef.current && !modalRef.current.contains(e.target)) {
-                onCancel(); // Close modal if clicked outside
-            }
-        };
+  // Close on outside click or Escape
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
+        onCancel();
+      }
+    };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [onCancel]);
 
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') {
-                onCancel(); // Close modal if Escape key is pressed
-            }
-        };
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000
+    }}>
+      <div
+        ref={modalRef}
+        style={{
+          position: 'relative',  // <- כדי שה× יתבסס על הקונטיינר
+          background: 'white',
+          padding: '2rem',
+          borderRadius: '10px',
+          width: '90%',
+          maxWidth: '500px'
+        }}
+      >
+        {/* לחצן הסגירה */}
+        <button
+          onClick={onCancel}
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            right: '1rem',
+            background: 'none',
+            border: 'none',
+            fontSize: '1.5rem',
+            cursor: 'pointer',
+            lineHeight: 1
+          }}
+          aria-label="סגור"
+        >
+          &times;
+        </button>
 
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEsc);
+        <h3 style={{ textAlign: 'center' }}>
+          {editingItem ? 'עריכת מוצר' : 'הוספת מוצר חדש'}
+        </h3>
+        <form onSubmit={onSubmit}>
+          <label>שם המוצר:</label>
+          <input
+            type="text"
+            value={name}
+            onChange={onNameChange}
+            required
+            style={inputStyle}
+          />
 
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEsc);
-        };
-    }, [onCancel]);
+          <label>כמות:</label>
+          <input
+            type="number"
+            value={quantity}
+            onChange={onQuantityChange}
+            required
+            style={inputStyle}
+          />
 
-    // Handle form submission
-    return (
-        <div style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-        }}>
-            <div
-                ref={modalRef}
+          <label>הערה לפרסום (חיצונית):</label>
+          <input
+            type="text"
+            value={publicComment}
+            onChange={onPublicCommentChange}
+            style={inputStyle}
+          />
+
+          <label>הערה פנימית:</label>
+          <input
+            type="text"
+            value={internalComment}
+            onChange={onInternalCommentChange}
+            style={inputStyle}
+          />
+
+          <label>תמונה (או כתובת URL):</label>
+          <input
+            type="text"
+            value={imageUrl}
+            onChange={onImageUrlChange}
+            placeholder="הדבק כתובת תמונה (או העלה קובץ)"
+            style={inputStyle}
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const uploadedUrl = await uploadToCloudinary(file);
+                onImageUrlChange({ target: { value: uploadedUrl } });
+                toast.success('התמונה הועלתה בהצלחה!');
+              }
+            }}
+          />
+
+          {(imageUrl || imageFile) && (
+            <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+              <img
+                src={imageFile ? URL.createObjectURL(imageFile) : imageUrl}
+                alt="preview"
                 style={{
-                    background: 'white',
-                    padding: '2rem',
-                    borderRadius: '10px',
-                    width: '90%',
-                    maxWidth: '500px'
+                  maxHeight: '150px',
+                  maxWidth: '100%',
+                  objectFit: 'contain',
+                  borderRadius: '6px'
                 }}
-            >
-                <h3 style={{ textAlign: 'center' }}>{editingItem ? 'עריכת מוצר' : 'הוספת מוצר חדש'}</h3>
-                <form onSubmit={onSubmit}>
-                    <label>שם המוצר:</label>
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={onNameChange}
-                        required
-                        style={inputStyle}
-                    />
-
-                    <label>כמות:</label>
-                    <input
-                        type="number"
-                        value={quantity}
-                        onChange={onQuantityChange}
-                        required
-                        style={inputStyle}
-                    />
-
-                    <label>הערה לפרסום (חיצונית):</label>
-                    <input
-                        type="text"
-                        value={publicComment}
-                        onChange={onPublicCommentChange}
-                        style={inputStyle}
-                    />
-
-                    <label>הערה פנימית:</label>
-                    <input
-                        type="text"
-                        value={internalComment}
-                        onChange={onInternalCommentChange}
-                        style={inputStyle}
-                    />
-
-                    <label>תמונה (או כתובת URL):</label>
-                    <input
-                        type="text"
-                        value={imageUrl}
-                        onChange={onImageUrlChange}
-                        placeholder="הדבק כתובת תמונה (או העלה קובץ)"
-                        style={inputStyle}
-                    />
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={async (e) => {
-                            const file = e.target.files[0];
-                            if (file) {
-                                const uploadedUrl = await uploadToCloudinary(file);
-                                onImageUrlChange({ target: { value: uploadedUrl } });
-                                toast.success('התמונה הועלתה בהצלחה!');
-                            }
-                        }}
-                    />
-
-                    {(imageUrl || imageFile) && (
-                        <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
-                            <img
-                                src={imageFile ? URL.createObjectURL(imageFile) : imageUrl}
-                                alt="preview"
-                                style={{
-                                    maxHeight: '150px',
-                                    maxWidth: '100%',
-                                    objectFit: 'contain',
-                                    borderRadius: '6px'
-                                }}
-                            />
-                        </div>
-                    )}
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <button type="submit" style={submitBtnStyle}>
-                            {editingItem ? 'שמור שינויים' : 'הוסף מוצר'}
-                        </button>
-                        <button type="button" onClick={onCancel} style={cancelBtnStyle}>
-                            ביטול
-                        </button>
-                    </div>
-                </form>
+              />
             </div>
-        </div>
-    );
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <button type="submit" style={submitBtnStyle}>
+              {editingItem ? 'שמור שינויים' : 'הוסף מוצר'}
+            </button>
+            <button type="button" onClick={onCancel} style={cancelBtnStyle}>
+              ביטול
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 const inputStyle = {
-    width: '100%',
-    padding: '10px',
-    marginBottom: '1rem',
-    borderRadius: '6px',
-    border: '1px solid #ccc'
+  width: '100%',
+  padding: '10px',
+  marginBottom: '1rem',
+  borderRadius: '6px',
+  border: '1px solid #ccc'
 };
 
 const submitBtnStyle = {
-    padding: '10px 16px',
-    backgroundColor: '#1976d2',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    width: '45%'
+  padding: '10px 16px',
+  backgroundColor: '#1976d2',
+  color: 'white',
+  border: 'none',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  width: '45%'
 };
 
 const cancelBtnStyle = {
-    padding: '10px 16px',
-    backgroundColor: '#aaa',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    width: '45%'
+  padding: '10px 16px',
+  backgroundColor: '#aaa',
+  color: 'white',
+  border: 'none',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  width: '45%'
 };
 
 export default ItemFormModal;
