@@ -1,3 +1,4 @@
+// src/components/Navbar.jsx
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../UserContext';
 import { signOut } from 'firebase/auth';
@@ -130,22 +131,22 @@ const Navbar = () => {
   return (
     <div style={navbarStyle}>
       <Link to="/" style={linkStyle}>דף הבית</Link>
-      <Link to="/Catalog" style={linkStyle}>קטלוג מוצרים</Link>
+      <Link to="/catalog" style={linkStyle}>קטלוג מוצרים</Link>
 
       {/* משתמש רגיל (רק אם ההגדרה פעילה) */}
       {user?.role === 'User' && onlineOrdering && (
         <>
           <Link to="/my-orders" style={linkStyle}>ההזמנות שלי</Link>
-          <Link to="/request" style={linkStyle}>בקשת השאלה</Link>
+          <Link to="/request"   style={linkStyle}>בקשת השאלה</Link>
         </>
       )}
 
       {/* מנהל גמח ומעלה */}
       {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
         <>
-          <Link to="/new-loan" style={linkStyle}>הזמנה חדשה</Link>
-          <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
-          <Link to="/open-loans" style={linkStyle}>השאלות פתוחות</Link>
+          <Link to="/new-loan"     style={linkStyle}>הזמנה חדשה</Link>
+          <Link to="/requests"     style={linkStyle}>בקשות להזמנה</Link>
+          <Link to="/open-loans"   style={linkStyle}>השאלות פתוחות</Link>   
           <Link to="/loan-history" style={linkStyle}>היסטוריית שאלות</Link>
           <Link to="/manage-product" style={linkStyle}>ניהול מוצרים</Link>
         </>
@@ -158,7 +159,7 @@ const Navbar = () => {
 
       {!user && (
         <>
-          <Link to="/login" style={linkStyle}>התחברות</Link>
+          <Link to="/login"    style={linkStyle}>התחברות</Link>
           <Link to="/register" style={linkStyle}>הרשמה</Link>
         </>
       )}
