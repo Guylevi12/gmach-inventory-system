@@ -29,7 +29,10 @@ export default function OpenLoans() {
     const snap = await getDocs(collection(db, 'orders'));
     setOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   };
-  useEffect(fetchOrders, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   // סינון פתוחות/מאושרות
   const openOrders     = orders.filter(o => o.status === 'open');
@@ -54,13 +57,33 @@ export default function OpenLoans() {
 
   // הצג מוצרים פופ-אפ
   const handleShowProducts = async order => {
-    setEditingOrderId(order.id);
-    setOrderProducts(order.items || []);
-    const itemsSnap = await getDocs(query(collection(db, 'items'), where('isActive', '==', true)));
-    setAllItems(itemsSnap.docs.map(d => ({ id: d.id, name: d.data().name })));
-    setNewProdId(''); setNewProdQty(1);
-    setShowProdPopup(true);
-  };
+  setEditingOrderId(order.id);
+
+  // שליפת כל המוצרים הפעילים כולל imageUrl
+  const itemsSnap = await getDocs(query(collection(db, 'items'), where('isActive', '==', true)));
+
+  const itemsMap = {};
+  const itemsList = itemsSnap.docs.map(d => {
+    const data = d.data();
+    itemsMap[d.id] = { name: data.name, imageUrl: data.imageUrl };
+    return { id: d.id, name: data.name, imageUrl: data.imageUrl };
+  });
+  setAllItems(itemsList);
+
+  // מיזוג תמונות למוצרים שכבר בהזמנה
+  const merged = (order.items || []).map(p => ({
+    id: p.id,
+    name: itemsMap[p.id]?.name || p.name,
+    imageUrl: itemsMap[p.id]?.imageUrl || '',
+    quantity: p.quantity
+  }));
+  setOrderProducts(merged);
+
+  setNewProdId('');
+  setNewProdQty(1);
+  setShowProdPopup(true);
+};
+
 
   const updateProductQty = (pid, qty) =>
     setOrderProducts(prev => prev.map(p => p.id === pid ? { ...p, quantity: qty } : p));
@@ -148,18 +171,31 @@ export default function OpenLoans() {
 
             <div style={{ maxHeight:'300px', overflowY:'auto', marginBottom:'1rem' }}>
               {orderProducts.map(p => (
-                <div key={p.id} style={prodRow}>
-                  <span style={{ flex:1 }}>{p.name}</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={p.quantity}
-                    onChange={e => updateProductQty(p.id, +e.target.value)}
-                    style={{ width:'60px', margin:'0 8px', textAlign:'center' }}
-                  />
-                  <button onClick={() => removeProduct(p.id)} style={buttonStyle('#d32f2f')}>❌</button>
-                </div>
-              ))}
+                  <div key={p.id} style={prodRow}>
+                    {p.imageUrl && (
+                      <img
+                        src={p.imageUrl}
+                        alt={p.name}
+                        style={{
+                          width: '50px',
+                          height: '50px',
+                          objectFit: 'cover',
+                          borderRadius: '4px',
+                          marginLeft: '8px'
+                        }}
+                      />
+                    )}
+                    <span style={{ flex: 1 }}>{p.name}</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={p.quantity}
+                      onChange={e => updateProductQty(p.id, +e.target.value)}
+                      style={{ width: '60px', margin: '0 8px', textAlign: 'center' }}
+                    />
+                    <button onClick={() => removeProduct(p.id)} style={buttonStyle('#d32f2f')}>❌</button>
+                  </div>
+                ))}
             </div>
 
             <div style={{ display:'flex', gap:'0.5rem', marginBottom:'1rem', alignItems:'center' }}>
@@ -234,7 +270,12 @@ const modalStyle = {
   maxWidth:'500px'
 };
 const prodRow = {
-  display:'flex',
-  alignItems:'center',
-  marginBottom:'0.5rem'
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  marginBottom: '0.5rem',
+  direction: 'rtl', // ✅ חזרה ל־RTL
+  textAlign: 'right'
 };
+
+
