@@ -17,6 +17,8 @@ const HebrewCalendar = () => {
   const [error, setError] = useState(null);
   const [itemsMap, setItemsMap] = useState({});
   const [allItems, setAllItems] = useState([]); 
+  const [showItemsModal, setShowItemsModal] = useState(false);
+
 
 const updateStockIfNeeded = async (itemsList) => {
   const today = new Date();
@@ -84,13 +86,15 @@ const updateStockIfNeeded = async (itemsList) => {
       // 1. טען את כל הפריטים
       const itemSnap = await getDocs(collection(db, 'items'));
       const itemsData = itemSnap.docs.map(doc => {
-  const data = doc.data();
-  return {
-    id: doc.id,
-    name: data.name,
-    imageUrl: data.imageUrl, 
-  };
-});
+        const data = doc.data();
+        return {
+          id: doc.id,               // מזהה מסמך
+          itemId: data.ItemId,      // מזהה פשוט
+          name: data.name,
+          imageUrl: data.imageUrl,
+        };
+      });
+
 setAllItems(itemsData);
 
       const itemsMapObj = {};
@@ -109,10 +113,15 @@ setAllItems(itemsData);
       const calendarEvents = orderData.flatMap(order => {
         const events = [];
 
-        const decorateItems = (items = []) => items.map(item => ({
-          ...item,
-          imageUrl: itemsMapObj[item.name] || null
-        }));
+       const decorateItems = (items = []) => items.map(item => {
+          const itemDoc = itemsData.find(i => i.id === item.id);
+          return {
+            ...item,
+            imageUrl: itemDoc?.imageUrl || null,
+            itemId: itemDoc?.itemId || 'לא נמצא'
+          };
+        });
+
 
         if (order.pickupDate) {
           events.push({
@@ -334,21 +343,31 @@ const handleDeleteOrder = async (orderId) => {
     const orderSnap = await getDoc(orderRef);
     const orderData = orderSnap.data();
 
-    // החזרת מלאי
-    for (const item of orderData.items || []) {
-      const itemDoc = allItems.find(i => i.name === item.name);
-      if (!itemDoc) continue;
+    // בדוק האם תאריך ההשאלה כבר הגיע או עבר
+    const pickupDate = new Date(orderData.pickupDate);
+    const today = new Date();
+    pickupDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
 
-      const itemRef = doc(db, 'items', itemDoc.id);
-      const itemSnap = await getDoc(itemRef);
-      const itemData = itemSnap.data();
+    const shouldUpdateStock = pickupDate <= today;
 
-      const updatedQty = (itemData.quantity || 0) + (item.quantity || 0);
+    if (shouldUpdateStock) {
+      // החזרת מלאי רק אם ההשאלה כבר התבצעה
+      for (const item of orderData.items || []) {
+        const itemDoc = allItems.find(i => i.name === item.name);
+        if (!itemDoc) continue;
 
-      await updateDoc(itemRef, {
-        quantity: updatedQty,
-        isActive: true,
-      });
+        const itemRef = doc(db, 'items', itemDoc.id);
+        const itemSnap = await getDoc(itemRef);
+        const itemData = itemSnap.data();
+
+        const updatedQty = (itemData.quantity || 0) + (item.quantity || 0);
+
+        await updateDoc(itemRef, {
+          quantity: updatedQty,
+          isActive: true,
+        });
+      }
     }
 
     // מחיקת ההזמנה
@@ -357,12 +376,13 @@ const handleDeleteOrder = async (orderId) => {
     // ריענון
     await fetchItemsAndOrders();
     setShowReport(false);
-    alert("ההזמנה נמחקה והמלאי עודכן בהצלחה.");
+    alert(`ההזמנה נמחקה${shouldUpdateStock ? " והמלאי עודכן" : ""} בהצלחה.`);
   } catch (error) {
     console.error("שגיאה במחיקה או עדכון מלאי:", error);
     alert("מחיקה נכשלה. נסה שוב.");
   }
 };
+
 
 
 const updateItemQuantity = (index, newQuantity) => {
@@ -498,101 +518,99 @@ const updateItemQuantity = (index, newQuantity) => {
       </div>
 
       {selectedEvents.map((event) => (
-        <div
-          key={event.id}
-          style={{
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '1rem',
-            background: '#f9fafb',
-            marginBottom: '1rem'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <div>
-              <p style={{ fontWeight: 'bold' }}>{event.clientName}</p>
-              <p style={{ color: '#4b5563' }}>טלפון: {event.phone}</p>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                {new Date(event.pickupDate).toLocaleDateString('he-IL')} - {new Date(event.returnDate).toLocaleDateString('he-IL')}
-              </p>
-            </div>
-            <span style={{
-              background: event.type === 'השאלה' ? '#d1fae5' : '#ffe4e6',
-              color: event.type === 'השאלה' ? '#065f46' : '#9f1239',
-              padding: '4px 12px',
-              borderRadius: '9999px',
-              fontWeight: 'bold',
-              fontSize: '0.875rem',
-              alignSelf: 'center'
-            }}>
-              {event.type}
-            </span>
-           
-          </div>
-<div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-  <button
-    onClick={() => handleEditClick(event)}
+  <div
+    key={event.id}
     style={{
-      fontSize: '0.8rem',
-      padding: '6px 12px',
-      borderRadius: '6px',
-      border: '1px solid #3b82f6',
-      backgroundColor: 'white',
-      color: '#3b82f6',
-      cursor: 'pointer'
+      border: '1px solid #e5e7eb',
+      borderRadius: '8px',
+      padding: '1rem',
+      background: '#f9fafb',
+      marginBottom: '1rem'
     }}
   >
-    ערוך מוצרים
-  </button>
-</div>
-
-          {event.items.length > 0 && (
-            <ul style={{ paddingInlineStart: '20px', color: '#374151' }}>
-            {event.items.map((item, idx) => (
-  <li key={idx} style={{ marginBottom: '10px' }}>
-    {item.name} × {item.quantity}
-    {item.imageUrl && (
-      <div style={{ marginTop: '6px' }}>
-        <img
-          src={item.imageUrl}
-          alt={item.name}
-          style={{ maxWidth: '80px', maxHeight: '80px', borderRadius: '4px', marginTop: '4px' }}
-        />
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+      <div>
+        <p style={{ fontWeight: 'bold' }}>{event.clientName}</p>
+        <p style={{ color: '#4b5563' }}>טלפון: {event.phone}</p>
+        <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+          {new Date(event.pickupDate).toLocaleDateString('he-IL')} - {new Date(event.returnDate).toLocaleDateString('he-IL')}
+        </p>
       </div>
-    )}
-  </li>
+      <span style={{
+        background: event.type === 'השאלה' ? '#d1fae5' : '#ffe4e6',
+        color: event.type === 'השאלה' ? '#065f46' : '#9f1239',
+        padding: '4px 12px',
+        borderRadius: '9999px',
+        fontWeight: 'bold',
+        fontSize: '0.875rem',
+        alignSelf: 'center'
+      }}>
+        {event.type}
+      </span>
+    </div>
+
+    {/* כפתורים: עריכה + מחיקה */}
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem', gap: '1rem' }}>
+      <button
+        onClick={() => handleEditClick(event)}
+        style={{
+          fontSize: '0.8rem',
+          padding: '6px 12px',
+          borderRadius: '6px',
+          border: '1px solid #3b82f6',
+          backgroundColor: 'white',
+          color: '#3b82f6',
+          cursor: 'pointer'
+        }}
+      >
+        ערוך מוצרים
+      </button>
+<button
+  onClick={() => setShowItemsModal(true)}
+  style={{
+    fontSize: '0.8rem',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    border: '1px solid #10b981',
+    backgroundColor: 'white',
+    color: '#10b981',
+    cursor: 'pointer'
+  }}
+>
+  הצג מוצרים
+</button>
+
+      <button
+        onClick={async () => {
+          const orderId = event.id.split('-')[0];
+          if (orderId) {
+            await handleDeleteOrder(orderId);
+          }
+        }}
+        style={{
+          fontSize: '0.8rem',
+          padding: '6px 12px',
+          borderRadius: '6px',
+          backgroundColor: '#ef4444',
+          color: 'white',
+          border: 'none',
+          cursor: 'pointer'
+        }}
+      >
+        מחק הזמנה
+      </button>
+    </div>
+
+  
+  </div>
 ))}
 
-
-            </ul>
-          )}
-        </div>
-      ))}
-
-      <div style={{
+{/* כפתור סגירה של כל המודל (נשאר כמו שהיה) */}
+<div style={{
   display: 'flex',
-  justifyContent: 'space-between',
+  justifyContent: 'center',
   marginTop: '1rem'
 }}>
-  <button
-    onClick={async () => {
-      const orderId = selectedEvents[0]?.id.split('-')[0];
-      if (orderId) {
-        await handleDeleteOrder(orderId);
-      }
-    }}
-    style={{
-      padding: '8px 16px',
-      backgroundColor: '#ef4444',
-      color: 'white',
-      border: 'none',
-      borderRadius: '4px',
-      cursor: 'pointer'
-    }}
-  >
-    מחק הזמנה
-  </button>
-
   <button
     onClick={() => setShowReport(false)}
     style={{
@@ -608,9 +626,65 @@ const updateItemQuantity = (index, newQuantity) => {
   </button>
 </div>
 
+
     </div>
   </div>
 )}
+
+{showItemsModal && (
+  <div style={{
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10000
+  }}>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      padding: '1.5rem',
+      maxWidth: '600px',
+      width: '100%',
+      maxHeight: '80vh',
+      overflowY: 'auto',
+      direction: 'rtl'
+    }}>
+      <h2 style={{ marginBottom: '1rem' }}>רשימת מוצרים</h2>
+      <ul style={{ listStyle: 'none', padding: 0 }}>
+        {selectedEvents[0]?.items?.map((item, idx) => {
+          const itemData = allItems.find(i => i.name === item.name);
+          return (
+            <li key={idx} style={{ marginBottom: '1rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '1rem' }}>
+              <div><strong>{item.name}</strong> × {item.quantity}</div>
+              <div>מזהה מוצר: <code>{item.itemId || 'לא נמצא'}</code></div>
+              {item.imageUrl && (
+                <img src={item.imageUrl} alt={item.name} style={{ width: '100px', marginTop: '8px', borderRadius: '4px' }} />
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <div style={{ textAlign: 'center' }}>
+        <button
+          onClick={() => setShowItemsModal(false)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          סגור
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 {editItemModal.open && (
   <div style={{
     position: 'fixed',
@@ -711,26 +785,38 @@ const updateItemQuantity = (index, newQuantity) => {
         </button>
 
         <button type="button"
-     onClick={async (e) => {
+   onClick={async (e) => {
   e.preventDefault();
 
   try {
     const orderId = editItemModal.eventId?.split('-')[0];
     if (!orderId) return;
 
-    // בדיקה: האם יש פריט עם כמות מבוקשת גבוהה מהמלאי
-    for (const item of editItemModal.items) {
-      const itemDocRef = doc(db, 'items', allItems.find(i => i.name === item.name)?.id);
-      const itemSnap = await getDoc(itemDocRef);
-      const itemData = itemSnap.data();
+    // 1. שלוף את ההזמנה המקורית
+    const orderRef = doc(db, 'orders', orderId);
+    const originalSnap = await getDoc(orderRef);
+    const originalData = originalSnap.data();
+    const originalItems = originalData.items || [];
 
-      if (item.quantity > itemData.quantity) {
-        alert(`אין מספיק מלאי עבור "${item.name}". יש רק ${itemData.quantity} במלאי.`);
-        return; // עצור את השמירה
+    // 2. בדוק רק פריטים שנוספו או שגדלה כמותם
+    for (const item of editItemModal.items) {
+      const originalItem = originalItems.find(i => i.name === item.name);
+      const oldQty = originalItem?.quantity || 0;
+      const addedQty = item.quantity - oldQty;
+
+      if (addedQty > 0) {
+        const itemDocRef = doc(db, 'items', allItems.find(i => i.name === item.name)?.id);
+        const itemSnap = await getDoc(itemDocRef);
+        const itemData = itemSnap.data();
+
+        if (addedQty > itemData.quantity) {
+          alert(`אין מספיק מלאי עבור "${item.name}". יש רק ${itemData.quantity} במלאי.`);
+          return; // עצור את השמירה
+        }
       }
     }
 
-    const orderRef = doc(db, 'orders', orderId);
+    // 3. שמור את הפריטים
     await updateDoc(orderRef, {
       items: editItemModal.items,
     });
@@ -743,6 +829,7 @@ const updateItemQuantity = (index, newQuantity) => {
     alert("שמירה נכשלה. נסה שוב.");
   }
 }}
+
 
         >
           שמור שינויים
