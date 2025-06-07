@@ -36,28 +36,15 @@ const updateStockIfNeeded = async (itemsList) => {
 
     if (pickup > today) continue;
 
-    for (const item of order.items) {
-      const itemDoc = itemsList.find(i => i.name === item.name);
-      if (!itemDoc) continue;
-
-      const itemRef = doc(db, 'items', itemDoc.id);
-      const itemSnap = await getDoc(itemRef);
-      const itemData = itemSnap.data();
-
-      const remainingQty = (itemData.quantity || 0) - (item.quantity || 0);
-      const updatedQty = Math.max(remainingQty, 0);
-
-      await updateDoc(itemRef, {
-        quantity: updatedQty,
-        isActive: updatedQty > 0,
-      });
-    }
+    // ✅ אין צורך לעדכן את כמות המלאי בפועל
+    // אפשר להפעיל לוגיקה אחרת אם תרצה, לדוג' רק לקבוע stockUpdated = true
 
     await updateDoc(doc(db, 'orders', orderId), {
       stockUpdated: true
     });
   }
 };
+
 
 
   async function migrateEventDateToPickupDate() {
@@ -351,32 +338,13 @@ const handleDeleteOrder = async (orderId) => {
 
     const shouldUpdateStock = pickupDate <= today;
 
-    if (shouldUpdateStock) {
-      // החזרת מלאי רק אם ההשאלה כבר התבצעה
-      for (const item of orderData.items || []) {
-        const itemDoc = allItems.find(i => i.name === item.name);
-        if (!itemDoc) continue;
-
-        const itemRef = doc(db, 'items', itemDoc.id);
-        const itemSnap = await getDoc(itemRef);
-        const itemData = itemSnap.data();
-
-        const updatedQty = (itemData.quantity || 0) + (item.quantity || 0);
-
-        await updateDoc(itemRef, {
-          quantity: updatedQty,
-          isActive: true,
-        });
-      }
-    }
-
     // מחיקת ההזמנה
     await deleteDoc(orderRef);
 
     // ריענון
     await fetchItemsAndOrders();
     setShowReport(false);
-    alert(`ההזמנה נמחקה${shouldUpdateStock ? " והמלאי עודכן" : ""} בהצלחה.`);
+    alert("ההזמנה נמחקה בהצלחה.");
   } catch (error) {
     console.error("שגיאה במחיקה או עדכון מלאי:", error);
     alert("מחיקה נכשלה. נסה שוב.");

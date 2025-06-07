@@ -34,19 +34,43 @@ const NewLoan = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!form.volunteerName.trim()) newErrors.volunteerName = 'שדה חובה';
-    if (!form.clientName.trim())   newErrors.clientName   = 'שדה חובה';
-    if (!form.address.trim())      newErrors.address      = 'שדה חובה';
-    if (!form.phone.trim())        newErrors.phone        = 'שדה חובה';
-    if (!form.eventType.trim())    newErrors.eventType    = 'שדה חובה';
-    if (!form.pickupDate)          newErrors.pickupDate   = 'שדה חובה';
-    if (!form.eventDate)           newErrors.eventDate    = 'שדה חובה';
-    if (!form.returnDate)          newErrors.returnDate   = 'שדה חובה';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+const validateForm = () => {
+  const newErrors = {};
+  const today = new Date().toISOString().split('T')[0];
+
+  const { pickupDate, eventDate, returnDate } = form;
+
+  // בדיקות כלליות
+  if (!form.volunteerName.trim()) newErrors.volunteerName = 'שדה חובה';
+  if (!form.clientName.trim())   newErrors.clientName   = 'שדה חובה';
+  if (!form.address.trim())      newErrors.address      = 'שדה חובה';
+  if (!form.phone.trim()) {
+    newErrors.phone = 'שדה חובה';
+  } else if (!/^\d{10}$/.test(form.phone)) {
+    newErrors.phone = 'מספר טלפון חייב להכיל בדיוק 10 ספרות';
+  }
+
+  if (!form.eventType.trim())    newErrors.eventType    = 'שדה חובה';
+
+  // תאריכים
+  if (!pickupDate) newErrors.pickupDate = 'שדה חובה';
+  if (!eventDate)  newErrors.eventDate  = 'שדה חובה';
+  if (!returnDate) newErrors.returnDate = 'שדה חובה';
+
+  if (pickupDate && pickupDate < today)
+    newErrors.pickupDate = 'תאריך לא יכול להיות בעבר';
+
+  if (eventDate && pickupDate && eventDate < pickupDate)
+    newErrors.eventDate = 'תאריך האירוע לא יכול להיות לפני תאריך לקיחת מוצרים';
+
+  if (returnDate && pickupDate && returnDate <= pickupDate)
+    newErrors.returnDate = 'תאריך החזרה חייב להיות אחרי תאריך לקיחה';
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+
 
   const handleClear = () => {
     if (window.confirm('האם אתה בטוח שברצונך לבטל את ההזמנה?')) {
@@ -62,99 +86,129 @@ const NewLoan = () => {
     }
   };
 
-  const handleConfirm = async () => {
-    if (!validateForm()) return;
+const handleConfirm = async () => {
+  if (!validateForm()) return;
 
-    // 1) קביעת simpleId כ–max(simpleId) + 1 או 1 אם אין הזמנות
-    const ordersSnap = await getDocs(collection(db, 'orders'));
-    const existingIds = ordersSnap.docs
-      .map(d => d.data().simpleId)
-      .filter(id => typeof id === 'number');
-    const nextSimpleId = existingIds.length > 0
-      ? Math.max(...existingIds) + 1
-      : 1;
+  // 1) קביעת simpleId כ–max(simpleId) + 1 או 1 אם אין הזמנות
+  const ordersSnap = await getDocs(collection(db, 'orders'));
+  const existingIds = ordersSnap.docs
+    .map(d => d.data().simpleId)
+    .filter(id => typeof id === 'number');
+  const nextSimpleId = existingIds.length > 0
+    ? Math.max(...existingIds) + 1
+    : 1;
 
-    // 2) הכנת רשימת המוצרים שנבחרו
-    const items = availableItems
-      .filter(i => i.selected)
-      .map(i => ({ id: i.id, name: i.name, quantity: i.selectedQty }));
+  // 2) הכנת רשימת המוצרים שנבחרו עם שדות מלאים
+  const items = availableItems
+    .filter(i => i.selected)
+    .map(i => ({
+      id: i.id,
+      name: i.name,
+      quantity: i.selectedQty
+    }));
 
-    setSaving(true);
-    try {
-      // 3) שמירת ההזמנה כולל שדה simpleId
-      const docRef = await addDoc(collection(db, 'orders'), {
-        ...form,
-        items,
-        status: 'open',
-        simpleId: nextSimpleId,
-        createdAt: serverTimestamp()
-      });
-      // 4) הוספת orderId (מפתח Firestore) לשדה נפרד אם רוצים
-      await updateDoc(docRef, { orderId: docRef.id });
+  console.log('Items to save:', items); // בדיקה
 
-      // 5) איפוס UI והודעה למשתמש
-      setForm({
-        volunteerName: '', clientName: '', address: '',
-        phone: '', email: '', eventType: '',
-        pickupDate: '', eventDate: '', returnDate: ''
-      });
-      setAvailableItems([]);
-      setSearchTerm('');
-      setShowCatalogPopup(false);
-      alert(`ההזמנה נשמרה!  Simple ID: ${nextSimpleId}`);
-    } catch (err) {
-      console.error('שגיאה בשמירת הזמנה:', err);
-      alert('שגיאה בשמירה, נסה שוב.');
-    }
-    setSaving(false);
-  };
+  setSaving(true);
+  try {
+    // 3) שמירת ההזמנה כולל שדה simpleId
+    const docRef = await addDoc(collection(db, 'orders'), {
+      ...form,
+      items,
+      status: 'open',
+      simpleId: nextSimpleId,
+      createdAt: serverTimestamp()
+    });
+
+    // 4) הוספת orderId (מפתח Firestore) לשדה נפרד
+    await updateDoc(docRef, { orderId: docRef.id });
+
+    // 5) איפוס UI והודעה
+    setForm({
+      volunteerName: '', clientName: '', address: '',
+      phone: '', email: '', eventType: '',
+      pickupDate: '', eventDate: '', returnDate: ''
+    });
+    setAvailableItems([]);
+    setSearchTerm('');
+    setShowCatalogPopup(false);
+    alert(`ההזמנה נשמרה!  Simple ID: ${nextSimpleId}`);
+  } catch (err) {
+    console.error('שגיאה בשמירת הזמנה:', err);
+    alert('שגיאה בשמירה, נסה שוב.');
+  }
+  setSaving(false);
+};
+
 
   useEffect(() => {
     if (!showCatalogPopup) return;
 
-    const fetchAvailable = async () => {
-      setLoadingItems(true);
-      try {
-        const itemsSnap = await getDocs(
-          query(collection(db, 'items'), where('isActive', '==', true))
+const fetchAvailable = async () => {
+  setLoadingItems(true);
+
+  // פונקציית עזר להמרת תאריך
+  const parseDate = (d) => {
+    if (!d) return null;
+    if (d.toDate) return d.toDate();               // Firestore Timestamp
+    if (typeof d === 'string') return new Date(d); // מחרוזת
+    return d;                                       // כבר Date
+  };
+
+  try {
+    // 1. שלוף את כל הפריטים
+    const itemsSnap = await getDocs(collection(db, 'items'));
+    const itemsData = itemsSnap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(item => item.isDeleted !== true)
+      .map(item => ({ ...item, selected: false, selectedQty: 0 }));
+
+    // 2. שלוף את כל ההזמנות שחופפות לטווח התאריכים של ההזמנה החדשה
+    const ordersSnap = await getDocs(collection(db, 'orders'));
+    const pickupStart = parseDate(form.pickupDate);
+    const pickupEnd = parseDate(form.returnDate);
+
+    const overlappingOrders = ordersSnap.docs
+      .map(doc => doc.data())
+      .filter(order => {
+        const orderStart = parseDate(order.pickupDate);
+        const orderEnd = parseDate(order.returnDate);
+        return (
+          order.status === 'open' &&
+          orderStart && orderEnd && pickupStart && pickupEnd &&
+          orderEnd >= pickupStart &&
+          orderStart <= pickupEnd
         );
-        const itemsData = itemsSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          selected: false,
-          selectedQty: 0
-        }));
+      });
 
-        const ordersSnap = await getDocs(
-          query(collection(db, 'orders'), where('returnDate', '>=', form.pickupDate))
-        );
-        const orders = ordersSnap.docs
-          .map(d => d.data())
-          .filter(o => o.pickupDate <= form.returnDate);
+    // 3. חישוב כמות תפוסה לכל מוצר
+    const reserved = {};
+    overlappingOrders.forEach(order => {
+      order.items?.forEach(item => {
+        reserved[item.id] = (reserved[item.id] || 0) + item.quantity;
+      });
+    });
 
-        const reserved = {};
-        orders.forEach(o =>
-          Array.isArray(o.items) &&
-          o.items.forEach(it => {
-            reserved[it.id] = (reserved[it.id] || 0) + it.quantity;
-          })
-        );
+    // 4. חישוב כמה זמין לכל מוצר
+    const result = itemsData
+      .map(item => {
+        const availableQty = (item.quantity || 0) - (reserved[item.id] || 0);
+        return { ...item, quantity: availableQty };
+      })
+      .filter(item => item.quantity > 0); // רק מוצרים שזמינים בפועל
 
-        const filtered = itemsData
-          .map(it => {
-            const avail = it.quantity - (reserved[it.id] || 0);
-            return { ...it, quantity: avail };
-          })
-          .filter(it => it.quantity > 0);
+    setAvailableItems(result);
+  } catch (err) {
+    console.error('שגיאה בחישוב זמינות:', err);
+    setAvailableItems([]);
+  }
 
-        setAvailableItems(filtered);
-      } catch {
-        setAvailableItems([]);
-      }
-      setLoadingItems(false);
-    };
+  setLoadingItems(false);
+};
 
-    fetchAvailable();
+
+fetchAvailable();
+
   }, [showCatalogPopup, form.pickupDate, form.returnDate]);
 
   const toggleSelectItem = id => {
@@ -204,15 +258,35 @@ const NewLoan = () => {
               display:'block', marginBottom:'0.3rem', maxWidth:'400px',
               margin:'0 auto', textAlign:'right'
             }}>{label}{required && ' *'}</label>
-            <input id={name} type={type} name={name} value={form[name]}
-              onChange={handleChange}
-              style={{
-                display:'block', width:'100%', maxWidth:'400px',
-                margin:'0 auto', padding:'10px',
-                border: errors[name] ? '1px solid red' : '1px solid #ccc',
-                borderRadius:'6px', fontSize:'1rem'
-              }}
-            />
+   <input
+  id={name}
+  type={type}
+  name={name}
+  value={form[name]}
+  onChange={handleChange}
+  min={
+    type === 'date'
+      ? name === 'pickupDate'
+        ? new Date().toISOString().split('T')[0]
+        : name === 'eventDate'
+        ? form.pickupDate || new Date().toISOString().split('T')[0]
+        : name === 'returnDate'
+        ? form.pickupDate || new Date().toISOString().split('T')[0]
+        : undefined
+      : undefined
+  }
+  style={{
+    display: 'block',
+    width: '100%',
+    maxWidth: '400px',
+    margin: '0 auto',
+    padding: '10px',
+    border: errors[name] ? '1px solid red' : '1px solid #ccc',
+    borderRadius: '6px',
+    fontSize: '1rem'
+  }}
+/>
+
             {errors[name] && (
               <div style={{
                 color:'red', fontSize:'0.85rem', maxWidth:'400px',

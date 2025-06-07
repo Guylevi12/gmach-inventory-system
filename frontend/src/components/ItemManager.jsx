@@ -46,11 +46,37 @@ const ItemManager = () => {
   }, []);
 
   // Fetch active & deleted items
-  const fetchItems = async () => {
-    const q = query(collection(db, 'items'), where('isActive', '==', true));
-    const snap = await getDocs(q);
-    setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-  };
+const fetchItems = async () => {
+  // שלב 1: שליפת כל ההזמנות הפעילות
+  const ordersSnap = await getDocs(collection(db, 'orders'));
+  const openOrders = ordersSnap.docs
+    .map(doc => doc.data())
+    .filter(order => order.status === 'open');
+
+  // שלב 2: בניית סט מזהי פריטים בשימוש
+  const itemsInUse = new Set();
+  openOrders.forEach(order => {
+    order.items?.forEach(item => {
+      itemsInUse.add(item.id); // שים לב שזה item.id, לא item.ItemId
+    });
+  });
+
+  // שלב 3: שליפת כל הפריטים שלא נמחקו
+  const itemsSnap = await getDocs(collection(db, 'items'));
+  const itemsList = itemsSnap.docs
+    .filter(doc => doc.data().isDeleted !== true)
+    .map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        inUse: itemsInUse.has(doc.id)
+      };
+    });
+
+  setItems(itemsList);
+};
+
   const fetchDeletedItems = async () => {
     const snap = await getDocs(collection(db, 'deletedItems'));
     setDeletedItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -315,6 +341,11 @@ const ItemManager = () => {
                 <p style={{ fontSize: '0.85rem', color: '#555' }}>
                   מזהה מוצר: {item.ItemId}
                 </p>
+                {item.inUse && (
+  <p style={{ color: '#d97706', fontWeight: 'bold', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+    🕐 מוצר זה נמצא בהזמנה פעילה
+  </p>
+)}
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                   <button
                     onClick={() => {

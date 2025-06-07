@@ -12,7 +12,7 @@ const Catalog = () => {
     const unsubscribe = onSnapshot(itemsCol, (snapshot) => {
       const itemList = snapshot.docs
         .map(doc => doc.data())
-        .filter(item => item.isActive !== false);
+        .filter(item => item.isDeleted !== true);
       setItems(itemList);
       setLoading(false);
     });
@@ -65,44 +65,40 @@ const Catalog = () => {
             <p>אנה נסה לחפש שוב.</p>
           </div>
         ) : (
-          filteredItems.map(item => {
-            const isOut = item.quantity === 0;
-            return (
-              <div key={item.ItemId} style={{
-                flex: '1 1 220px',
-                maxWidth: '150px',
-                border: '1px solid #ccc',
-                padding: '0.8rem',
-                borderRadius: '8px',
-                boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
-                backgroundColor: 'white',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                transition: 'transform 0.2s ease-in-out',
-                opacity: isOut ? 0.5 : 1,
-                filter: isOut ? 'grayscale(0.6)' : 'none'
-              }}>
-                <img
-                  src={item.imageUrl || '/no-image-available.png'}
-                  alt={item.name}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    display: 'block'
-                  }}
-                />
-                <h3 style={{ marginBottom: '0.5rem' }}>{item.name}</h3>
-                <p>כמות: {item.quantity}</p>
-                {item.publicComment && (
-                  <p style={{ fontSize: '0.85rem', color: '#444' }}>
-                    📝 {item.publicComment}
-                  </p>
-                )}
-              </div>
-            );
-          })
+          filteredItems.map(item => (
+            <div key={item.ItemId} style={{
+              flex: '1 1 220px',
+              maxWidth: '150px',
+              border: '1px solid #ccc',
+              padding: '0.8rem',
+              borderRadius: '8px',
+              boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
+              backgroundColor: 'white',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              transition: 'transform 0.2s ease-in-out',
+              opacity: 1,
+              filter: 'none'
+            }}>
+              <img
+                src={item.imageUrl || '/no-image-available.png'}
+                alt={item.name}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block'
+                }}
+              />
+              <h3 style={{ marginBottom: '0.5rem' }}>{item.name}</h3>
+              {item.publicComment && (
+                <p style={{ fontSize: '0.85rem', color: '#444' }}>
+                  📝 {item.publicComment}
+                </p>
+              )}
+            </div>
+          ))
         )}
       </div>
     </div>
