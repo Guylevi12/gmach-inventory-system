@@ -46,36 +46,36 @@ const ItemManager = () => {
   }, []);
 
   // Fetch active & deleted items
-const fetchItems = async () => {
-  // שלב 1: שליפת כל ההזמנות הפעילות
-  const ordersSnap = await getDocs(collection(db, 'orders'));
-  const openOrders = ordersSnap.docs
-    .map(doc => doc.data())
-    .filter(order => order.status === 'open');
+  const fetchItems = async () => {
+    // שלב 1: שליפת כל ההזמנות הפעילות
+    const ordersSnap = await getDocs(collection(db, 'orders'));
+    const openOrders = ordersSnap.docs
+      .map(doc => doc.data())
+      .filter(order => order.status === 'open');
 
-  // שלב 2: בניית סט מזהי פריטים בשימוש
-  const itemsInUse = new Set();
-  openOrders.forEach(order => {
-    order.items?.forEach(item => {
-      itemsInUse.add(item.id); // שים לב שזה item.id, לא item.ItemId
-    });
-  });
-
-  // שלב 3: שליפת כל הפריטים שלא נמחקו
-  const itemsSnap = await getDocs(collection(db, 'items'));
-  const itemsList = itemsSnap.docs
-    .filter(doc => doc.data().isDeleted !== true)
-    .map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        inUse: itemsInUse.has(doc.id)
-      };
+    // שלב 2: בניית סט מזהי פריטים בשימוש
+    const itemsInUse = new Set();
+    openOrders.forEach(order => {
+      order.items?.forEach(item => {
+        itemsInUse.add(item.id); // שים לב שזה item.id, לא item.ItemId
+      });
     });
 
-  setItems(itemsList);
-};
+    // שלב 3: שליפת כל הפריטים שלא נמחקו
+    const itemsSnap = await getDocs(collection(db, 'items'));
+    const itemsList = itemsSnap.docs
+      .filter(doc => doc.data().isDeleted !== true)
+      .map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          inUse: itemsInUse.has(doc.id)
+        };
+      });
+
+    setItems(itemsList);
+  };
 
   const fetchDeletedItems = async () => {
     const snap = await getDocs(collection(db, 'deletedItems'));
@@ -220,17 +220,9 @@ const fetchItems = async () => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start',
-        padding: '2rem',
-        width: '100%'
-      }}
-    >
+    <div className="page-container">
       {/* Active Items Section */}
-      <div style={{ width: '100%', direction: 'rtl', padding: '2rem' }}>
+      <div style={{ width: '100%', direction: 'rtl' }}>
         <h2>ניהול מוצרים</h2>
         <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
           <button
@@ -239,6 +231,7 @@ const fetchItems = async () => {
               setName(''); setQuantity(''); setImageUrl(''); setImageFile(null);
               setShowPopup(true); setPublicComment(''); setInternalComment('');
             }}
+            className="btn-primary"
             style={{
               backgroundColor: '#1976d2',
               color: 'white',
@@ -256,6 +249,7 @@ const fetchItems = async () => {
           </button>
           <button
             onClick={() => setShowDeletedPopup(true)}
+            className="btn-secondary"
             style={{
               backgroundColor: '#6c757d',
               color: 'white',
@@ -279,6 +273,7 @@ const fetchItems = async () => {
           placeholder="חיפוש מוצר..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
+          className="search-input"
           style={{
             padding: '10px',
             borderRadius: '6px',
@@ -290,6 +285,7 @@ const fetchItems = async () => {
         />
 
         <div
+          className="products-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
@@ -303,6 +299,7 @@ const fetchItems = async () => {
             filteredItems.map(item => (
               <div
                 key={item.id}
+                className="product-card"
                 style={{
                   width: '100%',
                   maxWidth: '240px',
@@ -342,10 +339,10 @@ const fetchItems = async () => {
                   מזהה מוצר: {item.ItemId}
                 </p>
                 {item.inUse && (
-  <p style={{ color: '#d97706', fontWeight: 'bold', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-    🕐 מוצר זה נמצא בהזמנה פעילה
-  </p>
-)}
+                  <p style={{ color: '#d97706', fontWeight: 'bold', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                    🕐 מוצר זה נמצא בהזמנה פעילה
+                  </p>
+                )}
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                   <button
                     onClick={() => {
@@ -355,6 +352,8 @@ const fetchItems = async () => {
                       setImageUrl(item.imageUrl || '');
                       setImageFile(null);
                       setShowPopup(true);
+                      setPublicComment(item.publicComment || '');
+                      setInternalComment(item.internalComment || '');
                     }}
                     style={{
                       backgroundColor: '#6c757d',
@@ -370,7 +369,6 @@ const fetchItems = async () => {
                     }}
                   >
                     <FaEdit size={14} /> עריכה
-
                   </button>
                   <button
                     onClick={() => handleDeleteItem(item.id)}
@@ -398,21 +396,9 @@ const fetchItems = async () => {
 
       {/* Deleted Items Modal */}
       {showDeletedPopup && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}
-        >
+        <div className="modal-overlay">
           <div
+            className="modal-content"
             ref={deletedModalRef}
             style={{
               position: 'relative',
@@ -447,6 +433,7 @@ const fetchItems = async () => {
               placeholder="חיפוש מוצרים שנמחקו..."
               value={deletedSearch}
               onChange={e => setDeletedSearch(e.target.value)}
+              className="search-input"
               style={{
                 padding: '10px',
                 borderRadius: '6px',

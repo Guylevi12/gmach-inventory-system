@@ -10,8 +10,9 @@ import Request from './components/Request';
 import ItemManager from './components/ItemManager';
 import Catalog from './components/Catalog';
 import ItemDetails from './components/ItemDetails';
-import CalendarPage from './components/CalendarPage'; // New wrapper component
+import CalendarPage from './components/CalendarPage'; 
 import Dashboard from './components/Dashboard';
+import ContactBubble from './components/contactBubble';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
+      <ContactBubble/>
     </>
   );
 }
