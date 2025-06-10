@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
 
-const NewLoan = () => {
+const NewLoan = ({ onOrderCreated }) => {
   const [form, setForm] = useState({
     volunteerName: '',
     clientName: '',
@@ -133,6 +133,9 @@ const handleConfirm = async () => {
     setSearchTerm('');
     setShowCatalogPopup(false);
     alert(`ההזמנה נשמרה!  Simple ID: ${nextSimpleId}`);
+    if (typeof onOrderCreated === 'function') {
+      await onOrderCreated();
+    }
   } catch (err) {
     console.error('שגיאה בשמירת הזמנה:', err);
     alert('שגיאה בשמירה, נסה שוב.');
