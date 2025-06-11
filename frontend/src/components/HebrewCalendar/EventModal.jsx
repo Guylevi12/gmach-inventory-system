@@ -1,8 +1,8 @@
 // src/components/EventModal.jsx
 import React, { useEffect } from 'react';
 import { deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/firebase/firebase-config'; // Adjust path as needed
-import { Edit, Eye, Trash2, Calendar, Phone, Package } from 'lucide-react';
+import { db } from '@/firebase/firebase-config'; // Updated Firebase path
+import { Edit, Eye, Trash2, Calendar, Phone, Package, ClipboardCheck, CheckCircle } from 'lucide-react';
 
 const EventModal = ({ 
   show, 
@@ -12,7 +12,9 @@ const EventModal = ({
   setShowReport, 
   setShowItemsModal, 
   setEditItemModal, 
-  fetchItemsAndOrders 
+  fetchItemsAndOrders,
+  onStartReturnInspection, 
+  onCloseOrderManually 
 }) => {
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -39,8 +41,30 @@ const EventModal = ({
     }
   };
 
-  const handleDeleteOrder = async (event) => {
-    const orderId = event.id.split('-')[0];
+  const groupEventsByOrder = (events) => {
+    const grouped = new Map();
+    
+    events.forEach(event => {
+      if (!grouped.has(event.orderId)) {
+        grouped.set(event.orderId, {
+          orderId: event.orderId,
+          clientName: event.clientName,
+          phone: event.phone,
+          items: event.items,
+          pickupDate: event.pickupDate,
+          returnDate: event.returnDate,
+          events: []
+        });
+      }
+      grouped.get(event.orderId).events.push(event);
+    });
+    
+    return Array.from(grouped.values());
+  };
+
+  const groupedEvents = groupEventsByOrder(selectedEvents);
+
+  const handleDeleteOrder = async (orderId) => {
     if (orderId && window.confirm('האם אתה בטוח שברצונך למחוק את ההזמנה?')) {
       try {
         await deleteOrder(orderId);
@@ -170,7 +194,7 @@ const EventModal = ({
               marginTop: '0.5rem', 
               color: '#bfdbfe'
             }}>
-              {selectedEvents.length} אירוע{selectedEvents.length !== 1 ? 'ים' : ''}
+              {groupedEvents.length} הזמנ{groupedEvents.length !== 1 ? 'ות' : 'ה'}
             </div>
           </div>
 
@@ -181,8 +205,8 @@ const EventModal = ({
             maxHeight: 'calc(90vh - 200px)'
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {selectedEvents.map((event, index) => (
-                <div key={event.id} style={{
+              {groupedEvents.map((orderGroup, index) => (
+                <div key={orderGroup.orderId} style={{
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   background: 'white',
@@ -212,16 +236,17 @@ const EventModal = ({
                             color: '#1f2937',
                             margin: 0
                           }}>
-                            {event.clientName}
+                            {orderGroup.clientName}
                           </h4>
                           <span style={{
                             padding: '0.25rem 0.75rem',
                             borderRadius: '9999px',
-                            fontSize: '0.875rem',
+                            fontSize: '0.75rem',
                             fontWeight: '500',
-                            border: '1px solid'
-                          }} className={getEventTypeColor(event.type)}>
-                            {getEventIcon(event.type)} {event.type}
+                            background: '#3b82f6',
+                            color: 'white'
+                          }}>
+                            הזמנה #{index + 1}
                           </span>
                         </div>
                         
@@ -230,24 +255,56 @@ const EventModal = ({
                           alignItems: 'center',
                           gap: '1rem',
                           fontSize: '0.875rem',
-                          color: '#4b5563'
+                          color: '#4b5563',
+                          marginBottom: '0.5rem'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             <Phone size={16} />
-                            <span>{event.phone}</span>
+                            <span>{orderGroup.phone}</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             <Calendar size={16} />
                             <span>
-                              {new Date(event.pickupDate).toLocaleDateString('he-IL')} - {new Date(event.returnDate).toLocaleDateString('he-IL')}
+                              {new Date(orderGroup.pickupDate).toLocaleDateString('he-IL')} - {new Date(orderGroup.returnDate).toLocaleDateString('he-IL')}
                             </span>
                           </div>
+                        </div>
+
+                        {/* Event Timeline */}
+                        <div style={{
+                          display: 'flex',
+                          gap: '0.5rem',
+                          flexWrap: 'wrap',
+                          marginBottom: '0.75rem'
+                        }}>
+                          {orderGroup.events.map((event, eventIndex) => (
+                            <div key={eventIndex} style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '500',
+                              background: event.type === 'השאלה' ? '#10b981' : 
+                                         event.type === 'החזרה' ? '#f59e0b' : '#3b82f6',
+                              color: 'white'
+                            }}>
+                              <span>{event.icon}</span>
+                              <span>{event.description}</span>
+                              {event.isMultiDay && (
+                                <span style={{ fontSize: '0.65rem', opacity: 0.8 }}>
+                                  (יום {event.dayNumber}/{event.totalDays})
+                                </span>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
 
                     {/* Items Preview */}
-                    {event.items && event.items.length > 0 && (
+                    {orderGroup.items && orderGroup.items.length > 0 && (
                       <div style={{ marginBottom: '1rem' }}>
                         <div style={{
                           display: 'flex',
@@ -261,7 +318,7 @@ const EventModal = ({
                             fontWeight: '500',
                             color: '#374151'
                           }}>
-                            פריטים ({event.items.reduce((sum, item) => sum + (item.quantity || 1), 0)})
+                            פריטים ({orderGroup.items.reduce((sum, item) => sum + (item.quantity || 1), 0)})
                           </span>
                         </div>
                         <div style={{
@@ -269,7 +326,7 @@ const EventModal = ({
                           flexWrap: 'wrap',
                           gap: '0.5rem'
                         }}>
-                          {event.items.slice(0, 3).map((item, idx) => (
+                          {orderGroup.items.slice(0, 3).map((item, idx) => (
                             <div key={idx} style={{
                               background: '#f9fafb',
                               padding: '0.25rem 0.75rem',
@@ -281,7 +338,7 @@ const EventModal = ({
                               {item.name} {item.quantity > 1 ? `(×${item.quantity})` : ''}
                             </div>
                           ))}
-                          {event.items.length > 3 && (
+                          {orderGroup.items.length > 3 && (
                             <div style={{
                               background: '#eff6ff',
                               padding: '0.25rem 0.75rem',
@@ -290,7 +347,7 @@ const EventModal = ({
                               color: '#2563eb',
                               border: '1px solid #dbeafe'
                             }}>
-                              +{event.items.length - 3} נוספים
+                              +{orderGroup.items.length - 3} נוספים
                             </div>
                           )}
                         </div>
@@ -311,8 +368,8 @@ const EventModal = ({
                       <button 
                         onClick={() => setEditItemModal({ 
                           open: true, 
-                          eventId: event.id, 
-                          items: event.items.map(i => ({ ...i })) 
+                          eventId: `${orderGroup.orderId}-edit`, 
+                          items: orderGroup.items.map(i => ({ ...i })) 
                         })} 
                         style={{
                           display: 'flex',
@@ -351,7 +408,7 @@ const EventModal = ({
                       </button>
                       
                       <button 
-                        onClick={() => handleDeleteOrder(event)} 
+                        onClick={() => handleDeleteOrder(orderGroup.orderId)} 
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -368,6 +425,26 @@ const EventModal = ({
                         <Trash2 size={16} />
                         מחק
                       </button>
+                      {onCloseOrderManually && (
+                      <button 
+                        onClick={() => onCloseOrderManually(orderGroup.orderId)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          background: '#f59e0b',
+                          color: 'white',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <CheckCircle size={16} />
+                        סגור ידנית
+                      </button>
+                    )}
                     </div>
                   </div>
                 </div>
@@ -390,7 +467,7 @@ const EventModal = ({
                 fontSize: '0.875rem',
                 color: '#4b5563'
               }}>
-                סה"כ {selectedEvents.reduce((sum, event) => sum + (event.items?.reduce((itemSum, item) => itemSum + (item.quantity || 1), 0) || 0), 0)} פריטים
+                סה"כ {groupedEvents.reduce((sum, orderGroup) => sum + (orderGroup.items?.reduce((itemSum, item) => itemSum + (item.quantity || 1), 0) || 0), 0)} פריטים
               </div>
               <button 
                 onClick={() => setShowReport(false)} 

@@ -31,6 +31,8 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
   return orderSnap.docs.flatMap(docSnap => {
     const order = docSnap.data();
 
+    if(order.status === 'closed') return [];
+
     const decorateItems = (items = []) => items.map(item => {
       const refItem = itemsData.find(i => i.id === item.id);
       return {
@@ -43,30 +45,58 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
     const events = [];
 
     if (order.pickupDate && order.returnDate) {
-      let current = new Date(order.pickupDate);
-      const end = new Date(order.returnDate);
-      current.setHours(0, 0, 0, 0);
-      end.setHours(0, 0, 0, 0);
+      const pickupDate = new Date(order.pickupDate);
+      const returnDate = new Date(order.returnDate);
+      
+      // Strip time to work with dates only
+      pickupDate.setHours(0, 0, 0, 0);
+      returnDate.setHours(0, 0, 0, 0);
 
-      while (current <= end) {
-        const type = current.getTime() === new Date(order.pickupDate).getTime()
-          ? 'השאלה'
-          : current.getTime() === new Date(order.returnDate).getTime()
-          ? 'החזרה'
-          : 'השאלה פעילה';
+      // Calculate the number of days between pickup and return
+      const daysDiff = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24));
+      
+      // Create events for each day in the range
+      for (let i = 0; i <= daysDiff; i++) {
+        const currentDate = new Date(pickupDate);
+        currentDate.setDate(pickupDate.getDate() + i);
+        
+        let eventType;
+        let eventIcon;
+        let eventDescription;
+        
+        if (i === 0) {
+          // First day - pickup
+          eventType = 'השאלה';
+          eventIcon = '📦';
+          eventDescription = 'איסוף מוצרים';
+        } else if (i === daysDiff) {
+          // Last day - return
+          eventType = 'החזרה';
+          eventIcon = '🔄';
+          eventDescription = 'החזרת מוצרים';
+        } else {
+          // Middle days - active loan
+          eventType = 'השאלה פעילה';
+          eventIcon = '⏰';
+          eventDescription = 'מוצרים בשימוש';
+        }
 
         events.push({
-          id: `${docSnap.id}-${current.toISOString().slice(0, 10)}`,
-          date: new Date(current),
+          id: `${docSnap.id}-${currentDate.toISOString().slice(0, 10)}`,
+          orderId: docSnap.id, // Original order ID
+          date: new Date(currentDate),
           clientName: order.clientName,
           phone: order.phone,
-          type,
+          type: eventType,
+          icon: eventIcon,
+          description: eventDescription,
           items: decorateItems(order.items),
           pickupDate: order.pickupDate,
-          returnDate: order.returnDate
+          returnDate: order.returnDate,
+          dayNumber: i + 1,
+          totalDays: daysDiff + 1,
+          isMultiDay: daysDiff > 0
         });
-
-        current.setDate(current.getDate() + 1);
       }
     }
 

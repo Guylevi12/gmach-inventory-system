@@ -145,9 +145,8 @@ const Navbar = () => {
       {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
         <>
           <Link to="/new-loan"     style={linkStyle}>הזמנה חדשה</Link>
-          <Link to="/requests"     style={linkStyle}>בקשות להזמנה</Link>
           <Link to="/Calendar"   style={linkStyle}>השאלות פתוחות</Link>   
-          <Link to="/loan-history" style={linkStyle}>היסטוריית שאלות</Link>
+          <Link to="/loan-history" style={linkStyle}>היסטוריית השאלות</Link>
           <Link to="/manage-product" style={linkStyle}>ניהול מוצרים</Link>
         </>
       )}

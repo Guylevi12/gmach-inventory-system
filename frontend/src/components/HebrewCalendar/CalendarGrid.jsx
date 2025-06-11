@@ -26,10 +26,29 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     });
   };
 
-  const handleDateClick = (day) => {
+  // Group events by order ID to show unique orders per day
+  const getUniqueOrdersForDate = (day) => {
     const dayEvents = getEventsForDate(day);
-    if (dayEvents.length > 0) {
-      setSelectedEvents(dayEvents);
+    const uniqueOrders = new Map();
+    
+    dayEvents.forEach(event => {
+      if (!uniqueOrders.has(event.orderId)) {
+        uniqueOrders.set(event.orderId, {
+          ...event,
+          allEventsForOrder: dayEvents.filter(e => e.orderId === event.orderId)
+        });
+      }
+    });
+    
+    return Array.from(uniqueOrders.values());
+  };
+
+  const handleDateClick = (day) => {
+    const uniqueOrders = getUniqueOrdersForDate(day);
+    if (uniqueOrders.length > 0) {
+      // Pass all events for the selected day, but grouped by order
+      const allEventsForDay = getEventsForDate(day);
+      setSelectedEvents(allEventsForDay);
       setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
       setShowReport(true);
     }
@@ -44,38 +63,57 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const currentFullDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const safeEvents = Array.isArray(events) ? events : [];
-
-    // Find events for this specific date
-    const dayEvents = safeEvents.filter(event => {
-      if (!event.date) return false;
-      const eventDate = new Date(event.date);
-      return eventDate.toDateString() === currentFullDate.toDateString();
-    });
-
-    // Separate pickup and return events
+    const dayEvents = getEventsForDate(day);
+    const uniqueOrders = getUniqueOrdersForDate(day);
+    
+    // Group events by type for display
     const pickupEvents = dayEvents.filter(e => e.type === 'השאלה');
     const returnEvents = dayEvents.filter(e => e.type === 'החזרה');
     const activeEvents = dayEvents.filter(e => e.type === 'השאלה פעילה');
 
-    const hasPickup = pickupEvents.length > 0;
-    const hasReturn = returnEvents.length > 0;
-    const hasActive = activeEvents.length > 0;
     const hasAnyEvent = dayEvents.length > 0;
+    const uniqueOrderCount = uniqueOrders.length;
+
+    let dayClasses = 'day-cell';
+    if (hasAnyEvent) dayClasses += ' has-events';
+    if (pickupEvents.length > 0) dayClasses += ' pickup-day';
+    if (returnEvents.length > 0) dayClasses += ' return-day';
+    if (activeEvents.length > 0) dayClasses += ' active-day';
 
     days.push(
       <div
         key={day}
-        className={`day-cell ${hasPickup ? 'pickup-day' : ''} ${hasReturn ? 'return-day' : ''} ${hasActive ? 'active-day' : ''} ${hasAnyEvent ? 'has-events' : ''}`}
+        className={dayClasses}
         onClick={() => handleDateClick(day)}
         style={{ cursor: hasAnyEvent ? 'pointer' : 'default' }}
       >
-        <span>{day}</span>
-        {hasPickup && <div className="event-tag pickup-tag">📦</div>}
-        {hasReturn && <div className="event-tag return-tag">🔄</div>}
-        {hasActive && <div className="event-tag active-tag">⏰</div>}
-        {hasAnyEvent && <div className="event-count">{dayEvents.length}</div>}
+        <span className="day-number">{day}</span>
+        
+        {/* Event Icons */}
+        <div className="event-icons">
+          {pickupEvents.length > 0 && (
+            <div className="event-tag pickup-tag" title="איסוף מוצרים">
+              📦 {pickupEvents.length > 1 && pickupEvents.length}
+            </div>
+          )}
+          {activeEvents.length > 0 && (
+            <div className="event-tag active-tag" title="מוצרים בשימוש">
+              ⏰ {activeEvents.length > 1 && activeEvents.length}
+            </div>
+          )}
+          {returnEvents.length > 0 && (
+            <div className="event-tag return-tag" title="החזרת מוצרים">
+              🔄 {returnEvents.length > 1 && returnEvents.length}
+            </div>
+          )}
+        </div>
+
+        {/* Order Count */}
+        {uniqueOrderCount > 0 && (
+          <div className="event-count" title={`${uniqueOrderCount} הזמנות`}>
+            {uniqueOrderCount}
+          </div>
+        )}
       </div>
     );
   }
@@ -106,9 +144,9 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
 
       <div className="calendar-footer">
         <div className="calendar-legend">
-          <span className="legend-item">📦 השאלה</span>
-          <span className="legend-item">🔄 החזרה</span>
-          <span className="legend-item">⏰ השאלה פעילה</span>
+          <span className="legend-item">📦 איסוף מוצרים</span>
+          <span className="legend-item">⏰ מוצרים בשימוש</span>
+          <span className="legend-item">🔄 החזרת מוצרים</span>
         </div>
         <div className="calendar-stats">
           לחץ על יום עם אירועים כדי לראות פרטים • סה"כ אירועים: {Array.isArray(events) ? events.length : 0}
