@@ -194,7 +194,9 @@ const HebrewCalendar = ({
         allItems={allItems}
         setShowReport={setShowReport}
         fetchItemsAndOrders={fetchItemsAndOrders}
+        allEvents={events} // 🔥 This is what we need
       />
+
 
       {/* Return Inspection Modal */}
       <ReturnInspectionModal

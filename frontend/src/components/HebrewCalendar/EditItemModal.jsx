@@ -4,7 +4,7 @@ import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config'; 
 import { Edit, Search, Plus, Minus, Trash2, Save } from 'lucide-react';
 
-const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItemsAndOrders }) => {
+const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItemsAndOrders, allEvents }) => {
   const [formData, setFormData] = useState({
     clientName: '',
     phone: '',
@@ -42,23 +42,64 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
 
   if (!show) return null;
 
-  const updateItemQuantity = (itemName, newQuantity) => {
-    if (newQuantity <= 0) {
-      setFormData(prev => ({
-        ...prev,
-        items: prev.items.filter(item => item.name !== itemName)
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        items: prev.items.map(item =>
-          item.name === itemName
-            ? { ...item, quantity: newQuantity }
-            : item
-        )
-      }));
+const updateItemQuantity = (itemName, newQuantity) => {
+  const stockItem = allItems.find(i => i.name === itemName);
+  const totalStock = stockItem?.quantity || 0;
+  const currentOrderId = data?.eventId?.split('-')[0];
+  const currentOrderPickup = new Date(formData.pickupDate);
+  const currentOrderReturn = new Date(formData.returnDate);
+
+  let reservedInOverlap = 0;
+
+  allEvents.forEach(event => {
+    if (event.orderId !== currentOrderId && event.items) {
+      const eventPickup = new Date(event.pickupDate);
+      const eventReturn = new Date(event.returnDate);
+
+      const overlaps = !(eventReturn < currentOrderPickup || eventPickup > currentOrderReturn);
+      if (overlaps) {
+        event.items.forEach(it => {
+          if (it.name === itemName) {
+            reservedInOverlap += it.quantity || 0;
+          }
+        });
+      }
     }
-  };
+  });
+
+  const currentItem = formData.items.find(i => i.name === itemName);
+  const reservedHere = currentItem?.quantity || 0;
+
+  const available = totalStock - reservedInOverlap + reservedHere;
+
+  if (newQuantity > available) {
+    alert(`אין מספיק מלאי ל-${itemName}. זמין: ${available}`);
+    return;
+  }
+
+  if (newQuantity <= 0) {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.filter(item => item.name !== itemName)
+    }));
+  } else {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map(item =>
+        item.name === itemName
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    }));
+  }
+};
+
+
+
+
+
+
+
 
   const addItem = (item) => {
     const existingItem = formData.items.find(i => i.name === item.name);
@@ -117,6 +158,33 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
       setData({ open: false, eventId: null, items: [] });
     }
   };
+const getAvailableQuantity = (itemName) => {
+  const stockItem = allItems.find(i => i.name === itemName);
+  const totalStock = stockItem?.quantity || 0;
+  const currentOrderId = data?.eventId?.split('-')[0];
+
+  let reservedInOtherOrders = 0;
+
+  allEvents.forEach(event => {
+    if (event.orderId !== currentOrderId && event.items) {
+      event.items.forEach(it => {
+        if (it.name === itemName) {
+          reservedInOtherOrders += it.quantity || 0;
+        }
+      });
+    }
+  });
+
+  // How much is already reserved in the *current* order
+  const currentItem = formData.items.find(i => i.name === itemName);
+  const reservedHere = currentItem?.quantity || 0;
+
+  // Total available from stock
+  const remaining = totalStock - reservedInOtherOrders;
+  return remaining >= 0 ? remaining : 0;
+};
+
+
 
   return (
     <>

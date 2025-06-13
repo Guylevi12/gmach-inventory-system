@@ -43,16 +43,20 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     return Array.from(uniqueOrders.values());
   };
 
-  const handleDateClick = (day) => {
-    const uniqueOrders = getUniqueOrdersForDate(day);
-    if (uniqueOrders.length > 0) {
-      // Pass all events for the selected day, but grouped by order
-      const allEventsForDay = getEventsForDate(day);
-      setSelectedEvents(allEventsForDay);
-      setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
-      setShowReport(true);
-    }
-  };
+const handleDateClick = (day) => {
+  const allEventsForDay = getEventsForDate(day);
+
+  // אל תפתח דוח אם כל האירועים הם רק "השאלה פעילה"
+  const onlyActive = allEventsForDay.length > 0 && allEventsForDay.every(e => e.type === 'השאלה פעילה');
+  if (onlyActive) return;
+
+  if (allEventsForDay.length > 0) {
+    setSelectedEvents(allEventsForDay);
+    setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
+    setShowReport(true);
+  }
+};
+
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = getFirstDayOfMonth(currentDate);
@@ -78,14 +82,16 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     if (hasAnyEvent) dayClasses += ' has-events';
     if (pickupEvents.length > 0) dayClasses += ' pickup-day';
     if (returnEvents.length > 0) dayClasses += ' return-day';
-    if (activeEvents.length > 0) dayClasses += ' active-day';
+    // if (activeEvents.length > 0) dayClasses += ' active-day';
 
     days.push(
       <div
         key={day}
         className={dayClasses}
         onClick={() => handleDateClick(day)}
-        style={{ cursor: hasAnyEvent ? 'pointer' : 'default' }}
+        style={{
+          cursor: (dayEvents.some(e => e.type !== 'השאלה פעילה')) ? 'pointer' : 'default'
+        }}
       >
         <span className="day-number">{day}</span>
         
@@ -96,11 +102,11 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
               📦 {pickupEvents.length > 1 && pickupEvents.length}
             </div>
           )}
-          {activeEvents.length > 0 && (
+          {/* {activeEvents.length > 0 && (
             <div className="event-tag active-tag" title="מוצרים בשימוש">
               ⏰ {activeEvents.length > 1 && activeEvents.length}
             </div>
-          )}
+          )} */}
           {returnEvents.length > 0 && (
             <div className="event-tag return-tag" title="החזרת מוצרים">
               🔄 {returnEvents.length > 1 && returnEvents.length}
@@ -145,7 +151,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
       <div className="calendar-footer">
         <div className="calendar-legend">
           <span className="legend-item">📦 איסוף מוצרים</span>
-          <span className="legend-item">⏰ מוצרים בשימוש</span>
+          {/* <span className="legend-item">⏰ מוצרים בשימוש</span> */}
           <span className="legend-item">🔄 החזרת מוצרים</span>
         </div>
         <div className="calendar-stats">

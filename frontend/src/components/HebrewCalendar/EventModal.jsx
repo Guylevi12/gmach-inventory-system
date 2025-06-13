@@ -425,26 +425,26 @@ const EventModal = ({
                         <Trash2 size={16} />
                         מחק
                       </button>
-                      {onCloseOrderManually && (
-                      <button 
-                        onClick={() => onCloseOrderManually(orderGroup.orderId)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          background: '#f59e0b',
-                          color: 'white',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem'
-                        }}
-                      >
-                        <CheckCircle size={16} />
-                        סגור ידנית
-                      </button>
-                    )}
+                      {onCloseOrderManually && orderGroup.events.some(e => e.type === 'החזרה') && (
+                        <button 
+                          onClick={() => onCloseOrderManually(orderGroup.orderId)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: '#f59e0b',
+                            color: 'white',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          <CheckCircle size={16} />
+                          סגור ידנית
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

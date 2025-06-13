@@ -81,7 +81,7 @@
 
 .day-cell.has-events {
   cursor: pointer;
-  border: 2px solid #3b82f6;
+  border: 2px solid #647ea8;
 }
 
 .day-cell.has-events:hover {

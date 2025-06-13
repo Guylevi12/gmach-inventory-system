@@ -5,7 +5,7 @@ import Home from './components/Home';
 import Login from './components/Login';
 import Register from './components/Register';
 import ManageUsers from './components/ManageUsers';
-import NewLoan from './components/NewLoan';
+import NewLoan from './components/NewLoan/NewLoan';
 import ItemManager from './components/ItemManager';
 import Catalog from './components/Catalog';
 import ItemDetails from './components/ItemDetails';

@@ -31,7 +31,7 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
   return orderSnap.docs.flatMap(docSnap => {
     const order = docSnap.data();
 
-    if(order.status === 'closed') return [];
+    if (order.status === 'closed') return [];
 
     const decorateItems = (items = []) => items.map(item => {
       const refItem = itemsData.find(i => i.id === item.id);
@@ -47,43 +47,35 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
     if (order.pickupDate && order.returnDate) {
       const pickupDate = new Date(order.pickupDate);
       const returnDate = new Date(order.returnDate);
-      
-      // Strip time to work with dates only
+
       pickupDate.setHours(0, 0, 0, 0);
       returnDate.setHours(0, 0, 0, 0);
 
-      // Calculate the number of days between pickup and return
       const daysDiff = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24));
-      
-      // Create events for each day in the range
+
       for (let i = 0; i <= daysDiff; i++) {
+        if (i !== 0 && i !== daysDiff) continue; // דילוג על ימים באמצע
+
         const currentDate = new Date(pickupDate);
         currentDate.setDate(pickupDate.getDate() + i);
-        
+
         let eventType;
         let eventIcon;
         let eventDescription;
-        
+
         if (i === 0) {
-          // First day - pickup
           eventType = 'השאלה';
           eventIcon = '📦';
           eventDescription = 'איסוף מוצרים';
         } else if (i === daysDiff) {
-          // Last day - return
           eventType = 'החזרה';
           eventIcon = '🔄';
           eventDescription = 'החזרת מוצרים';
-        } else {
-          // Middle days - active loan
-          eventType = 'השאלה פעילה';
-          eventIcon = '⏰';
-          eventDescription = 'מוצרים בשימוש';
         }
 
         events.push({
           id: `${docSnap.id}-${currentDate.toISOString().slice(0, 10)}`,
-          orderId: docSnap.id, // Original order ID
+          orderId: docSnap.id,
           date: new Date(currentDate),
           clientName: order.clientName,
           phone: order.phone,
@@ -103,6 +95,7 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
     return events;
   });
 };
+
 
 export const fetchItemsAndOrders = async (db, setAllItems, setItemsMap, setEvents) => {
   try {

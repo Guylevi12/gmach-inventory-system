@@ -1,0 +1,144 @@
+.new-loan-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8f8f8;
+}
+
+.loan-form-box {
+  direction: rtl;
+  width: 100%;
+  max-width: 600px;
+  padding: 2rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-blue { background-color: #1976d2; }
+.btn-green { background-color: #28a745; }
+.btn-red { background-color: #d32f2f; }
+.btn-gray { background-color: #6c757d; }
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+  direction: rtl;
+  width: 700px;
+  position: relative;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.item-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.item-card.selected {
+  border: 2px solid #1976d2;
+}
+
+.item-image {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  gap: 1rem;
+}
+
+.modal-actions .btn {
+  flex: 1;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease-in-out;
+}
+.item-card h4 {
+  min-height: 3rem; /* consistent title height */
+  margin: 0.5rem 0 0.3rem;
+  font-size: 1rem;
+}
+
+.item-card p {
+  margin: 0.3rem 0;
+}
+
+.item-card input[type="number"] {
+  width: 60px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  text-align: center;
+  font-size: 1rem;
+}
+.item-card:hover {
+  box-shadow: 0 0 8px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transform: scale(1.01);
+  transition: all 0.2s ease-in-out;
+}
+
+.item-card.selected {
+  border: 2px solid #1976d2;
+  background-color: #e3f2fd;
+}
+
+.item-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%; /* Make height fill the grid cell */
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.item-card {
+  transition: all 0.2s ease-in-out;
+}
+/* Always show number input steppers */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  opacity: 1;
+  display: block !important;
+}
