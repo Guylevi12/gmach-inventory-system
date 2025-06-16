@@ -4,30 +4,14 @@ import { useUser } from '../UserContext';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '@/firebase/firebase-config';
 import { useEffect, useState } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 const Navbar = () => {
   const { user, setUser } = useUser();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [onlineOrdering, setOnlineOrdering] = useState(null);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-      navigate('/login');
-    } catch (error) {
-      alert('שגיאה בהתנתקות: ' + error.message);
-    }
-  };
-
-  const getRoleLabel = (role) => {
-    switch (role) {
-      case 'MainAdmin': return 'מנהל ראשי';
-      case 'GmachAdmin': return 'מנהל גמח';
-      default: return 'משתמש';
-    }
-  };
+  const [isMobile, setIsMobile] = useState(null);
 
   useEffect(() => {
     const fetchSetting = async () => {
@@ -44,44 +28,67 @@ const Navbar = () => {
     fetchSetting();
   }, []);
 
-  const toggleOrdering = async () => {
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const handleLogout = async () => {
     try {
-      const newValue = !onlineOrdering;
-      await updateDoc(doc(db, 'settings', 'onlineOrdering'), {
-        enabled: newValue
-      });
-      setOnlineOrdering(newValue);
-    } catch (err) {
-      alert("שגיאה בעדכון ההגדרה: " + err.message);
+      await signOut(auth);
+      setUser(null);
+      navigate('/login');
+    } catch (error) {
+      alert('שגיאה בהתנתקות: ' + error.message);
     }
   };
+
+  const handleCloseMenu = () => {
+    setMenuOpen(false);
+  };
+
+  const getRoleLabel = (role) => {
+  switch (role) {
+    case 'MainAdmin': return 'מנהל ראשי';
+    case 'GmachAdmin': return 'מנהל גמח';
+    default: return 'משתמש';
+  }
+};
+
+  if (isMobile === null) return null; // חכה לחישוב ראשוני בטוח
 
   const navbarStyle = {
     backgroundColor: '#f2f2f2',
     padding: '10px 0',
-    textAlign: 'center',
     direction: 'rtl',
     borderBottom: '1px solid #ccc',
     position: 'relative',
+    zIndex: 1000
   };
 
   const linkStyle = {
-    margin: '0 20px',
+    padding: '12px 16px',
     textDecoration: 'none',
-    color: 'blue',
-    fontWeight: 'normal',
+    color: '#0056b3',
+    fontWeight: '500',
     fontSize: '16px',
+    display: 'block'
   };
 
   const greetingStyle = {
-    position: 'absolute',
-    right: '20px',
-    top: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    fontWeight: 'bold',
-    color: '#333',
+      position: 'absolute',
+  top: '10px',
+  left: isMobile ? '20px' : 'auto',
+  right: isMobile ? 'auto' : '20px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  fontWeight: 'bold',
+  color: '#333',
   };
 
   const logoutButtonStyle = {
@@ -94,90 +101,130 @@ const Navbar = () => {
     fontSize: '14px',
   };
 
-  const toggleContainerStyle = {
-    display: 'inline-flex',
-    alignItems: 'center',
+  const overlayStyle = {
+    position: 'fixed',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    zIndex: 999
+  };
+
+  const sidebarStyle = {
+    position: 'fixed',
+    top: 0,
+    right: menuOpen ? 0 : '-70%',
+    height: '100%',
+    width: '70%',
+    backgroundColor: '#fff',
+    boxShadow: '0 0 12px rgba(0,0,0,0.25)',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
     gap: '10px',
-    marginRight: '20px',
-    verticalAlign: 'middle',
-    userSelect: 'none',
-    direction: 'ltr',
-    position: 'absolute',
-    left: '20px',
-    top: '10px',
-    cursor: 'pointer'
+    transition: 'right 0.3s ease',
+    zIndex: 1000
   };
 
-  const toggleSwitchStyle = {
-    width: '42px',
-    height: '24px',
-    borderRadius: '50px',
-    backgroundColor: onlineOrdering ? '#4caf50' : '#e74c3c',
-    position: 'relative',
-    transition: '0.3s',
-  };
-
-  const toggleCircleStyle = {
-    position: 'absolute',
-    top: '3px',
-    left: onlineOrdering ? '22px' : '3px',
-    width: '18px',
-    height: '18px',
-    borderRadius: '50%',
-    backgroundColor: 'white',
-    transition: '0.3s',
+  const desktopMenuStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '10px',
+    padding: '10px 0'
   };
 
   return (
     <div style={navbarStyle}>
-      <Link to="/" style={linkStyle}>דף הבית</Link>
-      <Link to="/catalog" style={linkStyle}>קטלוג מוצרים</Link>
+      {/* ☰ כפתור המבורגר – רק במובייל */}
+      {isMobile && (
+        <button
+          onClick={() => setMenuOpen(true)}
+          style={{
+            fontSize: '24px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0 1rem'
+          }}
+        >
+          ☰
+        </button>
+      )}
 
-      {/* משתמש רגיל (רק אם ההגדרה פעילה) */}
-      {user?.role === 'User' && onlineOrdering && (
+      {/* תפריט בדסקטופ */}
+      {!isMobile && (
+        <div style={desktopMenuStyle}>
+          <Link to="/" style={linkStyle}>דף הבית</Link>
+          <Link to="/catalog" style={linkStyle}>קטלוג מוצרים</Link>
+          {user?.role === 'User' && onlineOrdering && (
+            <>
+              <Link to="/my-orders" style={linkStyle}>ההזמנות שלי</Link>
+              <Link to="/request" style={linkStyle}>בקשת השאלה</Link>
+            </>
+          )}
+          {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
+            <>
+              <Link to="/new-loan" style={linkStyle}>הזמנה חדשה</Link>
+              <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
+              <Link to="/Calendar" style={linkStyle}>השאלות פתוחות</Link>
+              <Link to="/history" style={linkStyle}>היסטוריית השאלות</Link>
+              <Link to="/manage-product" style={linkStyle}>ניהול מוצרים</Link>
+            </>
+          )}
+          {user?.role === 'MainAdmin' && (
+            <Link to="/manage-users" style={linkStyle}>ניהול משתמשים</Link>
+          )}
+          {!user && (
+            <>
+              <Link to="/login" style={linkStyle}>התחברות</Link>
+              <Link to="/register" style={linkStyle}>הרשמה</Link>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* תפריט מובייל – Slide-in */}
+      {menuOpen && isMobile && (
         <>
-          <Link to="/my-orders" style={linkStyle}>ההזמנות שלי</Link>
-          <Link to="/request" style={linkStyle}>בקשת השאלה</Link>
+          <div style={overlayStyle} onClick={handleCloseMenu}></div>
+          <div style={sidebarStyle}>
+            <Link to="/" style={linkStyle} onClick={handleCloseMenu}>דף הבית</Link>
+            <Link to="/catalog" style={linkStyle} onClick={handleCloseMenu}>קטלוג מוצרים</Link>
+
+            {user?.role === 'User' && onlineOrdering && (
+              <>
+                <Link to="/my-orders" style={linkStyle} onClick={handleCloseMenu}>ההזמנות שלי</Link>
+                <Link to="/request" style={linkStyle} onClick={handleCloseMenu}>בקשת השאלה</Link>
+              </>
+            )}
+            {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
+              <>
+                <Link to="/new-loan" style={linkStyle} onClick={handleCloseMenu}>הזמנה חדשה</Link>
+                <Link to="/requests" style={linkStyle} onClick={handleCloseMenu}>בקשות להזמנה</Link>
+                <Link to="/Calendar" style={linkStyle} onClick={handleCloseMenu}>השאלות פתוחות</Link>
+                <Link to="/history" style={linkStyle} onClick={handleCloseMenu}>היסטוריית השאלות</Link>
+                <Link to="/manage-product" style={linkStyle} onClick={handleCloseMenu}>ניהול מוצרים</Link>
+              </>
+            )}
+            {user?.role === 'MainAdmin' && (
+              <Link to="/manage-users" style={linkStyle} onClick={handleCloseMenu}>ניהול משתמשים</Link>
+            )}
+            {!user && (
+              <>
+                <Link to="/login" style={linkStyle} onClick={handleCloseMenu}>התחברות</Link>
+                <Link to="/register" style={linkStyle} onClick={handleCloseMenu}>הרשמה</Link>
+              </>
+            )}
+          </div>
         </>
       )}
 
-      {/* מנהל גמח ומעלה */}
-      {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
-        <>
-          <Link to="/new-loan" style={linkStyle}>הזמנה חדשה</Link>
-          <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
-          <Link to="/Calendar" style={linkStyle}>השאלות פתוחות</Link>
-          <Link to="/history" style={linkStyle}>היסטוריית השאלות</Link>
-          <Link to="/manage-product" style={linkStyle}>ניהול מוצרים</Link>
-        </>
-      )}
-
-      {/* MainAdmin בלבד */}
-      {user?.role === 'MainAdmin' && (
-        <Link to="/manage-users" style={linkStyle}>ניהול משתמשים</Link>
-      )}
-
-      {!user && (
-        <>
-          <Link to="/login" style={linkStyle}>התחברות</Link>
-          <Link to="/register" style={linkStyle}>הרשמה</Link>
-        </>
-      )}
-
+      {/* ברכה והתנתקות */}
       {user && (
         <div style={greetingStyle}>
           שלום {user.username} ({getRoleLabel(user.role)})
           <button style={logoutButtonStyle} onClick={handleLogout}>התנתק</button>
-        </div>
-      )}
-
-      {/* מתג - רק למנהל ראשי */}
-      {user?.role === 'MainAdmin' && onlineOrdering !== null && (
-        <div style={toggleContainerStyle} onClick={toggleOrdering}>
-          <span>הזמנות דרך האתר:</span>
-          <div style={toggleSwitchStyle}>
-            <div style={toggleCircleStyle}></div>
-          </div>
         </div>
       )}
     </div>

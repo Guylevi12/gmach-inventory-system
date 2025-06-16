@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '@/firebase/firebase-config';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { useUser } from '../UserContext';
 
 const ManageUsers = () => {
   const { user } = useUser();
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [onlineOrdering, setOnlineOrdering] = useState(null); // NEW
 
+  // שליפת משתמשים
   useEffect(() => {
     const fetchUsers = async () => {
       const usersCollection = collection(db, 'users');
@@ -22,12 +24,42 @@ const ManageUsers = () => {
     fetchUsers();
   }, []);
 
+  // שליפת ההגדרה להזמנות דרך האתר
+  useEffect(() => {
+    const fetchSetting = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'onlineOrdering');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setOnlineOrdering(docSnap.data().enabled);
+        }
+      } catch (err) {
+        console.error("שגיאה בטעינת ההגדרה:", err);
+      }
+    };
+    fetchSetting();
+  }, []);
+
+  // שינוי הרשאות משתמש
   const updateRole = async (userId, newRole) => {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, { role: newRole });
     setUsers(users.map(u =>
       u.id === userId ? { ...u, role: newRole } : u
     ));
+  };
+
+  // שינוי מצב הזמנות
+  const toggleOrdering = async () => {
+    try {
+      const newValue = !onlineOrdering;
+      await updateDoc(doc(db, 'settings', 'onlineOrdering'), {
+        enabled: newValue
+      });
+      setOnlineOrdering(newValue);
+    } catch (err) {
+      alert("שגיאה בעדכון ההגדרה: " + err.message);
+    }
   };
 
   const styles = {
@@ -71,6 +103,36 @@ const ManageUsers = () => {
       border: '1px solid #ccc',
       fontSize: '1rem',
       marginBottom: '1rem'
+    },
+    toggleBox: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      marginBottom: '1.5rem',
+      backgroundColor: '#f9f9f9',
+      padding: '10px 16px',
+      borderRadius: '8px',
+      border: '1px solid #ddd',
+      maxWidth: 'fit-content'
+    },
+    toggleSwitch: {
+      width: '42px',
+      height: '24px',
+      borderRadius: '50px',
+      backgroundColor: onlineOrdering ? '#4caf50' : '#e74c3c',
+      position: 'relative',
+      cursor: 'pointer',
+      transition: '0.3s'
+    },
+    toggleCircle: {
+      position: 'absolute',
+      top: '3px',
+      left: onlineOrdering ? '22px' : '3px',
+      width: '18px',
+      height: '18px',
+      borderRadius: '50%',
+      backgroundColor: 'white',
+      transition: '0.3s'
     }
   };
 
@@ -78,7 +140,6 @@ const ManageUsers = () => {
     return <p style={{ padding: '2rem', textAlign: 'center' }}>אין לך גישה לעמוד זה</p>;
   }
 
-  // מסנן את המשתמשים לפי מה שמכניסים בתיבת חיפוש
   const filteredUsers = users.filter(u =>
     u.username && u.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -87,11 +148,21 @@ const ManageUsers = () => {
     <div style={styles.container}>
       <h2>ניהול משתמשים</h2>
 
+      {/* מתג הזמנות דרך האתר */}
+      {onlineOrdering !== null && (
+        <div style={styles.toggleBox}>
+          <span style={{ fontWeight: 'bold' }}>הזמנות דרך האתר:</span>
+          <div style={styles.toggleSwitch} onClick={toggleOrdering}>
+            <div style={styles.toggleCircle}></div>
+          </div>
+        </div>
+      )}
+
       <input
         type="text"
         placeholder="חיפוש משתמש..."
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+         onChange={(e) => setSearchTerm(e.target.value)}
         style={styles.searchBox}
         dir="rtl"
       />
@@ -121,7 +192,6 @@ const ManageUsers = () => {
                       u.role === 'MainAdmin' ? 'מנהל ראשי' :
                         u.role}
                 </td>
-
                 <td style={styles.td}>
                   {u.role !== 'MainAdmin' && (
                     u.role === 'User' ? (
