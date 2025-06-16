@@ -117,6 +117,19 @@ export async function restoreDeletedItem(deletedDocId, createdBy = '') {
     isActive: true,
   });
 
+
   // 4. Remove from deletedItems
   await deleteDoc(delRef);
 }
+
+// מצא מוצר לפי ItemId (שזה המספר שמקודד בברקוד)
+export async function getItemByItemId(itemId) {
+  const q = query(collection(db, 'items'), where('ItemId', '==', Number(itemId)));
+  const snap = await getDocs(q);
+  if (!snap.empty) {
+    const doc = snap.docs[0];
+    return { id: doc.id, ...doc.data() };
+  }
+  throw new Error('לא נמצא מוצר עם ברקוד זה');
+}
+

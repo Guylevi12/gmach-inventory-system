@@ -1,38 +1,69 @@
-import React, { useEffect } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import React, { useEffect, useRef } from 'react';
+import { BrowserMultiFormatReader } from '@zxing/library';
 
 const BarcodeScanner = ({ onScanSuccess, onClose }) => {
-  useEffect(() => {
-    const config = { fps: 10, qrbox: 250 };
-    const html5QrCode = new Html5Qrcode("reader");
+  const videoRef = useRef(null);
+  const codeReaderRef = useRef(null);
 
-    Html5Qrcode.getCameras().then(devices => {
-      if (devices && devices.length) {
-        const cameraId = devices[0].id;
-        html5QrCode.start(
-          cameraId,
-          config,
-          (decodedText) => {
-            html5QrCode.stop().then(() => {
-              onScanSuccess(decodedText);
-            });
-          },
-          (errorMessage) => {
-            // Optional: console.log('Scanning error', errorMessage);
-          }
-        );
+  useEffect(() => {
+    const codeReader = new BrowserMultiFormatReader();
+    codeReaderRef.current = codeReader;
+
+    codeReader.decodeFromVideoDevice(null, videoRef.current, (result) => {
+      if (result) {
+        codeReader.reset();
+        onScanSuccess(result.getText()); // ← יפעיל את ההוספה וגם יסגור את הסורק
       }
     });
 
     return () => {
-      html5QrCode.stop().catch(() => {});
+      try {
+        codeReader.reset();
+      } catch (_) {}
     };
   }, [onScanSuccess]);
 
   return (
-    <div style={{ textAlign: 'center' }}>
-      <div id="reader" style={{ width: '100%' }} />
-      <button onClick={onClose} style={{ marginTop: '1rem' }}>סגור סורק</button>
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: '#000000e6',
+      zIndex: 9999,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <video
+        ref={videoRef}
+        style={{
+          width: '90%',
+          maxWidth: '500px',
+          borderRadius: '12px',
+          border: '3px solid white'
+        }}
+        muted
+        autoPlay
+        playsInline
+      />
+      <button
+        onClick={() => {
+          codeReaderRef.current?.reset();
+          onClose();
+        }}
+        style={{
+          marginTop: '1rem',
+          padding: '10px 20px',
+          backgroundColor: '#dc3545',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '6px',
+          fontSize: '16px',
+          cursor: 'pointer'
+        }}
+      >
+        סגור סורק
+      </button>
     </div>
   );
 };

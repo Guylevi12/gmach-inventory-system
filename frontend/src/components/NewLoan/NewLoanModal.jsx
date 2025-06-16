@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import BarcodeScanner from "../BarcodeScanner";
+import { getItemByItemId } from '@/services/firebase/itemsService';
+import ScanResultModal from './ScanResultModal';
 
 const NewLoanModal = ({
   showCatalogPopup,
@@ -9,9 +12,38 @@ const NewLoanModal = ({
   toggleSelectItem,
   changeQty,
   form,
-  loadingItems
+  loadingItems,
+  setAvailableItems
 }) => {
+  const [scanning, setScanning] = useState(false);
+  const [scannedItem, setScannedItem] = useState(null);
+
   if (!showCatalogPopup) return null;
+
+const handleScanSuccess = async (decodedText) => {
+  try {
+    const item = await getItemByItemId(decodedText);
+
+    const alreadySelected = availableItems.some(it => it.ItemId === item.ItemId && it.selected);
+    if (alreadySelected) {
+      alert("המוצר כבר קיים ברשימה");
+      setScanning(false);
+      return;
+    }
+
+    if (item.quantity > 0) {
+      setScannedItem(item);
+      setScanning(false); // סגור סורק אוטומטית
+    } else {
+      alert("המוצר לא זמין במלאי");
+      setScanning(false);
+    }
+  } catch (err) {
+    alert(err.message);
+    setScanning(false);
+  }
+};
+
 
   return (
     <div className="modal-overlay">
@@ -23,7 +55,7 @@ const NewLoanModal = ({
           <button
             style={{ width: '180px' }}
             className="btn btn-gray"
-            onClick={() => alert('סריקת ברקוד תתווסף בהמשך')}
+            onClick={() => setScanning(true)}
           >
             סריקת ברקוד
           </button>
@@ -58,6 +90,7 @@ const NewLoanModal = ({
                   />
                   <h4>{item.name}</h4>
                   <p>זמין: {item.quantity}</p>
+                  <p>מזהה מוצר: {item.ItemId}</p>
 
                   <div style={{ margin: '0.5rem 0' }}>
                     <label style={{ marginRight: '0.5rem' }}>כמות:</label>
@@ -76,8 +109,6 @@ const NewLoanModal = ({
                         backgroundColor: item.selectedQty > 0 ? '#e3f2fd' : '#fff'
                       }}
                     />
-
-
                   </div>
 
                   <button
@@ -96,9 +127,37 @@ const NewLoanModal = ({
           <button className="btn btn-blue" onClick={() => setShowCatalogPopup(false)}>✔️ אישור</button>
           <button className="btn btn-gray" onClick={() => setShowCatalogPopup(false)}>❌ ביטול</button>
         </div>
-
-
       </div>
+
+      {scanning && (
+        <BarcodeScanner
+          onScanSuccess={handleScanSuccess}
+          onClose={() => setScanning(false)}
+        />
+      )}
+
+      {scannedItem && (
+        <ScanResultModal
+          item={scannedItem}
+          onCancel={() => {
+            setScannedItem(null);
+            setScanning(false);
+          }}
+onConfirm={(qty) => {
+  const updated = { ...scannedItem, selected: true, selectedQty: qty };
+  setAvailableItems(prev =>
+    prev.map(item =>
+      item.ItemId === updated.ItemId
+        ? { ...item, selected: true, selectedQty: qty }
+        : item
+    )
+  );
+  setScannedItem(null);
+  setScanning(false);
+}}
+
+        />
+      )}
     </div>
   );
 };

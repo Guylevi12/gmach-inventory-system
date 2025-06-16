@@ -186,6 +186,7 @@ const NewLoan = ({ onOrderCreated }) => {
         setShowCatalogPopup={setShowCatalogPopup}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        setAvailableItems={setAvailableItems}
         availableItems={availableItems}
         toggleSelectItem={toggleSelectItem}
         changeQty={changeQty}
