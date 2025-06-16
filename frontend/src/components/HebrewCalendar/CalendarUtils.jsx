@@ -96,7 +96,6 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
   });
 };
 
-
 export const fetchItemsAndOrders = async (db, setAllItems, setItemsMap, setEvents) => {
   try {
     const itemSnap = await getDocs(collection(db, 'items'));
@@ -107,8 +106,12 @@ export const fetchItemsAndOrders = async (db, setAllItems, setItemsMap, setEvent
         itemId: data.ItemId,
         name: data.name,
         imageUrl: data.imageUrl,
+        quantity: data.quantity || 0, // 🔧 ADDED THIS LINE!
+        isDeleted: data.isDeleted || false
       };
-    });
+    }).filter(item => !item.isDeleted); // Filter out deleted items
+
+    console.log('📊 Items loaded with quantities:', itemsData.map(i => ({ name: i.name, quantity: i.quantity })));
 
     setAllItems(itemsData);
 

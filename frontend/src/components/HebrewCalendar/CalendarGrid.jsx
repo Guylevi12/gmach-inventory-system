@@ -16,13 +16,13 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   const getEventsForDate = (day) => {
     if (!Array.isArray(events)) return [];
     const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    
+
     return events.filter(event => {
       if (!event.date) return false;
       const eventDate = new Date(event.date);
-      return eventDate.getDate() === targetDate.getDate() && 
-             eventDate.getMonth() === targetDate.getMonth() && 
-             eventDate.getFullYear() === targetDate.getFullYear();
+      return eventDate.getDate() === targetDate.getDate() &&
+        eventDate.getMonth() === targetDate.getMonth() &&
+        eventDate.getFullYear() === targetDate.getFullYear();
     });
   };
 
@@ -30,7 +30,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   const getUniqueOrdersForDate = (day) => {
     const dayEvents = getEventsForDate(day);
     const uniqueOrders = new Map();
-    
+
     dayEvents.forEach(event => {
       if (!uniqueOrders.has(event.orderId)) {
         uniqueOrders.set(event.orderId, {
@@ -39,23 +39,23 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
         });
       }
     });
-    
+
     return Array.from(uniqueOrders.values());
   };
 
-const handleDateClick = (day) => {
-  const allEventsForDay = getEventsForDate(day);
+  const handleDateClick = (day) => {
+    const allEventsForDay = getEventsForDate(day);
 
-  // אל תפתח דוח אם כל האירועים הם רק "השאלה פעילה"
-  const onlyActive = allEventsForDay.length > 0 && allEventsForDay.every(e => e.type === 'השאלה פעילה');
-  if (onlyActive) return;
+    // אל תפתח דוח אם כל האירועים הם רק "השאלה פעילה"
+    const onlyActive = allEventsForDay.length > 0 && allEventsForDay.every(e => e.type === 'השאלה פעילה');
+    if (onlyActive) return;
 
-  if (allEventsForDay.length > 0) {
-    setSelectedEvents(allEventsForDay);
-    setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
-    setShowReport(true);
-  }
-};
+    if (allEventsForDay.length > 0) {
+      setSelectedEvents(allEventsForDay);
+      setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
+      setShowReport(true);
+    }
+  };
 
 
   const daysInMonth = getDaysInMonth(currentDate);
@@ -69,7 +69,7 @@ const handleDateClick = (day) => {
   for (let day = 1; day <= daysInMonth; day++) {
     const dayEvents = getEventsForDate(day);
     const uniqueOrders = getUniqueOrdersForDate(day);
-    
+
     // Group events by type for display
     const pickupEvents = dayEvents.filter(e => e.type === 'השאלה');
     const returnEvents = dayEvents.filter(e => e.type === 'החזרה');
@@ -94,7 +94,7 @@ const handleDateClick = (day) => {
         }}
       >
         <span className="day-number">{day}</span>
-        
+
         {/* Event Icons */}
         <div className="event-icons">
           {pickupEvents.length > 0 && (

@@ -1,7 +1,7 @@
 // src/components/EditItemModal.jsx
 import React, { useState, useEffect } from 'react';
 import { updateDoc, doc } from 'firebase/firestore';
-import { db } from '@/firebase/firebase-config'; 
+import { db } from '@/firebase/firebase-config';
 import { Edit, Search, Plus, Minus, Trash2, Save } from 'lucide-react';
 
 const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItemsAndOrders, allEvents }) => {
@@ -15,6 +15,10 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
   const [loading, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Track changes for unsaved warning
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [originalFormData, setOriginalFormData] = useState(null);
+
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (show) {
@@ -22,7 +26,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
     } else {
       document.body.style.overflow = 'unset';
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -30,87 +34,134 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
 
   useEffect(() => {
     if (show && data.eventId) {
-      setFormData({
+      const initialData = {
         clientName: '',
         phone: '',
         pickupDate: '',
         returnDate: '',
-        items: data.items || []
-      });
+        items: [...(data.items || [])]
+      };
+
+      setFormData(initialData);
+      setOriginalFormData(JSON.parse(JSON.stringify(initialData))); // Deep copy
+      setHasUnsavedChanges(false);
     }
   }, [show, data]);
 
+  // Check for changes
+  useEffect(() => {
+    if (!originalFormData) return;
+
+    const currentDataString = JSON.stringify(formData);
+    const originalDataString = JSON.stringify(originalFormData);
+    const hasChanges = currentDataString !== originalDataString;
+
+    if (hasChanges !== hasUnsavedChanges) {
+      console.log('🔄 Changes detected:', hasChanges);
+      setHasUnsavedChanges(hasChanges);
+    }
+  }, [formData, originalFormData, hasUnsavedChanges]);
+
   if (!show) return null;
 
-const updateItemQuantity = (itemName, newQuantity) => {
-  const stockItem = allItems.find(i => i.name === itemName);
-  const totalStock = stockItem?.quantity || 0;
-  const currentOrderId = data?.eventId?.split('-')[0];
-  const currentOrderPickup = new Date(formData.pickupDate);
-  const currentOrderReturn = new Date(formData.returnDate);
+  const updateItemQuantity = (itemName, newQuantity) => {
+    console.log(`🔧 updateItemQuantity called with: ${itemName}, newQuantity: ${newQuantity}`);
+    console.log(`📋 Current formData.items:`, formData.items);
 
-  let reservedInOverlap = 0;
+    const currentItem = formData.items.find(i => i.name === itemName);
+    const currentQuantity = currentItem?.quantity || 0;
 
-  allEvents.forEach(event => {
-    if (event.orderId !== currentOrderId && event.items) {
-      const eventPickup = new Date(event.pickupDate);
-      const eventReturn = new Date(event.returnDate);
+    console.log(`📊 Found currentItem:`, currentItem);
+    console.log(`📊 Current quantity: ${currentQuantity}, New quantity: ${newQuantity}`);
+    console.log(`📊 Is decreasing? ${newQuantity <= currentQuantity}`);
 
-      const overlaps = !(eventReturn < currentOrderPickup || eventPickup > currentOrderReturn);
-      if (overlaps) {
+    if (newQuantity <= 0) {
+      console.log(`🗑️ REMOVING ${itemName} from order completely`);
+      setFormData(prev => ({
+        ...prev,
+        items: prev.items.filter(item => item.name !== itemName)
+      }));
+      return;
+    }
+
+    if (newQuantity < currentQuantity) {
+      console.log(`📉 DECREASING ${itemName} quantity to ${newQuantity}`);
+      setFormData(prev => ({
+        ...prev,
+        items: prev.items.map(item =>
+          item.name === itemName
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      }));
+      return;
+    }
+
+    // INCREASING QUANTITY - CHECK STOCK
+    console.log(`⬆️ INCREASING ${itemName}: ${currentQuantity} → ${newQuantity} - checking stock...`);
+
+    const stockItem = allItems.find(i => i.name === itemName);
+    const totalStock = stockItem?.quantity || stockItem?.stock || stockItem?.amount || 0;
+    const currentOrderId = data?.eventId?.split('-')[0];
+
+    let reservedInOtherOrders = 0;
+    allEvents.forEach(event => {
+      if (event.orderId !== currentOrderId && event.items) {
         event.items.forEach(it => {
           if (it.name === itemName) {
-            reservedInOverlap += it.quantity || 0;
+            reservedInOtherOrders += it.quantity || 0;
           }
         });
       }
+    });
+
+    const availableForThisOrder = totalStock - reservedInOtherOrders - currentQuantity;
+
+    if (newQuantity - currentQuantity > availableForThisOrder) {
+      alert(`אין מספיק מלאי ל-${itemName}. זמין: ${availableForThisOrder}, מבוקש: ${newQuantity}`);
+      return;
     }
-  });
 
-  const currentItem = formData.items.find(i => i.name === itemName);
-  const reservedHere = currentItem?.quantity || 0;
-
-  const available = totalStock - reservedInOverlap + reservedHere;
-
-  if (newQuantity > available) {
-    alert(`אין מספיק מלאי ל-${itemName}. זמין: ${available}`);
-    return;
-  }
-
-  if (newQuantity <= 0) {
     setFormData(prev => ({
       ...prev,
-      items: prev.items.filter(item => item.name !== itemName)
+      items: prev.items.some(i => i.name === itemName)
+        ? prev.items.map(item =>
+          item.name === itemName
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+        : [...prev.items, { name: itemName, quantity: newQuantity }]
     }));
-  } else {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.map(item =>
-        item.name === itemName
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    }));
-  }
-};
-
-
-
-
-
-
+  };
 
 
   const addItem = (item) => {
     const existingItem = formData.items.find(i => i.name === item.name);
-    if (existingItem) {
-      updateItemQuantity(item.name, existingItem.quantity + 1);
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        items: [...prev.items, { name: item.name, quantity: 1 }]
-      }));
+
+    const stockItem = allItems.find(i => i.name === item.name);
+    const totalStock = stockItem?.quantity || stockItem?.stock || stockItem?.amount || 0;
+    const currentOrderId = data?.eventId?.split('-')[0];
+
+    let reservedInOtherOrders = 0;
+    allEvents.forEach(event => {
+      if (event.orderId !== currentOrderId && event.items) {
+        event.items.forEach(it => {
+          if (it.name === item.name) {
+            reservedInOtherOrders += it.quantity || 0;
+          }
+        });
+      }
+    });
+
+    const currentlyInOrder = existingItem?.quantity || 0;
+    const available = totalStock - reservedInOtherOrders;
+
+    if (available <= currentlyInOrder) {
+      alert(`אין מספיק מלאי ל-${item.name}. זמין: ${available - currentlyInOrder}, מבוקש: ${currentlyInOrder + 1}`);
+      return;
     }
+
+    updateItemQuantity(item.name, currentlyInOrder + 1);
   };
 
   const removeItem = (itemName) => {
@@ -138,6 +189,7 @@ const updateItemQuantity = (itemName, newQuantity) => {
       });
 
       await fetchItemsAndOrders();
+      setHasUnsavedChanges(false);
       setData({ open: false, eventId: null, items: [] });
       setShowReport(false);
       alert("השינויים נשמרו בהצלחה!");
@@ -149,40 +201,57 @@ const updateItemQuantity = (itemName, newQuantity) => {
     }
   };
 
+  const handleClose = () => {
+    console.log('🚪 Attempting to close, hasUnsavedChanges:', hasUnsavedChanges);
+
+    if (hasUnsavedChanges) {
+      const shouldSave = window.confirm('יש לך שינויים שלא נשמרו. האם ברצונך לשמור את השינויים לפני הסגירה?');
+
+      if (shouldSave) {
+        saveChanges();
+        return;
+      } else {
+        const shouldDiscard = window.confirm('האם אתה בטוח שברצונך לבטל את השינויים?');
+        if (!shouldDiscard) {
+          return; // Don't close
+        }
+      }
+    }
+
+    // Close the modal
+    setData({ open: false, eventId: null, items: [] });
+  };
+
   const filteredItems = allItems.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
-      setData({ open: false, eventId: null, items: [] });
+      console.log('🎯 Backdrop clicked');
+      handleClose();
     }
   };
-const getAvailableQuantity = (itemName) => {
-  const stockItem = allItems.find(i => i.name === itemName);
-  const totalStock = stockItem?.quantity || 0;
-  const currentOrderId = data?.eventId?.split('-')[0];
 
-  let reservedInOtherOrders = 0;
+  const getAvailableQuantity = (itemName) => {
+    const stockItem = allItems.find(i => i.name === itemName);
+    const totalStock = stockItem?.quantity || 0;
+    const currentOrderId = data?.eventId?.split('-')[0];
 
-  allEvents.forEach(event => {
-    if (event.orderId !== currentOrderId && event.items) {
-      event.items.forEach(it => {
-        if (it.name === itemName) {
-          reservedInOtherOrders += it.quantity || 0;
-        }
-      });
-    }
-  });
+    let reservedInOtherOrders = 0;
+    allEvents.forEach(event => {
+      if (event.orderId !== currentOrderId && event.items) {
+        event.items.forEach(it => {
+          if (it.name === itemName) {
+            reservedInOtherOrders += it.quantity || 0;
+          }
+        });
+      }
+    });
 
-  // How much is already reserved in the *current* order
-  const currentItem = formData.items.find(i => i.name === itemName);
-  const reservedHere = currentItem?.quantity || 0;
-
-  // Total available from stock
-  const remaining = totalStock - reservedInOtherOrders;
-  return remaining >= 0 ? remaining : 0;
-};
+    const available = totalStock - reservedInOtherOrders;
+    return available >= 0 ? available : 0;
+  };
 
 
 
@@ -214,20 +283,29 @@ const getAvailableQuantity = (itemName) => {
           position: relative !important;
           z-index: 100000 !important;
         }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
       `}</style>
-      
-      <div 
+
+      <div
         className="edit-modal-overlay"
         onClick={handleBackdropClick}
       >
-        <div 
-          className="edit-modal-content" 
+
+
+        <div
+          className="edit-modal-content"
           dir="rtl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div style={{
-            background: 'linear-gradient(to right, #2563eb, #1d4ed8)',
+            background: hasUnsavedChanges
+              ? 'linear-gradient(to right, #dc2626, #b91c1c)'  // Red when changes
+              : 'linear-gradient(to right, #2563eb, #1d4ed8)', // Blue when no changes
             color: 'white',
             padding: '1rem'
           }}>
@@ -247,7 +325,7 @@ const getAvailableQuantity = (itemName) => {
                 </h3>
               </div>
               <button
-                onClick={() => setData({ open: false, eventId: null, items: [] })}
+                onClick={handleClose}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -342,6 +420,7 @@ const getAvailableQuantity = (itemName) => {
                               alignItems: 'center',
                               justifyContent: 'center'
                             }}
+                            disabled={loading}
                           >
                             <Minus size={16} />
                           </button>
@@ -366,6 +445,7 @@ const getAvailableQuantity = (itemName) => {
                               alignItems: 'center',
                               justifyContent: 'center'
                             }}
+                            disabled={loading}
                           >
                             <Plus size={16} />
                           </button>
@@ -381,6 +461,7 @@ const getAvailableQuantity = (itemName) => {
                               marginRight: '0.5rem',
                               fontSize: '0.875rem'
                             }}
+                            disabled={loading}
                           >
                             הסר
                           </button>
@@ -410,12 +491,12 @@ const getAvailableQuantity = (itemName) => {
               }}>
                 הוסף פריטים
               </h4>
-              
+
               {/* Search */}
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ position: 'relative' }}>
-                  <Search 
-                    size={20} 
+                  <Search
+                    size={20}
                     style={{
                       position: 'absolute',
                       right: '0.75rem',
@@ -436,6 +517,7 @@ const getAvailableQuantity = (itemName) => {
                       borderRadius: '8px',
                       fontSize: '1rem'
                     }}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -453,21 +535,18 @@ const getAvailableQuantity = (itemName) => {
                   return (
                     <div
                       key={index}
-                      onClick={() => addItem(item)}
+                      onClick={() => !loading && addItem(item)}
                       style={{
                         padding: '0.75rem',
                         borderRadius: '8px',
                         border: isInOrder ? '2px solid #3b82f6' : '1px solid #e5e7eb',
                         background: isInOrder ? '#eff6ff' : 'white',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                        opacity: loading ? 0.6 : 1
                       }}
                     >
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem'
-                      }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         {item.imageUrl && (
                           <img
                             src={item.imageUrl}
@@ -503,6 +582,13 @@ const getAvailableQuantity = (itemName) => {
                               בהזמנה ({formData.items.find(i => i.name === item.name)?.quantity})
                             </div>
                           )}
+                          <div style={{
+                            fontSize: '0.75rem',
+                            color: '#10b981',
+                            fontWeight: '500'
+                          }}>
+                            זמין: {getAvailableQuantity(item.name)}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -534,7 +620,7 @@ const getAvailableQuantity = (itemName) => {
                 gap: '0.75rem'
               }}>
                 <button
-                  onClick={() => setData({ open: false, eventId: null, items: [] })}
+                  onClick={handleClose}
                   disabled={loading}
                   style={{
                     background: '#6b7280',
@@ -542,8 +628,9 @@ const getAvailableQuantity = (itemName) => {
                     padding: '0.5rem 1.5rem',
                     borderRadius: '8px',
                     border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem'
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                    opacity: loading ? 0.6 : 1
                   }}
                 >
                   ביטול
@@ -552,12 +639,13 @@ const getAvailableQuantity = (itemName) => {
                   onClick={saveChanges}
                   disabled={loading || formData.items.length === 0}
                   style={{
-                    background: formData.items.length === 0 ? '#9ca3af' : '#2563eb',
+                    background: formData.items.length === 0 ? '#9ca3af' :
+                      hasUnsavedChanges ? '#dc2626' : '#2563eb',
                     color: 'white',
                     padding: '0.5rem 1.5rem',
                     borderRadius: '8px',
                     border: 'none',
-                    cursor: formData.items.length === 0 ? 'not-allowed' : 'pointer',
+                    cursor: formData.items.length === 0 || loading ? 'not-allowed' : 'pointer',
                     fontSize: '0.875rem',
                     display: 'flex',
                     alignItems: 'center',
@@ -588,13 +676,6 @@ const getAvailableQuantity = (itemName) => {
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </>
   );
 };

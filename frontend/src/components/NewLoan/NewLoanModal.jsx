@@ -62,20 +62,20 @@ const NewLoanModal = ({
                   <div style={{ margin: '0.5rem 0' }}>
                     <label style={{ marginRight: '0.5rem' }}>כמות:</label>
                     <input
-  type="number"
-  min={0}
-  max={item.quantity}
-  value={item.selectedQty}
-  onChange={e => changeQty(item.id, +e.target.value)}
-  style={{
-    width: '60px',
-    padding: '6px',
-    textAlign: 'center',
-    borderRadius: '6px',
-    border: '1px solid #ccc',
-    backgroundColor: item.selectedQty > 0 ? '#e3f2fd' : '#fff'
-  }}
-/>
+                      type="number"
+                      min={0}
+                      max={item.quantity}
+                      value={item.selectedQty}
+                      onChange={e => changeQty(item.id, +e.target.value)}
+                      style={{
+                        width: '60px',
+                        padding: '6px',
+                        textAlign: 'center',
+                        borderRadius: '6px',
+                        border: '1px solid #ccc',
+                        backgroundColor: item.selectedQty > 0 ? '#e3f2fd' : '#fff'
+                      }}
+                    />
 
 
                   </div>
@@ -92,10 +92,10 @@ const NewLoanModal = ({
           </div>
         )}
 
- <div className="modal-actions">
-  <button className="btn btn-blue" onClick={() => setShowCatalogPopup(false)}>✔️ אישור</button>
-  <button className="btn btn-gray" onClick={() => setShowCatalogPopup(false)}>❌ ביטול</button>
-</div>
+        <div className="modal-actions">
+          <button className="btn btn-blue" onClick={() => setShowCatalogPopup(false)}>✔️ אישור</button>
+          <button className="btn btn-gray" onClick={() => setShowCatalogPopup(false)}>❌ ביטול</button>
+        </div>
 
 
       </div>
