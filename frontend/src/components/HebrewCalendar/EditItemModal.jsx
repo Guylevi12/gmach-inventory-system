@@ -63,106 +63,126 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
   }, [formData, originalFormData, hasUnsavedChanges]);
 
   if (!show) return null;
+const updateItemQuantity = (itemName, newQuantity) => {
+  const stockItem = allItems.find(i => i.name === itemName);
+  const currentItem = formData.items.find(i => i.name === itemName);
+  const currentQuantity = currentItem?.quantity || 0;
 
-  const updateItemQuantity = (itemName, newQuantity) => {
-    console.log(`🔧 updateItemQuantity called with: ${itemName}, newQuantity: ${newQuantity}`);
-    console.log(`📋 Current formData.items:`, formData.items);
-
-    const currentItem = formData.items.find(i => i.name === itemName);
-    const currentQuantity = currentItem?.quantity || 0;
-
-    console.log(`📊 Found currentItem:`, currentItem);
-    console.log(`📊 Current quantity: ${currentQuantity}, New quantity: ${newQuantity}`);
-    console.log(`📊 Is decreasing? ${newQuantity <= currentQuantity}`);
-
-    if (newQuantity <= 0) {
-      console.log(`🗑️ REMOVING ${itemName} from order completely`);
-      setFormData(prev => ({
-        ...prev,
-        items: prev.items.filter(item => item.name !== itemName)
-      }));
-      return;
-    }
-
-    if (newQuantity < currentQuantity) {
-      console.log(`📉 DECREASING ${itemName} quantity to ${newQuantity}`);
-      setFormData(prev => ({
-        ...prev,
-        items: prev.items.map(item =>
-          item.name === itemName
-            ? { ...item, quantity: newQuantity }
-            : item
-        )
-      }));
-      return;
-    }
-
-    // INCREASING QUANTITY - CHECK STOCK
-    console.log(`⬆️ INCREASING ${itemName}: ${currentQuantity} → ${newQuantity} - checking stock...`);
-
-    const stockItem = allItems.find(i => i.name === itemName);
-    const totalStock = stockItem?.quantity || stockItem?.stock || stockItem?.amount || 0;
-    const currentOrderId = data?.eventId?.split('-')[0];
-
-    let reservedInOtherOrders = 0;
-    allEvents.forEach(event => {
-      if (event.orderId !== currentOrderId && event.items) {
-        event.items.forEach(it => {
-          if (it.name === itemName) {
-            reservedInOtherOrders += it.quantity || 0;
-          }
-        });
-      }
-    });
-
-    const availableForThisOrder = totalStock - reservedInOtherOrders - currentQuantity;
-
-    if (newQuantity - currentQuantity > availableForThisOrder) {
-      alert(`אין מספיק מלאי ל-${itemName}. זמין: ${availableForThisOrder}, מבוקש: ${newQuantity}`);
-      return;
-    }
-
+  if (newQuantity <= 0) {
     setFormData(prev => ({
       ...prev,
-      items: prev.items.some(i => i.name === itemName)
-        ? prev.items.map(item =>
-          item.name === itemName
-            ? { ...item, quantity: newQuantity }
-            : item
-        )
-        : [...prev.items, { name: itemName, quantity: newQuantity }]
+      items: prev.items.filter(item => item.name !== itemName)
     }));
-  };
+    return;
+  }
 
+  if (newQuantity < currentQuantity) {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map(item =>
+        item.name === itemName
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    }));
+    return;
+  }
 
-  const addItem = (item) => {
-    const existingItem = formData.items.find(i => i.name === item.name);
+  const totalStock = stockItem?.quantity || 0;
+  const currentOrderId = data?.eventId?.split('-')[0];
+  let reservedInOtherOrders = 0;
 
-    const stockItem = allItems.find(i => i.name === item.name);
-    const totalStock = stockItem?.quantity || stockItem?.stock || stockItem?.amount || 0;
-    const currentOrderId = data?.eventId?.split('-')[0];
-
-    let reservedInOtherOrders = 0;
-    allEvents.forEach(event => {
-      if (event.orderId !== currentOrderId && event.items) {
-        event.items.forEach(it => {
-          if (it.name === item.name) {
-            reservedInOtherOrders += it.quantity || 0;
-          }
-        });
-      }
-    });
-
-    const currentlyInOrder = existingItem?.quantity || 0;
-    const available = totalStock - reservedInOtherOrders;
-
-    if (available <= currentlyInOrder) {
-      alert(`אין מספיק מלאי ל-${item.name}. זמין: ${available - currentlyInOrder}, מבוקש: ${currentlyInOrder + 1}`);
-      return;
+  allEvents.forEach(event => {
+    if (event.orderId !== currentOrderId && event.items) {
+      event.items.forEach(it => {
+        if (it.name === itemName) {
+          reservedInOtherOrders += it.quantity || 0;
+        }
+      });
     }
+  });
 
-    updateItemQuantity(item.name, currentlyInOrder + 1);
+  const availableForThisOrder = totalStock - reservedInOtherOrders - currentQuantity;
+
+  if (newQuantity - currentQuantity > availableForThisOrder) {
+    alert(`אין מספיק מלאי ל-${itemName}. זמין: ${availableForThisOrder}, מבוקש: ${newQuantity}`);
+    return;
+  }
+
+  const enrichedItem = {
+    name: itemName,
+    quantity: newQuantity,
+    ItemId: stockItem?.ItemId ?? null,
+    itemId: stockItem?.ItemId ?? null,
+    id: stockItem?.id ?? null,
+    imageUrl: stockItem?.imageUrl ?? ''
   };
+
+  setFormData(prev => ({
+    ...prev,
+    items: prev.items.some(i => i.name === itemName)
+      ? prev.items.map(item =>
+          item.name === itemName ? enrichedItem : item
+        )
+      : [...prev.items, enrichedItem]
+  }));
+};
+
+
+
+
+
+const addItem = (item) => {
+  const existingItem = formData.items.find(i => i.name === item.name);
+  const currentQuantity = existingItem?.quantity || 0;
+
+  // צור פריט חדש מועשר
+  const enrichedItem = {
+    name: item.name,
+    quantity: currentQuantity + 1,
+    ItemId: item.ItemId ?? item.itemId ?? null,
+    itemId: item.ItemId ?? item.itemId ?? null,
+    id: item.id ?? null,
+    imageUrl: item.imageUrl ?? ''
+  };
+
+  if (!enrichedItem.ItemId) {
+    alert(`שגיאה: לא ניתן להוסיף את הפריט "${item.name}" - מזהה מוצר חסר`);
+    return;
+  }
+
+  // בדיקת מלאי
+  const stockItem = allItems.find(i => i.name === item.name);
+  const totalStock = stockItem?.quantity || 0;
+  const currentOrderId = data?.eventId?.split('-')[0];
+
+  let reservedInOtherOrders = 0;
+  allEvents.forEach(event => {
+    if (event.orderId !== currentOrderId && event.items) {
+      event.items.forEach(it => {
+        if (it.name === item.name) {
+          reservedInOtherOrders += it.quantity || 0;
+        }
+      });
+    }
+  });
+
+  const available = totalStock - reservedInOtherOrders;
+  if (available <= currentQuantity) {
+    alert(`אין מספיק מלאי ל-${item.name}. זמין: ${available - currentQuantity}, מבוקש: ${currentQuantity + 1}`);
+    return;
+  }
+
+  // הוספה
+  setFormData(prev => ({
+    ...prev,
+    items: prev.items.some(i => i.name === item.name)
+      ? prev.items.map(i => i.name === item.name ? { ...enrichedItem } : i)
+      : [...prev.items, enrichedItem]
+  }));
+};
+
+
 
   const removeItem = (itemName) => {
     setFormData(prev => ({
@@ -171,35 +191,46 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
     }));
   };
 
-  const saveChanges = async () => {
-    try {
-      setSaving(true);
-      const orderId = data.eventId?.split('-')[0];
-      if (!orderId) {
-        alert('שגיאה: לא נמצא מזהה הזמנה');
-        return;
+const saveChanges = async () => {
+  try {
+    setSaving(true);
+    const orderId = data.eventId?.split('-')[0];
+    if (!orderId) throw new Error('שגיאה: לא נמצא מזהה הזמנה');
+
+    const enrichedItems = formData.items.map(item => {
+      const finalId = item.ItemId ?? item.itemId;
+      if (!finalId) {
+        throw new Error(`לא ניתן לשמור את ההזמנה: פריט "${item.name}" חסר מזהה מוצר (ItemId)`);
       }
+      return {
+        ...item,
+        ItemId: finalId,
+        itemId: finalId
+      };
+    });
 
-      await updateDoc(doc(db, 'orders', orderId), {
-        items: formData.items,
-        ...(formData.clientName && { clientName: formData.clientName }),
-        ...(formData.phone && { phone: formData.phone }),
-        ...(formData.pickupDate && { pickupDate: formData.pickupDate }),
-        ...(formData.returnDate && { returnDate: formData.returnDate }),
-      });
+    await updateDoc(doc(db, 'orders', orderId), {
+      items: enrichedItems,
+      ...(formData.clientName && { clientName: formData.clientName }),
+      ...(formData.phone && { phone: formData.phone }),
+      ...(formData.pickupDate && { pickupDate: formData.pickupDate }),
+      ...(formData.returnDate && { returnDate: formData.returnDate }),
+    });
 
-      await fetchItemsAndOrders();
-      setHasUnsavedChanges(false);
-      setData({ open: false, eventId: null, items: [] });
-      setShowReport(false);
-      alert("השינויים נשמרו בהצלחה!");
-    } catch (error) {
-      console.error("שגיאה בשמירה:", error);
-      alert("שמירה נכשלה. נסה שוב.");
-    } finally {
-      setSaving(false);
-    }
-  };
+    await fetchItemsAndOrders();
+    setHasUnsavedChanges(false);
+    setData({ open: false, eventId: null, items: [] });
+    setShowReport(false);
+    alert("🎉 השינויים נשמרו בהצלחה!");
+  } catch (error) {
+    console.error("❌ שגיאה בשמירה:", error);
+    alert(error.message || "שמירה נכשלה. נסה שוב.");
+  } finally {
+    setSaving(false);
+  }
+};
+
+
 
   const handleClose = () => {
     console.log('🚪 Attempting to close, hasUnsavedChanges:', hasUnsavedChanges);
@@ -397,7 +428,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                               fontSize: '0.875rem',
                               color: '#6b7280'
                             }}>
-                              מזהה: {itemData?.itemId || 'לא נמצא'}
+                             מזהה: {itemData?.ItemId ?? itemData?.itemId ?? 'לא נמצא'}
                             </div>
                           </div>
                         </div>
