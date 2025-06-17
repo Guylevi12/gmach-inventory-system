@@ -108,24 +108,33 @@ const updateItemQuantity = (itemName, newQuantity) => {
     alert(`אין מספיק מלאי ל-${itemName}. זמין: ${availableForThisOrder}, מבוקש: ${newQuantity}`);
     return;
   }
+console.log("🧩 יצירת פריט מועשר:", {
+  name: itemName,
+  fromItem: stockItem?.ItemId ?? stockItem?.itemId,
+  fromStock: stockItem?.id,
+});
 
-  const enrichedItem = {
-    name: itemName,
-    quantity: newQuantity,
-    ItemId: stockItem?.ItemId ?? null,
-    itemId: stockItem?.ItemId ?? null,
-    id: stockItem?.id ?? null,
-    imageUrl: stockItem?.imageUrl ?? ''
-  };
 
-  setFormData(prev => ({
-    ...prev,
-    items: prev.items.some(i => i.name === itemName)
-      ? prev.items.map(item =>
-          item.name === itemName ? enrichedItem : item
-        )
-      : [...prev.items, enrichedItem]
-  }));
+const enrichedItem = {
+  name: itemName,
+  quantity: newQuantity,
+  ItemId: stockItem?.ItemId ?? stockItem?.itemId ?? stockItem?.id ?? null,
+  itemId: stockItem?.ItemId ?? stockItem?.itemId ?? stockItem?.id ?? null,
+  id: stockItem?.id ?? null,
+  imageUrl: stockItem?.imageUrl ?? ''
+};
+
+
+
+setFormData(prev => ({
+  ...prev,
+  items: prev.items.some(i => i.name === itemName)
+    ? prev.items.map(i =>
+        i.name === itemName ? enrichedItem : i
+      )
+    : [...prev.items, enrichedItem]
+}));
+
 };
 
 
@@ -136,22 +145,6 @@ const addItem = (item) => {
   const existingItem = formData.items.find(i => i.name === item.name);
   const currentQuantity = existingItem?.quantity || 0;
 
-  // צור פריט חדש מועשר
-  const enrichedItem = {
-    name: item.name,
-    quantity: currentQuantity + 1,
-    ItemId: item.ItemId ?? item.itemId ?? null,
-    itemId: item.ItemId ?? item.itemId ?? null,
-    id: item.id ?? null,
-    imageUrl: item.imageUrl ?? ''
-  };
-
-  if (!enrichedItem.ItemId) {
-    alert(`שגיאה: לא ניתן להוסיף את הפריט "${item.name}" - מזהה מוצר חסר`);
-    return;
-  }
-
-  // בדיקת מלאי
   const stockItem = allItems.find(i => i.name === item.name);
   const totalStock = stockItem?.quantity || 0;
   const currentOrderId = data?.eventId?.split('-')[0];
@@ -173,14 +166,28 @@ const addItem = (item) => {
     return;
   }
 
-  // הוספה
+  const enrichedItem = {
+    name: item.name,
+    quantity: currentQuantity + 1,
+    ItemId: item.ItemId ?? item.itemId ?? item.id ?? null,
+    itemId: item.ItemId ?? item.itemId ?? item.id ?? null,
+    id: item.id ?? null,
+    imageUrl: item.imageUrl ?? ''
+  };
+
+  if (!enrichedItem.ItemId) {
+    alert(`שגיאה: לא ניתן להוסיף את הפריט "${item.name}" - מזהה מוצר חסר`);
+    return;
+  }
+
   setFormData(prev => ({
     ...prev,
     items: prev.items.some(i => i.name === item.name)
-      ? prev.items.map(i => i.name === item.name ? { ...enrichedItem } : i)
+      ? prev.items.map(i => i.name === item.name ? enrichedItem : i)
       : [...prev.items, enrichedItem]
   }));
 };
+
 
 
 
@@ -207,6 +214,10 @@ const saveChanges = async () => {
         ItemId: finalId,
         itemId: finalId
       };
+    });
+    console.log("💾 פריטים שנשמרים:");
+    formData.items.forEach(item => {
+  console.log(`🔹 ${item.name} | ItemId: ${item.ItemId} | id: ${item.id}`);
     });
 
     await updateDoc(doc(db, 'orders', orderId), {
