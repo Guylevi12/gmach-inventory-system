@@ -5,11 +5,11 @@
 This project was developed as part of the **Software Engineering for the Community** course at **Azrieli College of Engineering**.
 
 **Development Team:**
-- [Guy Levi]
-- [Mori Sason]
-- [Sawsaw Abu Saama]
-- [Ron Astrin]
-- [Lidan Beily]
+- Guy Levi
+- Mori Sason
+- Sawsaw Abu Saama
+- Ron Astrin
+- Lidan Beily
 
 **Course:** Software Engineering for the Community  
 **Institution:** Azrieli College of Engineering  
