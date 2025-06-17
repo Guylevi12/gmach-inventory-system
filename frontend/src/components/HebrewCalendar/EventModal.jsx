@@ -360,92 +360,99 @@ const EventModal = ({
                     padding: '1rem',
                     background: '#f9fafb'
                   }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      gap: '0.75rem'
-                    }}>
-                      <button 
-                        onClick={() => setEditItemModal({ 
-                          open: true, 
-                          eventId: `${orderGroup.orderId}-edit`, 
-                          items: orderGroup.items.map(i => ({ ...i })) 
-                        })} 
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          background: '#2563eb',
-                          color: 'white',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem'
-                        }}
-                      >
-                        <Edit size={16} />
-                        ערוך הזמנה
-                      </button>
-                      
-                      <button 
-                        onClick={() => setShowItemsModal(true)} 
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          background: '#059669',
-                          color: 'white',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem'
-                        }}
-                      >
-                        <Eye size={16} />
-                        הצג פרטים
-                      </button>
-                      
-                      <button 
-                        onClick={() => handleDeleteOrder(orderGroup.orderId)} 
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          background: '#dc2626',
-                          color: 'white',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem'
-                        }}
-                      >
-                        <Trash2 size={16} />
-                        מחק
-                      </button>
-                      {onCloseOrderManually && orderGroup.events.some(e => e.type === 'החזרה') && (
-                        <button 
-                          onClick={() => onCloseOrderManually(orderGroup.orderId)}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            background: '#f59e0b',
-                            color: 'white',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '8px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '0.875rem'
-                          }}
-                        >
-                          <CheckCircle size={16} />
-                          סגור ידנית
-                        </button>
-                      )}
-                    </div>
+                    
+<div style={{
+  display: 'flex',
+  justifyContent: 'center',
+  gap: '0.75rem'
+}}>
+  {orderGroup.events.some(e => e.icon === '📦') && (
+    <button 
+      onClick={() => setEditItemModal({ 
+        open: true, 
+        eventId: `${orderGroup.orderId}-edit`, 
+        items: orderGroup.items.map(i => ({ ...i })) 
+      })} 
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        background: '#2563eb',
+        color: 'white',
+        padding: '0.5rem 1rem',
+        borderRadius: '8px',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '0.875rem'
+      }}
+    >
+      <Edit size={16} />
+      ערוך הזמנה
+    </button>
+  )}
+
+  <button 
+    onClick={() => setShowItemsModal(true)} 
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      background: '#059669',
+      color: 'white',
+      padding: '0.5rem 1rem',
+      borderRadius: '8px',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '0.875rem'
+    }}
+  >
+    <Eye size={16} />
+    הצג פרטים
+  </button>
+
+  {orderGroup.events.some(e => e.icon === '📦') && (
+    <button 
+      onClick={() => handleDeleteOrder(orderGroup.orderId)} 
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        background: '#dc2626',
+        color: 'white',
+        padding: '0.5rem 1rem',
+        borderRadius: '8px',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '0.875rem'
+      }}
+    >
+      <Trash2 size={16} />
+      מחק
+    </button>
+  )}
+
+  {onCloseOrderManually && orderGroup.events.some(e => e.type === 'החזרה') && (
+    <button 
+      onClick={() => onCloseOrderManually(orderGroup.orderId)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        background: '#f59e0b',
+        color: 'white',
+        padding: '0.5rem 1rem',
+        borderRadius: '8px',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '0.875rem'
+      }}
+    >
+      <CheckCircle size={16} />
+      סגור ידנית
+    </button>
+  )}
+</div>
+
                   </div>
                 </div>
               ))}
