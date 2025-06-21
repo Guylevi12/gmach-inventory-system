@@ -28,30 +28,7 @@ const HebrewCalendar = ({
   // Function to initialize return inspection for an order
   const initializeReturnInspection = async (orderId) => {
     try {
-      // Update order status to include return inspection structure
-      const orderUpdate = {
-        status: "under_inspection",
-        returnInspection: {
-          inspectionStatus: "in_progress",
-          inspectedBy: "מנהל המערכת", // You can get this from user context
-          inspectionDate: serverTimestamp(),
-          itemInspections: [],
-          totalItemsReturned: 0,
-          totalItemsExpected: 0,
-          totalDamages: 0,
-          totalRepairCost: 0,
-          managerNotes: "",
-          customerNotified: false,
-          customerAgreedToCharges: false
-        }
-      };
-
-      await updateDoc(doc(db, 'orders', orderId), orderUpdate);
-      
-      // Fetch the updated order data
-      await fetchItemsAndOrders();
-      
-      // Find the order in current events to open inspection modal
+      // Find the order in current events to open inspection modal directly
       const orderEvents = events.filter(event => event.orderId === orderId);
       if (orderEvents.length > 0) {
         const orderData = {
@@ -109,33 +86,32 @@ const HebrewCalendar = ({
   // Function to complete return inspection
   const completeReturnInspection = async (orderId, itemInspections, summary) => {
     try {
+      // Update order status to closed with inspection details
       const orderUpdate = {
         status: "closed",
-        'returnInspection.inspectionStatus': "completed",
-        'returnInspection.itemInspections': itemInspections.map(item => ({
-          itemId: item.itemId,
-          name: item.name,
-          quantityExpected: item.quantityExpected,
-          quantityReturned: item.quantityReturned,
-          inspections: [{
-            inspectionId: `insp_${Date.now()}`,
+        returnInspection: {
+          inspectionStatus: "completed",
+          inspectedBy: "מנהל המערכת",
+          inspectionDate: serverTimestamp(),
+          itemInspections: itemInspections.map(item => ({
+            itemId: item.itemId,
+            name: item.name,
+            quantityExpected: item.quantityExpected,
+            quantityReturned: item.quantityReturned,
             condition: item.condition,
-            damageType: item.damageType || '',
             damageDescription: item.damageDescription || '',
-            severity: item.severity || 'minor',
             repairCost: item.repairCost || 0,
-            photos: item.photos || [],
             notes: item.notes || '',
-            inspectedAt: serverTimestamp()
-          }]
-        })),
-        'returnInspection.totalItemsReturned': summary.totalItemsReturned,
-        'returnInspection.totalItemsExpected': summary.totalItemsExpected,
-        'returnInspection.totalDamages': summary.totalDamages,
-        'returnInspection.totalRepairCost': summary.totalRepairCost,
-        'returnInspection.managerNotes': summary.managerNotes,
-        'returnInspection.customerNotified': summary.customerNotified,
-        'returnInspection.customerAgreedToCharges': summary.customerAgreedToCharges,
+            inspectedAt: new Date().toISOString() // Use regular timestamp instead of serverTimestamp
+          })),
+          totalItemsReturned: summary.totalItemsReturned,
+          totalItemsExpected: summary.totalItemsExpected,
+          totalDamages: summary.totalDamages,
+          totalRepairCost: summary.totalRepairCost,
+          managerNotes: summary.managerNotes,
+          customerNotified: summary.customerNotified,
+          customerAgreedToCharges: summary.customerAgreedToCharges
+        },
         closedAt: serverTimestamp()
       };
 
@@ -194,9 +170,8 @@ const HebrewCalendar = ({
         allItems={allItems}
         setShowReport={setShowReport}
         fetchItemsAndOrders={fetchItemsAndOrders}
-        allEvents={events} // 🔥 This is what we need
+        allEvents={events}
       />
-
 
       {/* Return Inspection Modal */}
       <ReturnInspectionModal
@@ -204,6 +179,8 @@ const HebrewCalendar = ({
         order={returnInspection.order}
         onClose={() => setReturnInspection({ show: false, order: null })}
         onCompleteInspection={completeReturnInspection}
+        allItems={allItems}
+        updateItemQuantities={fetchItemsAndOrders}
       />
     </div>
   );

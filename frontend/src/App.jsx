@@ -28,7 +28,7 @@ function App() {
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/catalog/:id" element={<ItemDetails />} />
         <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/loan-history" element={<LoanHistory />} />        
+        <Route path="/history" element={<LoanHistory />} />        
         </Routes>
       <ContactBubble/>
     </>

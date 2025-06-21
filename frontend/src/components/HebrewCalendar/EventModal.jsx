@@ -1,8 +1,8 @@
 // src/components/EventModal.jsx
 import React, { useEffect } from 'react';
 import { deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/firebase/firebase-config'; // Updated Firebase path
-import { Edit, Eye, Trash2, Calendar, Phone, Package, ClipboardCheck, CheckCircle } from 'lucide-react';
+import { db } from '@/firebase/firebase-config';
+import { Edit, Eye, Trash2, Calendar, Phone, Package, ClipboardCheck } from 'lucide-react';
 
 const EventModal = ({ 
   show, 
@@ -13,8 +13,7 @@ const EventModal = ({
   setShowItemsModal, 
   setEditItemModal, 
   fetchItemsAndOrders,
-  onStartReturnInspection, 
-  onCloseOrderManually 
+  onStartReturnInspection
 }) => {
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -75,32 +74,6 @@ const EventModal = ({
         console.error(err);
         alert("מחיקה נכשלה. נסה שוב.");
       }
-    }
-  };
-
-  const getEventTypeColor = (type) => {
-    switch (type) {
-      case 'השאלה':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'החזרה':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'השאלה פעילה':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getEventIcon = (type) => {
-    switch (type) {
-      case 'השאלה':
-        return '📦';
-      case 'החזרה':
-        return '🔄';
-      case 'השאלה פעילה':
-        return '⏰';
-      default:
-        return '📋';
     }
   };
 
@@ -360,99 +333,98 @@ const EventModal = ({
                     padding: '1rem',
                     background: '#f9fafb'
                   }}>
-                    
-<div style={{
-  display: 'flex',
-  justifyContent: 'center',
-  gap: '0.75rem'
-}}>
-  {orderGroup.events.some(e => e.icon === '📦') && (
-    <button 
-      onClick={() => setEditItemModal({ 
-        open: true, 
-        eventId: `${orderGroup.orderId}-edit`, 
-        items: orderGroup.items.map(i => ({ ...i })) 
-      })} 
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        background: '#2563eb',
-        color: 'white',
-        padding: '0.5rem 1rem',
-        borderRadius: '8px',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '0.875rem'
-      }}
-    >
-      <Edit size={16} />
-      ערוך הזמנה
-    </button>
-  )}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: '0.75rem',
+                      flexWrap: 'wrap'
+                    }}>
+                      {orderGroup.events.some(e => e.icon === '📦') && (
+                        <button 
+                          onClick={() => setEditItemModal({ 
+                            open: true, 
+                            eventId: `${orderGroup.orderId}-edit`, 
+                            items: orderGroup.items.map(i => ({ ...i })) 
+                          })} 
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: '#2563eb',
+                            color: 'white',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          <Edit size={16} />
+                          ערוך הזמנה
+                        </button>
+                      )}
 
-  <button 
-    onClick={() => setShowItemsModal(true)} 
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      background: '#059669',
-      color: 'white',
-      padding: '0.5rem 1rem',
-      borderRadius: '8px',
-      border: 'none',
-      cursor: 'pointer',
-      fontSize: '0.875rem'
-    }}
-  >
-    <Eye size={16} />
-    הצג פרטים
-  </button>
+                      <button 
+                        onClick={() => setShowItemsModal(true)} 
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          background: '#059669',
+                          color: 'white',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <Eye size={16} />
+                        הצג פרטים
+                      </button>
 
-  {orderGroup.events.some(e => e.icon === '📦') && (
-    <button 
-      onClick={() => handleDeleteOrder(orderGroup.orderId)} 
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        background: '#dc2626',
-        color: 'white',
-        padding: '0.5rem 1rem',
-        borderRadius: '8px',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '0.875rem'
-      }}
-    >
-      <Trash2 size={16} />
-      מחק
-    </button>
-  )}
+                      {orderGroup.events.some(e => e.icon === '📦') && (
+                        <button 
+                          onClick={() => handleDeleteOrder(orderGroup.orderId)} 
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: '#dc2626',
+                            color: 'white',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          <Trash2 size={16} />
+                          מחק
+                        </button>
+                      )}
 
-  {onCloseOrderManually && orderGroup.events.some(e => e.type === 'החזרה') && (
-    <button 
-      onClick={() => onCloseOrderManually(orderGroup.orderId)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        background: '#f59e0b',
-        color: 'white',
-        padding: '0.5rem 1rem',
-        borderRadius: '8px',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '0.875rem'
-      }}
-    >
-      <CheckCircle size={16} />
-      סגור ידנית
-    </button>
-  )}
-</div>
-
+                      {onStartReturnInspection && orderGroup.events.some(e => e.type === 'החזרה') && (
+                        <button 
+                          onClick={() => onStartReturnInspection(orderGroup.orderId)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: '#f59e0b',
+                            color: 'white',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          <ClipboardCheck size={16} />
+                          בדיקת החזרה
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
