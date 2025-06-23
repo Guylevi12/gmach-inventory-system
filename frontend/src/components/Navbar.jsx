@@ -4,7 +4,7 @@ import { useUser } from '../UserContext';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '@/firebase/firebase-config';
 import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 
 const Navbar = () => {
   const { user, setUser } = useUser();
@@ -14,18 +14,18 @@ const Navbar = () => {
   const [isMobile, setIsMobile] = useState(null);
 
   useEffect(() => {
-    const fetchSetting = async () => {
-      try {
-        const docRef = doc(db, 'settings', 'onlineOrdering');
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setOnlineOrdering(docSnap.data().enabled);
-        }
-      } catch (err) {
-        console.error("שגיאה בטעינת ההגדרה:", err);
+    // הגדרת listener לזמן אמת
+    const docRef = doc(db, 'settings', 'onlineOrdering');
+    
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setOnlineOrdering(docSnap.data().enabled);
       }
-    };
-    fetchSetting();
+    }, (err) => {
+      console.error("שגיאה בקבלת עדכונים בזמן אמת:", err);
+    });
+
+    return () => unsubscribe(); // ניקוי ה-listener כשהקומפוננט נמחק
   }, []);
 
   useEffect(() => {
@@ -166,7 +166,10 @@ const Navbar = () => {
           {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
             <>
               <Link to="/new-loan" style={linkStyle}>הזמנה חדשה</Link>
-              <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
+              {/* רק אם הזמנות דרך האתר מופעלות */}
+              {onlineOrdering && (
+                <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
+              )}
               <Link to="/Calendar" style={linkStyle}>השאלות פתוחות</Link>
               <Link to="/history" style={linkStyle}>היסטוריית השאלות</Link>
               <Link to="/manage-product" style={linkStyle}>ניהול מוצרים</Link>
@@ -201,7 +204,10 @@ const Navbar = () => {
             {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
               <>
                 <Link to="/new-loan" style={linkStyle} onClick={handleCloseMenu}>הזמנה חדשה</Link>
-                <Link to="/requests" style={linkStyle} onClick={handleCloseMenu}>בקשות להזמנה</Link>
+                {/* רק אם הזמנות דרך האתר מופעלות */}
+                {onlineOrdering && (
+                  <Link to="/requests" style={linkStyle} onClick={handleCloseMenu}>בקשות להזמנה</Link>
+                )}
                 <Link to="/Calendar" style={linkStyle} onClick={handleCloseMenu}>השאלות פתוחות</Link>
                 <Link to="/history" style={linkStyle} onClick={handleCloseMenu}>היסטוריית השאלות</Link>
                 <Link to="/manage-product" style={linkStyle} onClick={handleCloseMenu}>ניהול מוצרים</Link>

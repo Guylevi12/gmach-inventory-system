@@ -577,14 +577,14 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                             color: '#10b981',
                             fontWeight: '500'
                           }}>
-                            מלאי כולל: {item.quantity}
+                          {/* מלאי כולל: {item.quantity} */}
                           </div>
                           <div style={{
                             fontSize: '0.75rem',
                             color: availableQuantity > 0 ? '#059669' : '#dc2626',
                             fontWeight: '500'
                           }}>
-                            זמין לתאריכים אלה: {availableQuantity}
+                            זמין : {availableQuantity}
                           </div>
                           {isInOrder && (
                             <div style={{
@@ -592,7 +592,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                               color: '#2563eb',
                               fontWeight: '500'
                             }}>
-                              בהזמנה: {quantityInOrder}
+                             {/* בהזמנה: {quantityInOrder}*/}
                             </div>
                           )}
                           {!canAdd && availableQuantity === 0 && (
@@ -604,8 +604,6 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                               alignItems: 'center',
                               gap: '0.25rem'
                             }}>
-                              <AlertTriangle size={12} />
-                              לא זמין בתאריכים אלה
                             </div>
                           )}
                         </div>
