@@ -340,7 +340,13 @@ const ReturnInspectionModal = ({
                           color: '#6b7280',
                           marginTop: '0.25rem'
                         }}>
-                          מזהה: {item.itemId}
+                          <div style={{
+                          fontSize: '0.875rem',
+                          color: '#6b7280',
+                          marginTop: '0.25rem'
+                        }}>
+                          מזהה: {item.ItemId || order.items.find(orderItem => orderItem.id === item.itemId)?.ItemId || item.itemId}
+                        </div>
                         </div>
                       </div>
                     </div>
@@ -374,8 +380,9 @@ const ReturnInspectionModal = ({
                             const newValue = Math.min(item.quantityExpected, item.quantityReturned + 1);
                             updateItemInspection(index, 'quantityReturned', newValue);
                           }}
+                          disabled={item.quantityReturned >= item.quantityExpected}
                           style={{
-                            background: '#10b981',
+                            background: item.quantityReturned >= item.quantityExpected ? '#d1d5db' : '#10b981',
                             color: 'white',
                             border: 'none',
                             borderRadius: '50%',
@@ -383,14 +390,15 @@ const ReturnInspectionModal = ({
                             height: '32px',
                             fontSize: '18px',
                             fontWeight: 'bold',
-                            cursor: 'pointer',
+                            cursor: item.quantityReturned >= item.quantityExpected ? 'not-allowed' : 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            opacity: item.quantityReturned >= item.quantityExpected ? 0.6 : 1
                           }}
                         >
                           +
-                        </button>
+                      </button>
                         <span style={{
                           fontSize: '1.25rem',
                           fontWeight: 'bold',
@@ -405,8 +413,9 @@ const ReturnInspectionModal = ({
                             const newValue = Math.max(0, item.quantityReturned - 1);
                             updateItemInspection(index, 'quantityReturned', newValue);
                           }}
+                          disabled={item.quantityReturned <= 0}
                           style={{
-                            background: '#ef4444',
+                            background: item.quantityReturned <= 0 ? '#d1d5db' : '#ef4444',
                             color: 'white',
                             border: 'none',
                             borderRadius: '50%',
@@ -414,10 +423,11 @@ const ReturnInspectionModal = ({
                             height: '32px',
                             fontSize: '18px',
                             fontWeight: 'bold',
-                            cursor: 'pointer',
+                            cursor: item.quantityReturned <= 0 ? 'not-allowed' : 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            opacity: item.quantityReturned <= 0 ? 0.6 : 1
                           }}
                         >
                           -
