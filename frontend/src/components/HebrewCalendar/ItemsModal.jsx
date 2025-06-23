@@ -18,7 +18,7 @@ const ItemsModal = ({ show, setShow, selectedEvents, allItems }) => {
 
   if (!show) return null;
 
-  const items = selectedEvents[0]?.items || [];
+  const items = selectedEvents?.[0]?.items || [];
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {

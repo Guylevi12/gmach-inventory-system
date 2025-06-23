@@ -1,23 +1,16 @@
-// src/components/EditItemModal.jsx
+// src/components/EditItemModal.jsx - DATE-AWARE AVAILABILITY
 import React, { useState, useEffect } from 'react';
 import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
-import { Edit, Search, Plus, Minus, Trash2, Save } from 'lucide-react';
+import { Edit, Search, Plus, Minus, Save, AlertTriangle } from 'lucide-react';
 
 const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItemsAndOrders, allEvents }) => {
   const [formData, setFormData] = useState({
-    clientName: '',
-    phone: '',
-    pickupDate: '',
-    returnDate: '',
     items: []
   });
   const [loading, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Track changes for unsaved warning
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [originalFormData, setOriginalFormData] = useState(null);
+  const [orderDates, setOrderDates] = useState({ pickupDate: null, returnDate: null });
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -32,270 +25,213 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
     };
   }, [show]);
 
+  // Initialize form data and get order dates
   useEffect(() => {
-    if (show && data.eventId) {
-      const initialData = {
-        clientName: '',
-        phone: '',
-        pickupDate: '',
-        returnDate: '',
+    if (show && data.eventId && allEvents.length > 0) {
+      console.log('🚀 Initializing edit modal');
+      
+      // Find this order's events to get the dates
+      const currentOrderId = data.eventId.split('-')[0];
+      const orderEvents = allEvents.filter(event => event.orderId === currentOrderId);
+      
+      if (orderEvents.length > 0) {
+        const firstEvent = orderEvents[0];
+        setOrderDates({
+          pickupDate: new Date(firstEvent.pickupDate),
+          returnDate: new Date(firstEvent.returnDate)
+        });
+        
+        console.log('📅 Order dates:', {
+          pickup: firstEvent.pickupDate,
+          return: firstEvent.returnDate
+        });
+      }
+      
+      setFormData({
         items: [...(data.items || [])]
-      };
-
-      setFormData(initialData);
-      setOriginalFormData(JSON.parse(JSON.stringify(initialData))); // Deep copy
-      setHasUnsavedChanges(false);
+      });
     }
-  }, [show, data]);
-
-  // Check for changes
-  useEffect(() => {
-    if (!originalFormData) return;
-
-    const currentDataString = JSON.stringify(formData);
-    const originalDataString = JSON.stringify(originalFormData);
-    const hasChanges = currentDataString !== originalDataString;
-
-    if (hasChanges !== hasUnsavedChanges) {
-      console.log('🔄 Changes detected:', hasChanges);
-      setHasUnsavedChanges(hasChanges);
-    }
-  }, [formData, originalFormData, hasUnsavedChanges]);
+  }, [show, data, allEvents]);
 
   if (!show) return null;
-const updateItemQuantity = (itemName, newQuantity) => {
+
+  // CORE FUNCTION: Calculate how many items are available for this order's date range
+  const getAvailableQuantityForDates = (itemName) => {
   const stockItem = allItems.find(i => i.name === itemName);
-  const currentItem = formData.items.find(i => i.name === itemName);
-  const currentQuantity = currentItem?.quantity || 0;
+  if (!stockItem) {
+    console.warn(`❌ Stock not found for ${itemName}`);
+    return 0;
+  }
+
+  const totalStock = stockItem.quantity || 0;
+  const currentOrderId = data.eventId?.split('-')[0];
+
+  if (!orderDates.pickupDate || !orderDates.returnDate) {
+    console.warn(`⚠️ Missing pickup/return dates for current order.`);
+    return totalStock;
+  }
+
+  console.log(`🔎 Checking "${itemName}" availability from ${orderDates.pickupDate.toDateString()} to ${orderDates.returnDate.toDateString()}`);
+  console.log(`📦 Total stock from database: ${totalStock}`);
+
+  let maxReservedDuringPeriod = 0;
+  const seenOrders = new Set();
+
+  allEvents.forEach(event => {
+    if (event.orderId === currentOrderId) return;
+    if (seenOrders.has(`${event.orderId}-${itemName}`)) return;
+
+    const eventPickup = new Date(event.pickupDate);
+    const eventReturn = new Date(event.returnDate);
+
+    const overlaps =
+      eventPickup <= orderDates.returnDate &&
+      eventReturn >= orderDates.pickupDate;
+
+    if (overlaps && event.items) {
+      const matchingItem = event.items.find(i => i.name === itemName);
+      if (matchingItem) {
+        console.log(`➡️ Overlapping Order ID: ${event.orderId}`);
+        console.log(`    Dates: ${eventPickup.toDateString()} - ${eventReturn.toDateString()}`);
+        console.log(`    Reserved: ${matchingItem.quantity}`);
+        maxReservedDuringPeriod += matchingItem.quantity || 0;
+        seenOrders.add(`${event.orderId}-${itemName}`);
+      }
+    }
+  });
+
+  const currentQuantityInOrder = formData.items.find(i => i.name === itemName)?.quantity || 0;
+  const available = totalStock - maxReservedDuringPeriod - currentQuantityInOrder;
+
+  console.log(`✅ Available: ${available} = ${totalStock} - ${maxReservedDuringPeriod} - ${currentQuantityInOrder} (already in order)`);
+
+  return Math.max(0, available);
+};
+
+
+  // Add item with availability check
+  const addItem = (item) => {
+  console.log('➕ Trying to add item:', item.name);
+
+  const availableQuantity = getAvailableQuantityForDates(item.name);
+
+  if (availableQuantity <= 0) {
+    alert(`❌ לא ניתן להוסיף מ-${item.name}. זמין: ${availableQuantity}`);
+    return;
+  }
+
+  const existingItemIndex = formData.items.findIndex(i => i.name === item.name);
+
+  if (existingItemIndex >= 0) {
+    const newItems = [...formData.items];
+    newItems[existingItemIndex] = {
+      ...newItems[existingItemIndex],
+      quantity: newItems[existingItemIndex].quantity + 1
+    };
+    setFormData({ ...formData, items: newItems });
+  } else {
+    const newItem = {
+      name: item.name,
+      quantity: 1,
+      ItemId: item.ItemId || item.itemId || item.id,
+      itemId: item.ItemId || item.itemId || item.id,
+      id: item.id,
+      imageUrl: item.imageUrl || ''
+    };
+    setFormData({
+      ...formData,
+      items: [...formData.items, newItem]
+    });
+  }
+};
+
+  
+  // Update item quantity with availability check
+  const updateItemQuantity = (itemName, newQuantity) => {
+  console.log(`🔄 Updating ${itemName} to quantity: ${newQuantity}`);
 
   if (newQuantity <= 0) {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.filter(item => item.name !== itemName)
-    }));
+    setFormData({
+      ...formData,
+      items: formData.items.filter(item => item.name !== itemName)
+    });
     return;
   }
 
-  if (newQuantity < currentQuantity) {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.map(item =>
-        item.name === itemName
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    }));
+  const currentQuantityInOrder = formData.items.find(i => i.name === itemName)?.quantity || 0;
+  const correctedAvailable = getAvailableQuantityForDates(itemName) + currentQuantityInOrder;
+
+  if (newQuantity > correctedAvailable) {
+    alert(`❌ לא ניתן להזמין ${newQuantity} מ-${itemName}. זמין: ${correctedAvailable}`);
     return;
   }
 
-  const totalStock = stockItem?.quantity || 0;
-  const currentOrderId = data?.eventId?.split('-')[0];
-  let reservedInOtherOrders = 0;
+  const newItems = formData.items.map(item =>
+    item.name === itemName
+      ? { ...item, quantity: newQuantity }
+      : item
+  );
 
-  allEvents.forEach(event => {
-    if (event.orderId !== currentOrderId && event.items) {
-      event.items.forEach(it => {
-        if (it.name === itemName) {
-          reservedInOtherOrders += it.quantity || 0;
-        }
-      });
-    }
-  });
-
-  const availableForThisOrder = totalStock - reservedInOtherOrders - currentQuantity;
-
-  if (newQuantity - currentQuantity > availableForThisOrder) {
-    alert(`אין מספיק מלאי ל-${itemName}. זמין: ${availableForThisOrder}, מבוקש: ${newQuantity}`);
-    return;
-  }
-console.log("🧩 יצירת פריט מועשר:", {
-  name: itemName,
-  fromItem: stockItem?.ItemId ?? stockItem?.itemId,
-  fromStock: stockItem?.id,
-});
-
-
-const enrichedItem = {
-  name: itemName,
-  quantity: newQuantity,
-  ItemId: stockItem?.ItemId ?? stockItem?.itemId ?? stockItem?.id ?? null,
-  itemId: stockItem?.ItemId ?? stockItem?.itemId ?? stockItem?.id ?? null,
-  id: stockItem?.id ?? null,
-  imageUrl: stockItem?.imageUrl ?? ''
+  setFormData({ ...formData, items: newItems });
 };
 
 
 
-setFormData(prev => ({
-  ...prev,
-  items: prev.items.some(i => i.name === itemName)
-    ? prev.items.map(i =>
-        i.name === itemName ? enrichedItem : i
-      )
-    : [...prev.items, enrichedItem]
-}));
-
-};
-
-
-
-
-
-const addItem = (item) => {
-  const existingItem = formData.items.find(i => i.name === item.name);
-  const currentQuantity = existingItem?.quantity || 0;
-
-  const stockItem = allItems.find(i => i.name === item.name);
-  const totalStock = stockItem?.quantity || 0;
-  const currentOrderId = data?.eventId?.split('-')[0];
-
-  let reservedInOtherOrders = 0;
-  allEvents.forEach(event => {
-    if (event.orderId !== currentOrderId && event.items) {
-      event.items.forEach(it => {
-        if (it.name === item.name) {
-          reservedInOtherOrders += it.quantity || 0;
-        }
-      });
-    }
-  });
-
-  const available = totalStock - reservedInOtherOrders;
-  if (available <= currentQuantity) {
-    alert(`אין מספיק מלאי ל-${item.name}. זמין: ${available - currentQuantity}, מבוקש: ${currentQuantity + 1}`);
-    return;
-  }
-
-  const enrichedItem = {
-    name: item.name,
-    quantity: currentQuantity + 1,
-    ItemId: item.ItemId ?? item.itemId ?? item.id ?? null,
-    itemId: item.ItemId ?? item.itemId ?? item.id ?? null,
-    id: item.id ?? null,
-    imageUrl: item.imageUrl ?? ''
-  };
-
-  if (!enrichedItem.ItemId) {
-    alert(`שגיאה: לא ניתן להוסיף את הפריט "${item.name}" - מזהה מוצר חסר`);
-    return;
-  }
-
-  setFormData(prev => ({
-    ...prev,
-    items: prev.items.some(i => i.name === item.name)
-      ? prev.items.map(i => i.name === item.name ? enrichedItem : i)
-      : [...prev.items, enrichedItem]
-  }));
-};
-
-
-
-
+  // Remove item completely
   const removeItem = (itemName) => {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.filter(item => item.name !== itemName)
-    }));
+    console.log('🗑️ Removing item:', itemName);
+    setFormData({
+      ...formData,
+      items: formData.items.filter(item => item.name !== itemName)
+    });
   };
 
-const saveChanges = async () => {
-  try {
-    setSaving(true);
-    const orderId = data.eventId?.split('-')[0];
-    if (!orderId) throw new Error('שגיאה: לא נמצא מזהה הזמנה');
+  // Save changes to database
+  const saveChanges = async () => {
+    try {
+      setSaving(true);
+      const orderId = data.eventId?.split('-')[0];
+      if (!orderId) throw new Error('שגיאה: לא נמצא מזהה הזמנה');
 
-    const enrichedItems = formData.items.map(item => {
-      const finalId = item.ItemId ?? item.itemId;
-      if (!finalId) {
-        throw new Error(`לא ניתן לשמור את ההזמנה: פריט "${item.name}" חסר מזהה מוצר (ItemId)`);
-      }
-      return {
+      console.log('💾 Saving items:', formData.items);
+
+      // Ensure all items have proper IDs
+      const itemsToSave = formData.items.map(item => ({
         ...item,
-        ItemId: finalId,
-        itemId: finalId
-      };
-    });
-    console.log("💾 פריטים שנשמרים:");
-    formData.items.forEach(item => {
-  console.log(`🔹 ${item.name} | ItemId: ${item.ItemId} | id: ${item.id}`);
-    });
+        ItemId: item.ItemId || item.itemId || item.id,
+        itemId: item.ItemId || item.itemId || item.id
+      }));
 
-    await updateDoc(doc(db, 'orders', orderId), {
-      items: enrichedItems,
-      ...(formData.clientName && { clientName: formData.clientName }),
-      ...(formData.phone && { phone: formData.phone }),
-      ...(formData.pickupDate && { pickupDate: formData.pickupDate }),
-      ...(formData.returnDate && { returnDate: formData.returnDate }),
-    });
+      await updateDoc(doc(db, 'orders', orderId), {
+        items: itemsToSave
+      });
 
-    await fetchItemsAndOrders();
-    setHasUnsavedChanges(false);
-    setData({ open: false, eventId: null, items: [] });
-    setShowReport(false);
-    alert("🎉 השינויים נשמרו בהצלחה!");
-  } catch (error) {
-    console.error("❌ שגיאה בשמירה:", error);
-    alert(error.message || "שמירה נכשלה. נסה שוב.");
-  } finally {
-    setSaving(false);
-  }
-};
-
-
+      await fetchItemsAndOrders();
+      setData({ open: false, eventId: null, items: [] });
+      setShowReport(false);
+      alert("🎉 השינויים נשמרו בהצלחה!");
+    } catch (error) {
+      console.error("❌ שגיאה בשמירה:", error);
+      alert(error.message || "שמירה נכשלה. נסה שוב.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleClose = () => {
-    console.log('🚪 Attempting to close, hasUnsavedChanges:', hasUnsavedChanges);
-
-    if (hasUnsavedChanges) {
-      const shouldSave = window.confirm('יש לך שינויים שלא נשמרו. האם ברצונך לשמור את השינויים לפני הסגירה?');
-
-      if (shouldSave) {
-        saveChanges();
-        return;
-      } else {
-        const shouldDiscard = window.confirm('האם אתה בטוח שברצונך לבטל את השינויים?');
-        if (!shouldDiscard) {
-          return; // Don't close
-        }
-      }
-    }
-
-    // Close the modal
     setData({ open: false, eventId: null, items: [] });
   };
 
+  // Filter available items for search
   const filteredItems = allItems.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
-      console.log('🎯 Backdrop clicked');
       handleClose();
     }
   };
-
-  const getAvailableQuantity = (itemName) => {
-    const stockItem = allItems.find(i => i.name === itemName);
-    const totalStock = stockItem?.quantity || 0;
-    const currentOrderId = data?.eventId?.split('-')[0];
-
-    let reservedInOtherOrders = 0;
-    allEvents.forEach(event => {
-      if (event.orderId !== currentOrderId && event.items) {
-        event.items.forEach(it => {
-          if (it.name === itemName) {
-            reservedInOtherOrders += it.quantity || 0;
-          }
-        });
-      }
-    });
-
-    const available = totalStock - reservedInOtherOrders;
-    return available >= 0 ? available : 0;
-  };
-
-
 
   return (
     <>
@@ -332,22 +268,12 @@ const saveChanges = async () => {
         }
       `}</style>
 
-      <div
-        className="edit-modal-overlay"
-        onClick={handleBackdropClick}
-      >
-
-
-        <div
-          className="edit-modal-content"
-          dir="rtl"
-          onClick={(e) => e.stopPropagation()}
-        >
+      <div className="edit-modal-overlay" onClick={handleBackdropClick}>
+        <div className="edit-modal-content" dir="rtl" onClick={(e) => e.stopPropagation()}>
+          
           {/* Header */}
           <div style={{
-            background: hasUnsavedChanges
-              ? 'linear-gradient(to right, #dc2626, #b91c1c)'  // Red when changes
-              : 'linear-gradient(to right, #2563eb, #1d4ed8)', // Blue when no changes
+            background: 'linear-gradient(to right, #2563eb, #1d4ed8)',
             color: 'white',
             padding: '1rem'
           }}>
@@ -380,6 +306,17 @@ const saveChanges = async () => {
                 ×
               </button>
             </div>
+            
+            {/* Show order dates */}
+            {orderDates.pickupDate && orderDates.returnDate && (
+              <div style={{
+                marginTop: '0.5rem',
+                fontSize: '0.875rem',
+                color: '#bfdbfe'
+              }}>
+                📅 תאריכי ההזמנה: {orderDates.pickupDate.toLocaleDateString('he-IL')} - {orderDates.returnDate.toLocaleDateString('he-IL')}
+              </div>
+            )}
           </div>
 
           <div style={{
@@ -387,6 +324,7 @@ const saveChanges = async () => {
             overflowY: 'auto',
             maxHeight: 'calc(90vh - 180px)'
           }}>
+            
             {/* Current Items Section */}
             <div style={{ marginBottom: '2rem' }}>
               <h4 style={{
@@ -395,12 +333,16 @@ const saveChanges = async () => {
                 marginBottom: '1rem',
                 color: '#1f2937'
               }}>
-                פריטים נוכחיים בהזמנה
+                פריטים נוכחיים בהזמנה ({formData.items.length})
               </h4>
+              
               {formData.items.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {formData.items.map((item, index) => {
                     const itemData = allItems.find(i => i.name === item.name);
+                    const availableQuantity = getAvailableQuantityForDates(item.name);
+                    const maxPossible = availableQuantity + item.quantity; // Current quantity + what's available
+                    
                     return (
                       <div key={index} style={{
                         display: 'flex',
@@ -439,10 +381,18 @@ const saveChanges = async () => {
                               fontSize: '0.875rem',
                               color: '#6b7280'
                             }}>
-                             מזהה: {itemData?.ItemId ?? itemData?.itemId ?? 'לא נמצא'}
+                              מזהה: {itemData?.ItemId || itemData?.itemId || 'לא נמצא'}
+                            </div>
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: '#059669',
+                              fontWeight: '500'
+                            }}>
+                              מקסימום אפשרי: {maxPossible}
                             </div>
                           </div>
                         </div>
+                        
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -466,6 +416,7 @@ const saveChanges = async () => {
                           >
                             <Minus size={16} />
                           </button>
+                          
                           <span style={{
                             width: '2rem',
                             textAlign: 'center',
@@ -473,24 +424,26 @@ const saveChanges = async () => {
                           }}>
                             {item.quantity}
                           </span>
+                          
                           <button
                             onClick={() => updateItemQuantity(item.name, item.quantity + 1)}
                             style={{
-                              background: '#10b981',
+                              background: item.quantity >= maxPossible ? '#9ca3af' : '#10b981',
                               color: 'white',
                               width: '2rem',
                               height: '2rem',
                               borderRadius: '50%',
                               border: 'none',
-                              cursor: 'pointer',
+                              cursor: item.quantity >= maxPossible ? 'not-allowed' : 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center'
                             }}
-                            disabled={loading}
+                            disabled={loading || item.quantity >= maxPossible}
                           >
                             <Plus size={16} />
                           </button>
+                          
                           <button
                             onClick={() => removeItem(item.name)}
                             style={{
@@ -531,7 +484,7 @@ const saveChanges = async () => {
                 marginBottom: '1rem',
                 color: '#1f2937'
               }}>
-                הוסף פריטים
+                הוסף פריטים מהמלאי
               </h4>
 
               {/* Search */}
@@ -574,18 +527,22 @@ const saveChanges = async () => {
               }}>
                 {filteredItems.map((item, index) => {
                   const isInOrder = formData.items.some(i => i.name === item.name);
+                  const quantityInOrder = isInOrder ? formData.items.find(i => i.name === item.name)?.quantity : 0;
+                  const availableQuantity = getAvailableQuantityForDates(item.name);
+                  const canAdd = quantityInOrder < (availableQuantity + quantityInOrder);
+                  
                   return (
                     <div
                       key={index}
-                      onClick={() => !loading && addItem(item)}
+                      onClick={() => !loading && canAdd && addItem(item)}
                       style={{
                         padding: '0.75rem',
                         borderRadius: '8px',
                         border: isInOrder ? '2px solid #3b82f6' : '1px solid #e5e7eb',
                         background: isInOrder ? '#eff6ff' : 'white',
-                        cursor: loading ? 'not-allowed' : 'pointer',
+                        cursor: loading || !canAdd ? 'not-allowed' : 'pointer',
                         transition: 'all 0.2s',
-                        opacity: loading ? 0.6 : 1
+                        opacity: loading || !canAdd ? 0.6 : 1
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -613,7 +570,21 @@ const saveChanges = async () => {
                             fontSize: '0.75rem',
                             color: '#6b7280'
                           }}>
-                            מזהה: {item.itemId}
+                            מזהה: {item.itemId || item.ItemId}
+                          </div>
+                          <div style={{
+                            fontSize: '0.75rem',
+                            color: '#10b981',
+                            fontWeight: '500'
+                          }}>
+                            מלאי כולל: {item.quantity}
+                          </div>
+                          <div style={{
+                            fontSize: '0.75rem',
+                            color: availableQuantity > 0 ? '#059669' : '#dc2626',
+                            fontWeight: '500'
+                          }}>
+                            זמין לתאריכים אלה: {availableQuantity}
                           </div>
                           {isInOrder && (
                             <div style={{
@@ -621,16 +592,22 @@ const saveChanges = async () => {
                               color: '#2563eb',
                               fontWeight: '500'
                             }}>
-                              בהזמנה ({formData.items.find(i => i.name === item.name)?.quantity})
+                              בהזמנה: {quantityInOrder}
                             </div>
                           )}
-                          <div style={{
-                            fontSize: '0.75rem',
-                            color: '#10b981',
-                            fontWeight: '500'
-                          }}>
-                            זמין: {getAvailableQuantity(item.name)}
-                          </div>
+                          {!canAdd && availableQuantity === 0 && (
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: '#dc2626',
+                              fontWeight: '500',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}>
+                              <AlertTriangle size={12} />
+                              לא זמין בתאריכים אלה
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -681,8 +658,7 @@ const saveChanges = async () => {
                   onClick={saveChanges}
                   disabled={loading || formData.items.length === 0}
                   style={{
-                    background: formData.items.length === 0 ? '#9ca3af' :
-                      hasUnsavedChanges ? '#dc2626' : '#2563eb',
+                    background: formData.items.length === 0 ? '#9ca3af' : '#2563eb',
                     color: 'white',
                     padding: '0.5rem 1.5rem',
                     borderRadius: '8px',

@@ -157,12 +157,13 @@ const HebrewCalendar = ({
       />
       
       <ItemsModal
-        show={showItemsModal}
-        setShow={setShowItemsModal}
-        selectedEvents={selectedEvents}
+        show={!!showItemsModal}
+        setShow={() => setShowItemsModal(false)}
+        selectedEvents={showItemsModal}
         allItems={allItems}
       />
-      
+
+    
       <EditItemModal
         show={editItemModal.open}
         data={editItemModal}

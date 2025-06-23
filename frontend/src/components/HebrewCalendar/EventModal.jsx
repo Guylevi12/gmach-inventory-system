@@ -365,7 +365,10 @@ const EventModal = ({
                       )}
 
                       <button 
-                        onClick={() => setShowItemsModal(true)} 
+                        onClick={() => {
+                          const orderEvents = selectedEvents.filter(e => e.orderId === orderGroup.orderId);
+                          setShowItemsModal(orderEvents);
+                        }}
                         style={{
                           display: 'flex',
                           alignItems: 'center',

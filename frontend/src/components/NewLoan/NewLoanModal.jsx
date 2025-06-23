@@ -20,30 +20,46 @@ const NewLoanModal = ({
 
   if (!showCatalogPopup) return null;
 
-const handleScanSuccess = async (decodedText) => {
-  try {
-    const item = await getItemByItemId(decodedText);
+  const handleScanSuccess = async (decodedText) => {
+    try {
+      const item = await getItemByItemId(decodedText);
 
-    const alreadySelected = availableItems.some(it => it.ItemId === item.ItemId && it.selected);
-    if (alreadySelected) {
-      alert("המוצר כבר קיים ברשימה");
+      const alreadySelected = availableItems.some(it => it.ItemId === item.ItemId && it.selected);
+      if (alreadySelected) {
+        alert("המוצר כבר קיים ברשימה");
+        setScanning(false);
+        return;
+      }
+
+      if (item.quantity > 0) {
+        setScannedItem(item);
+        setScanning(false);
+      } else {
+        alert("המוצר לא זמין במלאי");
+        setScanning(false);
+      }
+    } catch (err) {
+      alert(err.message);
       setScanning(false);
-      return;
     }
+  };
 
-    if (item.quantity > 0) {
-      setScannedItem(item);
-      setScanning(false); // סגור סורק אוטומטית
-    } else {
-      alert("המוצר לא זמין במלאי");
-      setScanning(false);
+  // Enhanced quantity change handler with validation
+  const handleQuantityChange = (item, inputValue) => {
+    let qty = parseInt(inputValue) || 0;
+    
+    // Ensure quantity doesn't exceed available amount
+    if (qty > item.quantity) {
+      qty = item.quantity;
     }
-  } catch (err) {
-    alert(err.message);
-    setScanning(false);
-  }
-};
-
+    
+    // Ensure quantity is not negative
+    if (qty < 0) {
+      qty = 0;
+    }
+    
+    changeQty(item.id, qty);
+  };
 
   return (
     <div className="modal-overlay">
@@ -93,22 +109,76 @@ const handleScanSuccess = async (decodedText) => {
                   <p>מזהה מוצר: {item.ItemId}</p>
 
                   <div style={{ margin: '0.5rem 0' }}>
-                    <label style={{ marginRight: '0.5rem' }}>כמות:</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={item.quantity}
-                      value={item.selectedQty}
-                      onChange={e => changeQty(item.id, +e.target.value)}
-                      style={{
-                        width: '60px',
-                        padding: '6px',
-                        textAlign: 'center',
-                        borderRadius: '6px',
-                        border: '1px solid #ccc',
-                        backgroundColor: item.selectedQty > 0 ? '#e3f2fd' : '#fff'
-                      }}
-                    />
+                    <label style={{ marginBottom: '0.3rem', display: 'block' }}>כמות:</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                      <button
+                        onClick={() => handleQuantityChange(item, Math.max(0, item.selectedQty - 1))}
+                        disabled={item.selectedQty <= 0}
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          borderRadius: '50%',
+                          border: '1px solid #ccc',
+                          backgroundColor: item.selectedQty <= 0 ? '#f5f5f5' : '#fff',
+                          cursor: item.selectedQty <= 0 ? 'not-allowed' : 'pointer',
+                          fontSize: '16px',
+                          fontWeight: 'bold',
+                          color: item.selectedQty <= 0 ? '#ccc' : '#333'
+                        }}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min={0}
+                        max={item.quantity}
+                        value={item.selectedQty}
+                        onChange={e => handleQuantityChange(item, e.target.value)}
+                        onBlur={e => {
+                          // Additional validation on blur to ensure the value is within bounds
+                          const value = parseInt(e.target.value) || 0;
+                          if (value > item.quantity) {
+                            handleQuantityChange(item, item.quantity);
+                          }
+                        }}
+                        style={{
+                          width: '50px',
+                          height: '30px',
+                          padding: '5px',
+                          textAlign: 'center',
+                          borderRadius: '6px',
+                          border: item.selectedQty > item.quantity ? '2px solid red' : '1px solid #ccc',
+                          backgroundColor: item.selectedQty > 0 ? '#e3f2fd' : '#fff',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          // Hide the number input spinners completely
+                          appearance: 'textfield',
+                          MozAppearance: 'textfield'
+                        }}
+                      />
+                      <button
+                        onClick={() => handleQuantityChange(item, Math.min(item.quantity, item.selectedQty + 1))}
+                        disabled={item.selectedQty >= item.quantity}
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          borderRadius: '50%',
+                          border: '1px solid #ccc',
+                          backgroundColor: item.selectedQty >= item.quantity ? '#f5f5f5' : '#fff',
+                          cursor: item.selectedQty >= item.quantity ? 'not-allowed' : 'pointer',
+                          fontSize: '16px',
+                          fontWeight: 'bold',
+                          color: item.selectedQty >= item.quantity ? '#ccc' : '#333'
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+                    {item.selectedQty > item.quantity && (
+                      <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                        מקסימום: {item.quantity}
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -143,19 +213,18 @@ const handleScanSuccess = async (decodedText) => {
             setScannedItem(null);
             setScanning(false);
           }}
-onConfirm={(qty) => {
-  const updated = { ...scannedItem, selected: true, selectedQty: qty };
-  setAvailableItems(prev =>
-    prev.map(item =>
-      item.ItemId === updated.ItemId
-        ? { ...item, selected: true, selectedQty: qty }
-        : item
-    )
-  );
-  setScannedItem(null);
-  setScanning(false);
-}}
-
+          onConfirm={(qty) => {
+            const updated = { ...scannedItem, selected: true, selectedQty: qty };
+            setAvailableItems(prev =>
+              prev.map(item =>
+                item.ItemId === updated.ItemId
+                  ? { ...item, selected: true, selectedQty: qty }
+                  : item
+              )
+            );
+            setScannedItem(null);
+            setScanning(false);
+          }}
         />
       )}
     </div>
