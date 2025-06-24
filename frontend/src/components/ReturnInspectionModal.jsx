@@ -1,4 +1,4 @@
-// src/components/ReturnInspectionModal.jsx
+// src/components/ReturnInspectionModal.jsx - מותאם למובייל
 import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
@@ -211,10 +211,12 @@ const ReturnInspectionModal = ({
           bottom: 0 !important;
           background-color: rgba(0, 0, 0, 0.7) !important;
           display: flex !important;
-          align-items: center !important;
+          align-items: flex-start !important;
           justify-content: center !important;
-          padding: 1rem !important;
+          padding: 0.5rem !important;
           z-index: 99999 !important;
+          overflow-x: hidden !important;
+          padding-top: 1rem !important;
         }
         
         .return-inspection-content {
@@ -223,10 +225,39 @@ const ReturnInspectionModal = ({
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
           width: 100% !important;
           max-width: 56rem !important;
-          max-height: 90vh !important;
+          max-height: 96vh !important;
           overflow: hidden !important;
           position: relative !important;
           z-index: 100000 !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+
+        @media (max-width: 768px) {
+          .return-inspection-overlay {
+            padding: 0.25rem !important;
+            padding-top: 0.5rem !important;
+          }
+          
+          .return-inspection-content {
+            max-height: 98vh !important;
+            border-radius: 8px !important;
+          }
+          
+          .footer-mobile {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+            align-items: stretch !important;
+          }
+          
+          .footer-mobile button {
+            width: 100% !important;
+          }
+          
+          .footer-mobile .summary-text {
+            text-align: center !important;
+            margin-bottom: 0.5rem !important;
+          }
         }
 
         @keyframes spin {
@@ -248,7 +279,8 @@ const ReturnInspectionModal = ({
           <div style={{
             background: 'linear-gradient(to right, #fb923c, #f97316)',
             color: 'white',
-            padding: '1.5rem'
+            padding: '1rem',
+            flexShrink: 0
           }}>
             <div style={{
               display: 'flex',
@@ -256,21 +288,21 @@ const ReturnInspectionModal = ({
               alignItems: 'center'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <CheckCircle size={28} />
+                <CheckCircle size={24} />
                 <div>
                   <h2 style={{
-                    fontSize: '1.5rem',
+                    fontSize: '1.25rem',
                     fontWeight: 'bold',
                     margin: 0
                   }}>
                     בדיקת החזרת מוצרים
                   </h2>
                   <div style={{
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     marginTop: '0.25rem',
                     opacity: 0.9
                   }}>
-                    לקוח: {order.clientName} • טלפון: {order.phone}
+                    לקוח: {order.clientName} • {order.phone}
                   </div>
                 </div>
               </div>
@@ -292,9 +324,9 @@ const ReturnInspectionModal = ({
 
           {/* Content */}
           <div style={{
-            padding: '1.5rem',
+            padding: '1rem',
             overflowY: 'auto',
-            maxHeight: 'calc(90vh - 200px)'
+            flex: 1
           }}>
            
             {/* Items Inspection */}
@@ -303,7 +335,7 @@ const ReturnInspectionModal = ({
                 <div key={index} style={{
                   border: '1px solid #e5e7eb',
                   borderRadius: '12px',
-                  padding: '1.5rem',
+                  padding: '1rem',
                   background: '#ffffff',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}>
@@ -312,23 +344,24 @@ const ReturnInspectionModal = ({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: '1.5rem'
+                    marginBottom: '1rem'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <img 
                         src={order.items.find(orderItem => orderItem.id === item.itemId)?.imageUrl || '/no-image-available.png'}
                         alt={item.name}
                         style={{
-                          width: '50px',
-                          height: '50px',
+                          width: '40px',
+                          height: '40px',
                           objectFit: 'cover',
                           borderRadius: '8px',
-                          border: '1px solid #e5e7eb'
+                          border: '1px solid #e5e7eb',
+                          flexShrink: 0
                         }}
                       />
-                      <div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
                         <h4 style={{
-                          fontSize: '1.1rem',
+                          fontSize: '1rem',
                           fontWeight: 'bold',
                           margin: 0,
                           color: '#1f2937'
@@ -336,139 +369,146 @@ const ReturnInspectionModal = ({
                           {item.name}
                         </h4>
                         <div style={{
-                          fontSize: '0.875rem',
-                          color: '#6b7280',
-                          marginTop: '0.25rem'
-                        }}>
-                          <div style={{
-                          fontSize: '0.875rem',
+                          fontSize: '0.75rem',
                           color: '#6b7280',
                           marginTop: '0.25rem'
                         }}>
                           מזהה: {item.ItemId || order.items.find(orderItem => orderItem.id === item.itemId)?.ItemId || item.itemId}
                         </div>
+                        <div style={{
+                          fontSize: '0.75rem',
+                          color: '#6b7280'
+                        }}>
+                          כמות מוזמנת: {item.quantityExpected}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Quantity Controls Only */}
+                  {/* Quantity Controls */}
                   <div style={{
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '1rem'
                   }}>
+                    <span style={{
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      color: '#374151'
+                    }}>
+                      כמות שחזרה:
+                    </span>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem'
+                      gap: '0.75rem'
                     }}>
-                      <span style={{
-                        fontSize: '1rem',
-                        fontWeight: '500',
-                        color: '#374151'
-                      }}>
-                        כמות שחזרה:
-                      </span>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}>
-                        <button
-                          onClick={() => {
-                            const newValue = Math.min(item.quantityExpected, item.quantityReturned + 1);
-                            updateItemInspection(index, 'quantityReturned', newValue);
-                          }}
-                          disabled={item.quantityReturned >= item.quantityExpected}
-                          style={{
-                            background: item.quantityReturned >= item.quantityExpected ? '#d1d5db' : '#10b981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '32px',
-                            height: '32px',
-                            fontSize: '18px',
-                            fontWeight: 'bold',
-                            cursor: item.quantityReturned >= item.quantityExpected ? 'not-allowed' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            opacity: item.quantityReturned >= item.quantityExpected ? 0.6 : 1
-                          }}
-                        >
-                          +
-                      </button>
-                        <span style={{
-                          fontSize: '1.25rem',
+                      <button
+                        onClick={() => {
+                          const newValue = Math.max(0, item.quantityReturned - 1);
+                          updateItemInspection(index, 'quantityReturned', newValue);
+                        }}
+                        disabled={item.quantityReturned <= 0}
+                        style={{
+                          background: item.quantityReturned <= 0 ? '#d1d5db' : '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '36px',
+                          height: '36px',
+                          fontSize: '18px',
                           fontWeight: 'bold',
-                          minWidth: '30px',
-                          textAlign: 'center',
-                          color: '#1f2937'
-                        }}>
-                          {item.quantityReturned}
-                        </span>
-                        <button
-                          onClick={() => {
-                            const newValue = Math.max(0, item.quantityReturned - 1);
-                            updateItemInspection(index, 'quantityReturned', newValue);
-                          }}
-                          disabled={item.quantityReturned <= 0}
-                          style={{
-                            background: item.quantityReturned <= 0 ? '#d1d5db' : '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '32px',
-                            height: '32px',
-                            fontSize: '18px',
-                            fontWeight: 'bold',
-                            cursor: item.quantityReturned <= 0 ? 'not-allowed' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            opacity: item.quantityReturned <= 0 ? 0.6 : 1
-                          }}
-                        >
-                          -
-                        </button>
-                      </div>
+                          cursor: item.quantityReturned <= 0 ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: item.quantityReturned <= 0 ? 0.6 : 1
+                        }}
+                      >
+                        -
+                      </button>
                       <span style={{
-                        fontSize: '0.875rem',
-                        color: '#6b7280'
+                        fontSize: '1.5rem',
+                        fontWeight: 'bold',
+                        minWidth: '40px',
+                        textAlign: 'center',
+                        color: '#1f2937'
                       }}>
-                        מתוך {item.quantityExpected}
+                        {item.quantityReturned}
                       </span>
+                      <button
+                        onClick={() => {
+                          const newValue = Math.min(item.quantityExpected, item.quantityReturned + 1);
+                          updateItemInspection(index, 'quantityReturned', newValue);
+                        }}
+                        disabled={item.quantityReturned >= item.quantityExpected}
+                        style={{
+                          background: item.quantityReturned >= item.quantityExpected ? '#d1d5db' : '#10b981',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '36px',
+                          height: '36px',
+                          fontSize: '18px',
+                          fontWeight: 'bold',
+                          cursor: item.quantityReturned >= item.quantityExpected ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: item.quantityReturned >= item.quantityExpected ? 0.6 : 1
+                        }}
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
+
+                  {/* Status indicator */}
+                  {item.quantityReturned < item.quantityExpected && (
+                    <div style={{
+                      marginTop: '0.75rem',
+                      padding: '0.5rem',
+                      background: '#fef3c7',
+                      borderRadius: '6px',
+                      textAlign: 'center'
+                    }}>
+                      <span style={{
+                        fontSize: '0.875rem',
+                        color: '#92400e',
+                        fontWeight: '500'
+                      }}>
+                        ⚠️ חסרים {item.quantityExpected - item.quantityReturned} פריטים
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-
-            
           </div>
 
           {/* Footer */}
           <div style={{
             background: '#f9fafb',
-            padding: '1rem 1.5rem',
-            borderTop: '1px solid #e5e7eb'
+            padding: '1rem',
+            borderTop: '1px solid #e5e7eb',
+            flexShrink: 0
           }}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
-            }}>
+            }} className="footer-mobile">
               <div style={{
                 fontSize: '0.875rem',
                 color: '#6b7280'
-              }}>
+              }} className="summary-text">
                 בדיקת החזרה תעביר את ההזמנה להיסטוריה
               </div>
               <div style={{
                 display: 'flex',
                 gap: '0.75rem'
-              }}>
+              }} className="footer-mobile">
                 <button
                   onClick={onClose}
                   disabled={saving}
@@ -499,7 +539,8 @@ const ReturnInspectionModal = ({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
-                    opacity: saving ? 0.6 : 1
+                    opacity: saving ? 0.6 : 1,
+                    justifyContent: 'center'
                   }}
                 >
                   {saving ? (
