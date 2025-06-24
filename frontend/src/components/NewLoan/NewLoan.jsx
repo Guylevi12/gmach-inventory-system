@@ -69,8 +69,10 @@ const NewLoan = ({ onOrderCreated }) => {
 
     const items = availableItems.filter(i => i.selected).map(i => ({
       id: i.id,
+      ItemId: i.ItemId,    // ✅ הוסף ItemId
       name: i.name,
-      quantity: i.selectedQty
+      quantity: i.selectedQty,
+      imageUrl: i.imageUrl // ✅ הוסף תמונה
     }));
 
     setSaving(true);
@@ -117,8 +119,7 @@ const NewLoan = ({ onOrderCreated }) => {
         const itemsSnap = await getDocs(collection(db, 'items'));
         const itemsData = itemsSnap.docs
           .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(item => item.isDeleted !== true)
-          .map(item => ({ ...item, selected: false, selectedQty: 0 }));
+          .filter(item => item.isDeleted !== true);
 
         const ordersSnap = await getDocs(collection(db, 'orders'));
         const pickupStart = parseDate(form.pickupDate);
@@ -142,9 +143,27 @@ const NewLoan = ({ onOrderCreated }) => {
           });
         });
 
+        // 🔧 שמירת בחירות קודמות
+        const previousSelections = {};
+        availableItems.forEach(item => {
+          if (item.selected && item.selectedQty > 0) {
+            previousSelections[item.id] = {
+              selected: item.selected,
+              selectedQty: item.selectedQty
+            };
+          }
+        });
+
         const result = itemsData.map(item => {
           const availableQty = (item.quantity || 0) - (reserved[item.id] || 0);
-          return { ...item, quantity: availableQty };
+          const prevSelection = previousSelections[item.id];
+          
+          return { 
+            ...item, 
+            quantity: availableQty,
+            selected: prevSelection ? prevSelection.selected : false,
+            selectedQty: prevSelection ? prevSelection.selectedQty : 0
+          };
         }).filter(item => item.quantity > 0);
 
         setAvailableItems(result);
