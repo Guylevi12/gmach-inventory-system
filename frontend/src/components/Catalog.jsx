@@ -34,7 +34,14 @@ const Catalog = () => {
   );
 
   return (
-    <div style={{ padding: '2rem', direction: 'rtl', textAlign: 'right' }}>
+    <div style={{ 
+      padding: '2rem', 
+      direction: 'rtl', 
+      textAlign: 'right',
+      // 📱 תיקון למובייל
+      paddingLeft: '1rem',
+      paddingRight: '1rem'
+    }}>
       <h2>קטלוג</h2>
 
       <input
@@ -49,26 +56,30 @@ const Catalog = () => {
           marginBottom: '1.5rem',
           borderRadius: '6px',
           border: '1px solid #ccc',
-          fontSize: '1rem'
+          fontSize: '1rem',
+          boxSizing: 'border-box'
         }}
       />
 
       <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
+        display: 'grid',
+        // 📱 במובייל: 2 עמודות, בדסקטופ: עד 6 עמודות
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
         gap: '1rem',
         marginTop: '1rem'
       }}>
         {filteredItems.length === 0 ? (
-          <div style={{ textAlign: 'center', width: '100%', marginTop: '2rem' }}>
+          <div style={{ 
+            textAlign: 'center', 
+            gridColumn: '1 / -1', 
+            marginTop: '2rem' 
+          }}>
             <h3>לא נמצאו פריטים.</h3>
             <p>אנה נסה לחפש שוב.</p>
           </div>
         ) : (
           filteredItems.map(item => (
             <div key={item.ItemId} style={{
-              flex: '1 1 220px',
-              maxWidth: '150px',
               border: '1px solid #ccc',
               padding: '0.8rem',
               borderRadius: '8px',
@@ -79,28 +90,69 @@ const Catalog = () => {
               justifyContent: 'space-between',
               transition: 'transform 0.2s ease-in-out',
               opacity: 1,
-              filter: 'none'
+              filter: 'none',
+              // 📱 תיקון גובה וחלוקת מקום
+              minHeight: '200px',
+              maxWidth: '100%'
             }}>
               <img
                 src={item.imageUrl || '/no-image-available.png'}
                 alt={item.name}
                 style={{
                   width: '100%',
-                  height: '100%',
+                  height: '120px', // 📱 גובה קבוע לתמונות
                   objectFit: 'cover',
-                  display: 'block'
+                  display: 'block',
+                  borderRadius: '4px',
+                  marginBottom: '0.5rem'
                 }}
               />
-              <h3 style={{ marginBottom: '0.5rem' }}>{item.name}</h3>
-              {item.publicComment && (
-                <p style={{ fontSize: '0.85rem', color: '#444' }}>
-                  📝 {item.publicComment}
-                </p>
-              )}
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}>
+                <h3 style={{ 
+                  marginBottom: '0.5rem',
+                  fontSize: '0.9rem', // 📱 טקסט קצת יותר קטן במובייל
+                  lineHeight: '1.2',
+                  textAlign: 'center'
+                }}>
+                  {item.name}
+                </h3>
+                {item.publicComment && (
+                  <p style={{ 
+                    fontSize: '0.75rem', 
+                    color: '#444',
+                    textAlign: 'center',
+                    margin: '0.3rem 0 0 0'
+                  }}>
+                    📝 {item.publicComment}
+                  </p>
+                )}
+              </div>
             </div>
           ))
         )}
       </div>
+      
+      {/* 📱 CSS נוסף למובייל */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          div[style*="gridTemplateColumns"] {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.8rem !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          div[style*="gridTemplateColumns"] {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.6rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
