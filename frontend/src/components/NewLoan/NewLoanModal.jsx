@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BarcodeScanner from "../BarcodeScanner";
 import { getItemByItemId } from '@/services/firebase/itemsService';
 import ScanResultModal from './ScanResultModal';
@@ -17,6 +17,15 @@ const NewLoanModal = ({
 }) => {
   const [scanning, setScanning] = useState(false);
   const [scannedItem, setScannedItem] = useState(null);
+  // Local state to track temporary selections
+  const [localItems, setLocalItems] = useState([]);
+
+  // Initialize local state when modal opens or availableItems changes
+  useEffect(() => {
+    if (showCatalogPopup) {
+      setLocalItems([...availableItems]);
+    }
+  }, [showCatalogPopup, availableItems]);
 
   if (!showCatalogPopup) return null;
 
@@ -24,7 +33,7 @@ const NewLoanModal = ({
     try {
       const item = await getItemByItemId(decodedText);
 
-      const alreadySelected = availableItems.some(it => it.ItemId === item.ItemId && it.selected);
+      const alreadySelected = localItems.some(it => it.ItemId === item.ItemId && it.selected);
       if (alreadySelected) {
         alert("המוצר כבר קיים ברשימה");
         setScanning(false);
@@ -44,26 +53,66 @@ const NewLoanModal = ({
     }
   };
 
-  // Enhanced quantity change handler with validation
-  const handleQuantityChange = (item, inputValue) => {
+  // Local toggle function that only affects local state
+  const toggleSelectItemLocal = (itemId) => {
+    setLocalItems(prev =>
+      prev.map(item =>
+        item.id === itemId
+          ? { ...item, selected: !item.selected, selectedQty: !item.selected ? 1 : 0 }
+          : item
+      )
+    );
+  };
+
+  // Local quantity change handler
+  const handleQuantityChangeLocal = (item, inputValue) => {
     let qty = parseInt(inputValue) || 0;
-    
+
     // Ensure quantity doesn't exceed available amount
     if (qty > item.quantity) {
       qty = item.quantity;
     }
-    
+
     // Ensure quantity is not negative
     if (qty < 0) {
       qty = 0;
     }
-    
-    changeQty(item.id, qty);
+
+    setLocalItems(prev =>
+      prev.map(it =>
+        it.id === item.id
+          ? { ...it, selectedQty: qty, selected: qty > 0 }
+          : it
+      )
+    );
+  };
+
+  // Apply local changes to actual state (called on confirm)
+  const applyChanges = () => {
+    localItems.forEach(localItem => {
+      if (localItem.selected !== availableItems.find(ai => ai.id === localItem.id)?.selected) {
+        toggleSelectItem(localItem.id);
+      }
+      if (localItem.selectedQty !== availableItems.find(ai => ai.id === localItem.id)?.selectedQty) {
+        changeQty(localItem.id, localItem.selectedQty);
+      }
+    });
+  };
+
+  // Handle confirm - apply changes and close modal
+  const handleConfirm = () => {
+    applyChanges();
+    setShowCatalogPopup(false);
+  };
+
+  // Handle cancel or outside click - just close without applying changes
+  const handleCancel = () => {
+    setShowCatalogPopup(false);
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-box" dir="rtl">
+    <div className="modal-overlay" onClick={handleCancel}>
+      <div className="modal-box" dir="rtl" onClick={(e) => e.stopPropagation()}>
         <div style={{
           display: 'flex', justifyContent: 'space-between',
           alignItems: 'center', marginBottom: '1rem'
@@ -95,7 +144,7 @@ const NewLoanModal = ({
           <p style={{ textAlign: 'center' }}>טוען מוצרים…</p>
         ) : (
           <div className="modal-grid">
-            {availableItems
+            {localItems
               .filter(it => it.name.toLowerCase().includes(searchTerm.toLowerCase()))
               .map(item => (
                 <div key={item.id} className={`item-card ${item.selected ? 'selected' : ''}`}>
@@ -112,7 +161,7 @@ const NewLoanModal = ({
                     <label style={{ marginBottom: '0.3rem', display: 'block' }}>כמות:</label>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
                       <button
-                        onClick={() => handleQuantityChange(item, Math.max(0, item.selectedQty - 1))}
+                        onClick={() => handleQuantityChangeLocal(item, Math.max(0, item.selectedQty - 1))}
                         disabled={item.selectedQty <= 0}
                         style={{
                           width: '30px',
@@ -133,12 +182,12 @@ const NewLoanModal = ({
                         min={0}
                         max={item.quantity}
                         value={item.selectedQty}
-                        onChange={e => handleQuantityChange(item, e.target.value)}
+                        onChange={e => handleQuantityChangeLocal(item, e.target.value)}
                         onBlur={e => {
                           // Additional validation on blur to ensure the value is within bounds
                           const value = parseInt(e.target.value) || 0;
                           if (value > item.quantity) {
-                            handleQuantityChange(item, item.quantity);
+                            handleQuantityChangeLocal(item, item.quantity);
                           }
                         }}
                         style={{
@@ -157,7 +206,7 @@ const NewLoanModal = ({
                         }}
                       />
                       <button
-                        onClick={() => handleQuantityChange(item, Math.min(item.quantity, item.selectedQty + 1))}
+                        onClick={() => handleQuantityChangeLocal(item, Math.min(item.quantity, item.selectedQty + 1))}
                         disabled={item.selectedQty >= item.quantity}
                         style={{
                           width: '30px',
@@ -182,7 +231,7 @@ const NewLoanModal = ({
                   </div>
 
                   <button
-                    onClick={() => toggleSelectItem(item.id)}
+                    onClick={() => toggleSelectItemLocal(item.id)}
                     className={`btn ${item.selected ? 'btn-red' : 'btn-blue'}`}
                     style={{ width: '100%', marginTop: '0.5rem' }}
                   >
@@ -194,8 +243,8 @@ const NewLoanModal = ({
         )}
 
         <div className="modal-actions">
-          <button className="btn btn-blue" onClick={() => setShowCatalogPopup(false)}>✔️ אישור</button>
-          <button className="btn btn-gray" onClick={() => setShowCatalogPopup(false)}>❌ ביטול</button>
+          <button className="btn btn-blue" onClick={handleConfirm}>✔️ אישור</button>
+          <button className="btn btn-gray" onClick={handleCancel}>❌ ביטול</button>
         </div>
       </div>
 
@@ -215,7 +264,7 @@ const NewLoanModal = ({
           }}
           onConfirm={(qty) => {
             const updated = { ...scannedItem, selected: true, selectedQty: qty };
-            setAvailableItems(prev =>
+            setLocalItems(prev =>
               prev.map(item =>
                 item.ItemId === updated.ItemId
                   ? { ...item, selected: true, selectedQty: qty }
