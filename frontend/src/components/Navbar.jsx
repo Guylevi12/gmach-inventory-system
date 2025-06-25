@@ -157,10 +157,14 @@ const Navbar = () => {
         <div style={desktopMenuStyle}>
           <Link to="/" style={linkStyle}>דף הבית</Link>
           <Link to="/catalog" style={linkStyle}>קטלוג מוצרים</Link>
-          {user?.role === 'User' && onlineOrdering && (
+          {user?.role === 'User' && (
             <>
+              {/* "ההזמנות שלי" תמיד זמין למשתמש רגיל */}
               <Link to="/my-orders" style={linkStyle}>ההזמנות שלי</Link>
-              <Link to="/request" style={linkStyle}>בקשת השאלה</Link>
+              {/* "בקשת השאלה" רק אם הזמנות דרך האתר מופעלות */}
+              {onlineOrdering && (
+                <Link to="/request" style={linkStyle}>בקשת השאלה</Link>
+              )}
             </>
           )}
           {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
@@ -195,10 +199,14 @@ const Navbar = () => {
             <Link to="/" style={linkStyle} onClick={handleCloseMenu}>דף הבית</Link>
             <Link to="/catalog" style={linkStyle} onClick={handleCloseMenu}>קטלוג מוצרים</Link>
 
-            {user?.role === 'User' && onlineOrdering && (
+            {user?.role === 'User' && (
               <>
+                {/* "ההזמנות שלי" תמיד זמין למשתמש רגיל */}
                 <Link to="/my-orders" style={linkStyle} onClick={handleCloseMenu}>ההזמנות שלי</Link>
-                <Link to="/request" style={linkStyle} onClick={handleCloseMenu}>בקשת השאלה</Link>
+                {/* "בקשת השאלה" רק אם הזמנות דרך האתר מופעלות */}
+                {onlineOrdering && (
+                  <Link to="/request" style={linkStyle} onClick={handleCloseMenu}>בקשת השאלה</Link>
+                )}
               </>
             )}
             {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
