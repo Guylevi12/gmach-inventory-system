@@ -11,6 +11,14 @@ import ItemFormModal from './ItemFormModal';
 import { FaEdit, FaTrash, FaPlus, FaUndo } from 'react-icons/fa';
 import { useUser } from '../UserContext';
 
+// הוספת imports חדשים
+import { 
+  normalizeItemImages, 
+  getPrimaryImage, 
+  migrateExistingItems 
+} from '../utils/imageUtils';
+import ImageGallery from './ImageGallery';
+
 const ItemManager = () => {
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -135,7 +143,7 @@ const ItemManager = () => {
     const itemsInUse = new Set();
     openOrders.forEach(order => {
       order.items?.forEach(item => {
-        itemsInUse.add(item.id); // שים לב שזה item.id, לא item.ItemId
+        itemsInUse.add(item.id);
       });
     });
 
@@ -145,9 +153,10 @@ const ItemManager = () => {
       .filter(doc => doc.data().isDeleted !== true)
       .map(doc => {
         const data = doc.data();
+        const normalizedItem = normalizeItemImages(data);
         return {
           id: doc.id,
-          ...data,
+          ...normalizedItem,
           inUse: itemsInUse.has(doc.id)
         };
       });
@@ -157,12 +166,47 @@ const ItemManager = () => {
 
   const fetchDeletedItems = async () => {
     const snap = await getDocs(collection(db, 'deletedItems'));
-    setDeletedItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const deletedList = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id, 
+        ...normalizeItemImages(data)
+      };
+    });
+    setDeletedItems(deletedList);
   };
 
   useEffect(() => {
-    fetchItems();
-    fetchDeletedItems();
+    // בדיקת migration חד-פעמית
+    const runMigration = async () => {
+      try {
+        console.log('🔄 בדיקת migration למבנה תמונות חדש...');
+        const result = await migrateExistingItems(
+          db, 
+          updateDoc, 
+          doc, 
+          getDocs, 
+          collection
+        );
+        console.log('📊 תוצאות migration:', result);
+      } catch (error) {
+        console.log('⚠️ Migration כבר רץ או שאין צורך בו');
+      }
+    };
+
+    // רץ migration אחת בלבד
+    const migrationRun = localStorage.getItem('imagesMigrationComplete');
+    if (!migrationRun) {
+      runMigration().then(() => {
+        localStorage.setItem('imagesMigrationComplete', 'true');
+        // רענן את הפריטים אחרי migration
+        fetchItems();
+        fetchDeletedItems();
+      });
+    } else {
+      fetchItems();
+      fetchDeletedItems();
+    }
   }, []);
 
   // Close deleted modal on outside click or Escape
@@ -214,31 +258,31 @@ const ItemManager = () => {
     }
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e, formData = null) => {
     e.preventDefault();
     try {
-      const q = query(collection(db, 'items'), where('name', '==', name.trim()));
+      // אם יש formData מהמודל החדש, השתמש בו
+      const itemData = formData || {
+        name,
+        quantity: parseInt(quantity),
+        images: imageUrl ? [imageUrl] : [],
+        imageUrl: imageUrl,
+        publicComment,
+        internalComment
+      };
+
+      const q = query(collection(db, 'items'), where('name', '==', itemData.name.trim()));
       const snap = await getDocs(q);
 
-      let finalImage = imageUrl;
-      if (imageFile) {
-        const compressed = await imageCompression(imageFile, {
-          maxSizeMB: 0.2,
-          maxWidthOrHeight: 1024,
-          useWebWorker: true
-        });
-        const ref = storage.ref(`items/${Date.now()}-${imageFile.name}`);
-        await ref.put(compressed);
-        finalImage = await ref.getDownloadURL();
-      }
-
       if (editingItem) {
+        // עריכת מוצר קיים
         await updateDoc(doc(db, 'items', editingItem.id), {
-          name,
-          quantity: parseInt(quantity),
-          imageUrl: finalImage,
-          publicComment,
-          internalComment,
+          name: itemData.name,
+          quantity: parseInt(itemData.quantity),
+          images: itemData.images || [],
+          imageUrl: itemData.images?.[0] || null, // תאימות לאחור
+          publicComment: itemData.publicComment,
+          internalComment: itemData.internalComment,
           updatedBy: userName,
           updatedAt: serverTimestamp()
         });
@@ -247,17 +291,18 @@ const ItemManager = () => {
         const data = snap.docs[0].data();
         confirmAlert({
           title: 'המוצר כבר קיים',
-          message: `המוצר "${name}" כבר קיים בכמות ${data.quantity}.\nהאם להוסיף ${quantity}?`,
+          message: `המוצר "${itemData.name}" כבר קיים בכמות ${data.quantity}.\nהאם להוסיף ${itemData.quantity}?`,
           buttons: [
             {
               label: 'כן',
               onClick: async () => {
                 await addItem({
-                  name,
-                  quantity: parseInt(quantity),
-                  imageUrl: finalImage,
-                  publicComment,
-                  internalComment,
+                  name: itemData.name,
+                  quantity: parseInt(itemData.quantity),
+                  images: itemData.images || [],
+                  imageUrl: itemData.images?.[0] || null, // תאימות לאחור
+                  publicComment: itemData.publicComment,
+                  internalComment: itemData.internalComment,
                   createdBy: userName,
                   updatedBy: userName,
                   createdAt: serverTimestamp(),
@@ -273,18 +318,20 @@ const ItemManager = () => {
         });
         return;
       } else {
+        // מוצר חדש
         await addItem({
-          name,
-          quantity: parseInt(quantity),
-          imageUrl: finalImage,
-          publicComment,
-          internalComment,
+          name: itemData.name,
+          quantity: parseInt(itemData.quantity),
+          images: itemData.images || [],
+          imageUrl: itemData.images?.[0] || null, // תאימות לאחור
+          publicComment: itemData.publicComment,
+          internalComment: itemData.internalComment,
           createdBy: userName,
           updatedBy: userName,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-        toast.success(`המוצר "${name}" נוסף בהצלחה`);
+        toast.success(`המוצר "${itemData.name}" נוסף בהצלחה`);
       }
 
       // Reset
@@ -292,7 +339,8 @@ const ItemManager = () => {
       setImageUrl(''); setPublicComment(''); setInternalComment('');
       setShowPopup(false); setEditingItem(null);
       fetchItems(); fetchDeletedItems();
-    } catch {
+    } catch (error) {
+      console.error('שגיאה בהוספת המוצר:', error);
       toast.error('הוספת המוצר נכשלה');
     }
   };
@@ -393,17 +441,15 @@ const ItemManager = () => {
                   boxSizing: 'border-box'
                 }}
               >
-                <img
-                  src={item.imageUrl || '/no-image-available.png'}
-                  alt={item.name}
-                  style={{
-                    width: '100%',
-                    height: '140px',
-                    objectFit: 'cover',
-                    borderRadius: '6px',
-                    marginBottom: '0.5rem'
-                  }}
+                {/* החלפת img ב-ImageGallery */}
+                <ImageGallery 
+                  item={item}
+                  width="100%"
+                  height="140px"
+                  showNavigation={true}
+                  style={{ marginBottom: '0.5rem' }}
                 />
+                
                 <h3 style={{ margin: '0.5rem 0', fontSize: '1rem' }}>{item.name}</h3>
                 <p style={{ margin: '0.25rem 0' }}>כמות: {item.quantity}</p>
                 {item.internalComment && (
@@ -435,7 +481,7 @@ const ItemManager = () => {
                       setEditingItem(item);
                       setName(item.name);
                       setQuantity(item.quantity.toString());
-                      setImageUrl(item.imageUrl || '');
+                      setImageUrl(getPrimaryImage(item) || '');
                       setImageFile(null);
                       setShowPopup(true);
                       setPublicComment(item.publicComment || '');
@@ -571,17 +617,15 @@ const ItemManager = () => {
                       boxSizing: 'border-box'
                     }}
                   >
-                    <img
-                      src={item.imageUrl || '/no-image-available.png'}
-                      alt={item.name}
-                      style={{
-                        width: '100%',
-                        height: '120px',
-                        objectFit: 'cover',
-                        borderRadius: '6px',
-                        marginBottom: '0.5rem'
-                      }}
+                    {/* גם כאן החלפת img ב-ImageGallery */}
+                    <ImageGallery 
+                      item={item}
+                      width="100%"
+                      height="120px"
+                      showNavigation={true}
+                      style={{ marginBottom: '0.5rem' }}
                     />
+                    
                     <h3 style={{ margin: '0.5rem 0' }}>{item.name}</h3>
                     <p style={{ margin: '0.25rem 0' }}>כמות: {item.quantity}</p>
                     <button

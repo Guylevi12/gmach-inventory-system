@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
+import { normalizeItemImages } from '../utils/imageUtils';
+import ImageGallery from './ImageGallery';
 
 const Catalog = () => {
   const [items, setItems] = useState([]);
@@ -11,7 +13,14 @@ const Catalog = () => {
     const itemsCol = collection(db, 'items');
     const unsubscribe = onSnapshot(itemsCol, (snapshot) => {
       const itemList = snapshot.docs
-        .map(doc => doc.data())
+        .map(doc => {
+          const data = doc.data();
+          const normalizedItem = normalizeItemImages(data);
+          return {
+            id: doc.id,
+            ...normalizedItem
+          };
+        })
         .filter(item => item.isDeleted !== true);
       setItems(itemList);
       setLoading(false);
@@ -95,18 +104,18 @@ const Catalog = () => {
               minHeight: '200px',
               maxWidth: '100%'
             }}>
-              <img
-                src={item.imageUrl || '/no-image-available.png'}
-                alt={item.name}
+              {/* החלפת img ב-ImageGallery */}
+              <ImageGallery 
+                item={item}
+                width="100%"
+                height="140px"
+                showNavigation={true}
                 style={{
-                  width: '100%',
-                  height: '120px', // 📱 גובה קבוע לתמונות
-                  objectFit: 'cover',
-                  display: 'block',
-                  borderRadius: '4px',
-                  marginBottom: '0.5rem'
+                  marginBottom: '0.5rem',
+                  borderRadius: '4px'
                 }}
               />
+              
               <div style={{
                 flex: 1,
                 display: 'flex',
