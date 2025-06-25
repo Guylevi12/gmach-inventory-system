@@ -40,6 +40,84 @@ const ItemManager = () => {
         margin: 0;
       }
       input[type=number] { -moz-appearance: textfield; }
+      
+      /* רספונסיביות משופרת */
+      .products-grid-mobile {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.2rem;
+        padding: 0;
+      }
+      
+      .product-card-mobile {
+        min-height: 380px;
+        padding: 1rem;
+      }
+      
+      .product-card-mobile img {
+        height: 140px;
+      }
+      
+      .product-card-mobile h3 {
+        font-size: 1rem;
+        margin: 0.5rem 0;
+      }
+      
+      .product-card-mobile p {
+        font-size: 0.875rem;
+        margin: 0.25rem 0;
+      }
+      
+      .product-card-mobile .button-group {
+        flex-direction: row;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      
+      .product-card-mobile button {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+        flex: 1;
+      }
+      
+      /* מובייל בלבד */
+      @media (max-width: 768px) {
+        .products-grid-mobile {
+          grid-template-columns: 1fr 1fr !important;
+          gap: 0.75rem !important;
+          padding: 0 0.5rem;
+        }
+        
+        .product-card-mobile {
+          min-height: 320px !important;
+          padding: 0.75rem !important;
+        }
+        
+        .product-card-mobile img {
+          height: 100px !important;
+        }
+        
+        .product-card-mobile h3 {
+          font-size: 0.9rem !important;
+          margin: 0.5rem 0 !important;
+        }
+        
+        .product-card-mobile p {
+          font-size: 0.8rem !important;
+          margin: 0.25rem 0 !important;
+        }
+        
+        .product-card-mobile .button-group {
+          flex-direction: column !important;
+          gap: 0.3rem !important;
+        }
+        
+        .product-card-mobile button {
+          font-size: 0.75rem !important;
+          padding: 4px 8px !important;
+          width: 100% !important;
+        }
+      }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
@@ -220,11 +298,17 @@ const ItemManager = () => {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ padding: '1rem', direction: 'rtl' }}>
       {/* Active Items Section */}
-      <div style={{ width: '100%', direction: 'rtl' }}>
+      <div style={{ width: '100%' }}>
         <h2>ניהול מוצרים</h2>
-        <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'flex-start', 
+          gap: '1rem', 
+          marginBottom: '1rem',
+          flexWrap: 'wrap'
+        }}>
           <button
             onClick={() => {
               setEditingItem(null);
@@ -280,30 +364,21 @@ const ItemManager = () => {
             fontSize: '1rem',
             border: '1px solid #ccc',
             width: '100%',
-            marginBottom: '1rem'
+            marginBottom: '1rem',
+            boxSizing: 'border-box'
           }}
         />
 
-        <div
-          className="products-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-            gap: '1.5rem',
-            justifyItems: 'center'
-          }}
-        >
+        <div className="products-grid-mobile">
           {filteredItems.length === 0 ? (
-            <p>לא נמצא מוצרים במלאי.</p>
+            <p style={{ gridColumn: '1 / -1', textAlign: 'center' }}>לא נמצא מוצרים במלאי.</p>
           ) : (
             filteredItems.map(item => (
               <div
                 key={item.id}
-                className="product-card"
+                className="product-card product-card-mobile"
                 style={{
                   width: '100%',
-                  maxWidth: '240px',
-                  minHeight: '420px',
                   border: '1px solid #e0e0e0',
                   borderRadius: '10px',
                   backgroundColor: '#fff',
@@ -314,7 +389,8 @@ const ItemManager = () => {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   textAlign: 'center',
-                  transition: 'transform 0.2s'
+                  transition: 'transform 0.2s',
+                  boxSizing: 'border-box'
                 }}
               >
                 <img
@@ -328,22 +404,32 @@ const ItemManager = () => {
                     marginBottom: '0.5rem'
                   }}
                 />
-                <h3>{item.name}</h3>
-                <p>כמות: {item.quantity}</p>
+                <h3 style={{ margin: '0.5rem 0', fontSize: '1rem' }}>{item.name}</h3>
+                <p style={{ margin: '0.25rem 0' }}>כמות: {item.quantity}</p>
                 {item.internalComment && (
-                  <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.25rem' }}>
+                  <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.25rem', margin: '0.25rem 0' }}>
                     📌 {item.internalComment}
                   </p>
                 )}
-                <p style={{ fontSize: '0.85rem', color: '#555' }}>
+                <p style={{ fontSize: '0.85rem', color: '#555', margin: '0.25rem 0' }}>
                   מזהה מוצר: {item.ItemId}
                 </p>
                 {item.inUse && (
-                  <p style={{ color: '#d97706', fontWeight: 'bold', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                  <p style={{ 
+                    color: '#d97706', 
+                    fontWeight: 'bold', 
+                    fontSize: '0.85rem', 
+                    margin: '0.25rem 0' 
+                  }}>
                     🕐 מוצר זה נמצא בהזמנה פעילה
                   </p>
                 )}
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                <div className="button-group" style={{ 
+                  display: 'flex', 
+                  gap: '0.5rem', 
+                  marginTop: 'auto',
+                  width: '100%'
+                }}>
                   <button
                     onClick={() => {
                       setEditingItem(item);
@@ -364,8 +450,10 @@ const ItemManager = () => {
                       fontSize: '14px',
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'center',
                       gap: '6px',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      flex: '1'
                     }}
                   >
                     <FaEdit size={14} /> עריכה
@@ -381,8 +469,10 @@ const ItemManager = () => {
                       fontSize: '14px',
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'center',
                       gap: '6px',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      flex: '1'
                     }}
                   >
                     <FaTrash size={14} /> מחיקה
@@ -396,7 +486,19 @@ const ItemManager = () => {
 
       {/* Deleted Items Modal */}
       {showDeletedPopup && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
           <div
             className="modal-content"
             ref={deletedModalRef}
@@ -404,7 +506,8 @@ const ItemManager = () => {
               position: 'relative',
               backgroundColor: 'white',
               borderRadius: '8px',
-              width: '80%',
+              width: '90%',
+              maxWidth: '800px',
               maxHeight: '80%',
               overflowY: 'auto',
               padding: '2rem',
@@ -440,28 +543,21 @@ const ItemManager = () => {
                 fontSize: '1rem',
                 border: '1px solid #ccc',
                 width: '100%',
-                margin: '1rem 0'
+                margin: '1rem 0',
+                boxSizing: 'border-box'
               }}
             />
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-                gap: '1.5rem',
-                justifyItems: 'center'
-              }}
-            >
+            <div className="products-grid-mobile">
               {filteredDeleted.length === 0 ? (
-                <p>אין פריטים שנמחקו.</p>
+                <p style={{ gridColumn: '1 / -1', textAlign: 'center' }}>אין פריטים שנמחקו.</p>
               ) : (
                 filteredDeleted.map(item => (
                   <div
                     key={item.id}
+                    className="product-card-mobile"
                     style={{
                       width: '100%',
-                      maxWidth: '240px',
-                      minHeight: '300px',
                       border: '1px solid #e0e0e0',
                       borderRadius: '10px',
                       backgroundColor: '#fff',
@@ -471,7 +567,8 @@ const ItemManager = () => {
                       flexDirection: 'column',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      textAlign: 'center'
+                      textAlign: 'center',
+                      boxSizing: 'border-box'
                     }}
                   >
                     <img
@@ -485,8 +582,8 @@ const ItemManager = () => {
                         marginBottom: '0.5rem'
                       }}
                     />
-                    <h3>{item.name}</h3>
-                    <p>כמות: {item.quantity}</p>
+                    <h3 style={{ margin: '0.5rem 0' }}>{item.name}</h3>
+                    <p style={{ margin: '0.25rem 0' }}>כמות: {item.quantity}</p>
                     <button
                       onClick={() => handleRestoreItem(item.id)}
                       style={{
@@ -499,7 +596,8 @@ const ItemManager = () => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        marginTop: 'auto'
                       }}
                     >
                       <FaUndo size={14} /> השבה

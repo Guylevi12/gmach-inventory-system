@@ -4,8 +4,11 @@ import { Phone, X, MessageCircle } from 'lucide-react';
 
 const ContactBubble = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const phoneNumber = "123-456-7890"; // Replace with your actual phone number
-  const whatsappNumber = "1234567890"; // Replace with WhatsApp number (no dashes)
+  const [isClosing, setIsClosing] = useState(false);
+  const [buttonContent, setButtonContent] = useState('phone');
+  const [contentTransition, setContentTransition] = useState('fade-in');
+  const phoneNumber = "050-123-4567"; // החלף למספר הטלפון האמיתי שלך
+  const whatsappNumber = "972501234567"; // החלף למספר WhatsApp (עם קוד מדינה)
 
   const handlePhoneClick = () => {
     window.open(`tel:${phoneNumber}`, '_self');
@@ -14,6 +17,34 @@ const ContactBubble = () => {
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("שלום, אני מעוניין לקבל מידע נוסף על השירות");
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+  };
+
+  const handleToggle = () => {
+    if (isExpanded) {
+      // התחל אנימציית סגירה
+      setIsClosing(true);
+      
+      // אנימציה לתוכן הכפתור
+      setContentTransition('fade-out');
+      setTimeout(() => {
+        setButtonContent('phone');
+        setContentTransition('fade-in');
+      }, 150);
+      
+      setTimeout(() => {
+        setIsExpanded(false);
+        setIsClosing(false);
+      }, 250);
+    } else {
+      setIsExpanded(true);
+      
+      // אנימציה לתוכן הכפתור
+      setContentTransition('fade-out');
+      setTimeout(() => {
+        setButtonContent('close');
+        setContentTransition('fade-in');
+      }, 150);
+    }
   };
 
   return (
@@ -33,7 +64,7 @@ const ContactBubble = () => {
           border-radius: 50px;
           box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           border: none;
           display: flex;
           align-items: center;
@@ -41,6 +72,8 @@ const ContactBubble = () => {
           padding: 12px 20px;
           font-weight: 500;
           font-size: 14px;
+          overflow: hidden;
+          position: relative;
         }
 
         .bubble-main:hover {
@@ -55,6 +88,25 @@ const ContactBubble = () => {
           padding: 0;
           justify-content: center;
           border-radius: 50%;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* אנימציה לתוכן הכפתור */
+        .bubble-content {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bubble-content.fade-out {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+
+        .bubble-content.fade-in {
+          opacity: 1;
+          transform: scale(1);
         }
 
         .expanded-menu {
@@ -73,12 +125,27 @@ const ContactBubble = () => {
         @keyframes slideUp {
           from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(10px) scale(0.95);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
           }
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: translateY(10px) scale(0.95);
+          }
+        }
+
+        .expanded-menu.closing {
+          animation: slideDown 0.25s ease forwards;
         }
 
         .menu-item {
@@ -135,26 +202,47 @@ const ContactBubble = () => {
 
         @media (max-width: 768px) {
           .contact-bubble {
-            bottom: 15px;
+            bottom: 80px;
             right: 15px;
           }
           
           .expanded-menu {
-            min-width: 200px;
-            right: -50px;
+            width: 220px;
+            right: 10px; /* הזז ימינה כדי שלא יחתוך */
+            bottom: 65px;
+            padding: 14px;
+            border-radius: 10px;
           }
           
           .bubble-main {
-            padding: 10px 16px;
-            font-size: 13px;
+            padding: 12px 18px;
+            font-size: 14px;
+            min-height: 48px;
+          }
+          
+          .bubble-main.collapsed {
+            width: 56px;
+            height: 56px;
+            padding: 0;
+          }
+          
+          .menu-item {
+            padding: 12px;
+            font-size: 14px;
+            min-height: 50px;
+          }
+          
+          .menu-header {
+            font-size: 16px;
+            margin-bottom: 12px;
           }
         }
       `}</style>
 
       <div className="contact-bubble">
         {/* Expanded Menu */}
-        {isExpanded && (
-          <div className="expanded-menu" dir="rtl">
+        {(isExpanded || isClosing) && (
+          <div className={`expanded-menu ${isClosing ? 'closing' : ''}`} dir="rtl">
             <div className="menu-header">צור קשר</div>
             
             <button
@@ -183,18 +271,20 @@ const ContactBubble = () => {
 
         {/* Main Bubble Button */}
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={handleToggle}
           className={`bubble-main ${!isExpanded ? 'collapsed pulse' : ''}`}
           aria-label="צור קשר"
         >
-          {isExpanded ? (
-            <>
-              <X size={20} />
-              <span>סגור</span>
-            </>
-          ) : (
-            <Phone size={24} />
-          )}
+          <div className={`bubble-content ${contentTransition}`}>
+            {buttonContent === 'close' ? (
+              <>
+                <X size={20} />
+                <span>סגור</span>
+              </>
+            ) : (
+              <Phone size={24} />
+            )}
+          </div>
         </button>
       </div>
     </>
