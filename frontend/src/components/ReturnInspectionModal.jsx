@@ -4,10 +4,10 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
 import { CheckCircle, XCircle, Package, Save, AlertTriangle } from 'lucide-react';
 
-const ReturnInspectionModal = ({ 
-  show, 
-  order, 
-  onClose, 
+const ReturnInspectionModal = ({
+  show,
+  order,
+  onClose,
   onCompleteInspection,
   allItems = [],
   updateItemQuantities
@@ -42,7 +42,7 @@ const ReturnInspectionModal = ({
     } else {
       document.body.style.overflow = 'unset';
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -54,7 +54,7 @@ const ReturnInspectionModal = ({
     setItemInspections(prev => prev.map((item, i) => {
       if (i === index) {
         const updated = { ...item, [field]: value };
-        
+
         // Auto-calculate if fully returned based on quantities
         if (field === 'quantityReturned') {
           updated.isFullyReturned = value >= item.quantityExpected;
@@ -65,7 +65,7 @@ const ReturnInspectionModal = ({
             updated.condition = 'good';
           }
         }
-        
+
         return updated;
       }
       return item;
@@ -114,27 +114,27 @@ const ReturnInspectionModal = ({
 
       // Update item quantities in stock based on what was actually returned
       for (const inspection of itemInspections) {
-        const stockItem = allItems.find(item => 
-          item.id === inspection.itemId || 
+        const stockItem = allItems.find(item =>
+          item.id === inspection.itemId ||
           item.name === inspection.name
         );
-        
+
         if (stockItem) {
           // Calculate items to remove from stock
           let itemsToRemoveFromStock = 0;
-          
+
           // Items that didn't return at all (lost)
           const itemsNotReturned = inspection.quantityExpected - inspection.quantityReturned;
-          
+
           // Items that returned but are damaged (unusable)
           const damagedItems = inspection.condition === 'damaged' ? inspection.quantityReturned : 0;
-          
+
           // Total items to remove = items that didn't return + items that returned damaged
           itemsToRemoveFromStock = itemsNotReturned + damagedItems;
-          
+
           const newStockQuantity = stockItem.quantity - itemsToRemoveFromStock;
           const finalQuantity = Math.max(0, newStockQuantity);
-          
+
           console.log(`עדכון מלאי - ${stockItem.name}:`, {
             originalStock: stockItem.quantity,
             expectedReturn: inspection.quantityExpected,
@@ -145,7 +145,7 @@ const ReturnInspectionModal = ({
             totalToRemove: itemsToRemoveFromStock,
             newStock: finalQuantity
           });
-          
+
           // Only update if there are items to remove from stock
           if (itemsToRemoveFromStock > 0) {
             await updateDoc(doc(db, 'items', stockItem.id), {
@@ -158,14 +158,14 @@ const ReturnInspectionModal = ({
 
       // Complete the inspection
       await onCompleteInspection(order.id, itemInspections, summary);
-      
+
       // Refresh item data if function provided
       if (updateItemQuantities) {
         await updateItemQuantities();
       }
 
       onClose();
-      
+
     } catch (error) {
       console.error('Error completing return inspection:', error);
       alert('שגיאה בהשלמת בדיקת החזרה. נסה שוב.');
@@ -328,7 +328,7 @@ const ReturnInspectionModal = ({
             overflowY: 'auto',
             flex: 1
           }}>
-           
+
             {/* Items Inspection */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {itemInspections.map((item, index) => (
@@ -347,7 +347,7 @@ const ReturnInspectionModal = ({
                     marginBottom: '1rem'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <img 
+                      <img
                         src={order.items.find(orderItem => orderItem.id === item.itemId)?.imageUrl || '/no-image-available.png'}
                         alt={item.name}
                         style={{

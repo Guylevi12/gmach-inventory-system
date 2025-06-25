@@ -16,7 +16,7 @@ const Navbar = () => {
   useEffect(() => {
     // הגדרת listener לזמן אמת
     const docRef = doc(db, 'settings', 'onlineOrdering');
-    
+
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         setOnlineOrdering(docSnap.data().enabled);
@@ -52,12 +52,12 @@ const Navbar = () => {
   };
 
   const getRoleLabel = (role) => {
-  switch (role) {
-    case 'MainAdmin': return 'מנהל ראשי';
-    case 'GmachAdmin': return 'מנהל גמח';
-    default: return 'משתמש';
-  }
-};
+    switch (role) {
+      case 'MainAdmin': return 'מנהל ראשי';
+      case 'GmachAdmin': return 'מנהל גמח';
+      default: return 'משתמש';
+    }
+  };
 
   if (isMobile === null) return null; // חכה לחישוב ראשוני בטוח
 
@@ -80,15 +80,15 @@ const Navbar = () => {
   };
 
   const greetingStyle = {
-      position: 'absolute',
-  top: '10px',
-  left: isMobile ? '20px' : 'auto',
-  right: isMobile ? 'auto' : '20px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px',
-  fontWeight: 'bold',
-  color: '#333',
+    position: 'absolute',
+    top: '10px',
+    left: isMobile ? '20px' : 'auto',
+    right: isMobile ? 'auto' : '20px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    fontWeight: 'bold',
+    color: '#333',
   };
 
   const logoutButtonStyle = {

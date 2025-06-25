@@ -10,7 +10,7 @@ const ItemsModal = ({ show, setShow, selectedEvents, allItems }) => {
     } else {
       document.body.style.overflow = 'unset';
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -55,13 +55,13 @@ const ItemsModal = ({ show, setShow, selectedEvents, allItems }) => {
           z-index: 100000 !important;
         }
       `}</style>
-      
-      <div 
+
+      <div
         className="items-modal-overlay"
         onClick={handleBackdropClick}
       >
-        <div 
-          className="items-modal-content" 
+        <div
+          className="items-modal-content"
           dir="rtl"
           onClick={(e) => e.stopPropagation()}
         >
@@ -78,16 +78,16 @@ const ItemsModal = ({ show, setShow, selectedEvents, allItems }) => {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <Package size={24} />
-                <h2 style={{ 
-                  fontSize: '1.25rem', 
+                <h2 style={{
+                  fontSize: '1.25rem',
                   fontWeight: 'bold',
                   margin: 0
                 }}>
                   רשימת מוצרים
                 </h2>
               </div>
-              <button 
-                onClick={() => setShow(false)} 
+              <button
+                onClick={() => setShow(false)}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -100,8 +100,8 @@ const ItemsModal = ({ show, setShow, selectedEvents, allItems }) => {
                 <X size={20} />
               </button>
             </div>
-            <div style={{ 
-              marginTop: '0.5rem', 
+            <div style={{
+              marginTop: '0.5rem',
               color: '#a7f3d0'
             }}>
               {items.length} פריט{items.length !== 1 ? 'ים' : ''} בהזמנה
@@ -131,9 +131,9 @@ const ItemsModal = ({ show, setShow, selectedEvents, allItems }) => {
                         gap: '1rem'
                       }}>
                         {item.imageUrl && (
-                          <img 
-                            src={item.imageUrl} 
-                            alt={item.name} 
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
                             style={{
                               width: '4rem',
                               height: '4rem',
@@ -163,7 +163,7 @@ const ItemsModal = ({ show, setShow, selectedEvents, allItems }) => {
                               <strong>כמות:</strong> {item.quantity}
                             </span>
                             <span>
-                              <strong>מזהה מוצר:</strong> 
+                              <strong>מזהה מוצר:</strong>
                               <code style={{
                                 background: '#f3f4f6',
                                 padding: '0.125rem 0.375rem',
@@ -196,7 +196,7 @@ const ItemsModal = ({ show, setShow, selectedEvents, allItems }) => {
                 padding: '2rem',
                 color: '#6b7280'
               }}>
-                <Package size={48} style={{ 
+                <Package size={48} style={{
                   color: '#d1d5db',
                   marginBottom: '1rem'
                 }} />
@@ -222,7 +222,7 @@ const ItemsModal = ({ show, setShow, selectedEvents, allItems }) => {
               }}>
                 סה"כ כמות: {items.reduce((sum, item) => sum + (item.quantity || 1), 0)}
               </div>
-              <button 
+              <button
                 onClick={() => setShow(false)}
                 style={{
                   background: '#059669',

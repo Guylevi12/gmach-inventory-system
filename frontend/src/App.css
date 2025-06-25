@@ -3,12 +3,14 @@
 .App {
   text-align: center;
   min-height: 100vh;
-  direction: rtl; /* RTL support for Hebrew */
+  direction: rtl;
+  /* RTL support for Hebrew */
 }
 
 /* Main content wrapper - JUST ADD CENTERING */
 .main-content {
-  max-width: 1400px; /* Slightly wider to match your current layout */
+  max-width: 1400px;
+  /* Slightly wider to match your current layout */
   margin: 0 auto;
   padding: 0 1rem;
   width: 100%;
@@ -19,7 +21,8 @@
 .page-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem; /* Keep your current padding */
+  padding: 2rem;
+  /* Keep your current padding */
   direction: rtl;
 }
 
@@ -28,7 +31,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem; /* Keep your current spacing */
+  margin-bottom: 1rem;
+  /* Keep your current spacing */
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -43,22 +47,27 @@
 /* Button group - keep current styling */
 .button-group {
   display: flex;
-  gap: 1rem; /* Match your current gap */
+  gap: 1rem;
+  /* Match your current gap */
   align-items: center;
   flex-wrap: wrap;
 }
 
 /* Search section - minimal styling */
 .search-section {
-  margin-bottom: 1rem; /* Match your current spacing */
+  margin-bottom: 1rem;
+  /* Match your current spacing */
   width: 100%;
 }
 
 .search-input {
   width: 100%;
-  padding: 10px; /* Keep your current padding */
-  border: 1px solid #ccc; /* Keep your current border */
-  border-radius: 6px; /* Keep your current radius */
+  padding: 10px;
+  /* Keep your current padding */
+  border: 1px solid #ccc;
+  /* Keep your current border */
+  border-radius: 6px;
+  /* Keep your current radius */
   font-size: 1rem;
   direction: rtl;
   text-align: right;
@@ -67,8 +76,10 @@
 /* Products grid - keep your current grid settings */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); /* Keep your current sizing */
-  gap: 1.5rem; /* Keep your current gap */
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  /* Keep your current sizing */
+  gap: 1.5rem;
+  /* Keep your current gap */
   justify-items: center;
   width: 100%;
 }
@@ -76,19 +87,26 @@
 /* Product cards - keep your current card styling */
 .product-card {
   width: 100%;
-  max-width: 240px; /* Keep your current max-width */
-  min-height: 420px; /* Keep your current min-height */
-  border: 1px solid #e0e0e0; /* Keep your current border */
-  border-radius: 10px; /* Keep your current radius */
+  max-width: 240px;
+  /* Keep your current max-width */
+  min-height: 420px;
+  /* Keep your current min-height */
+  border: 1px solid #e0e0e0;
+  /* Keep your current border */
+  border-radius: 10px;
+  /* Keep your current radius */
   background-color: #fff;
-  padding: 1rem; /* Keep your current padding */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06); /* Keep your current shadow */
+  padding: 1rem;
+  /* Keep your current padding */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  /* Keep your current shadow */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   text-align: center;
-  transition: transform 0.2s; /* Keep your current transition */
+  transition: transform 0.2s;
+  /* Keep your current transition */
 }
 
 .product-card:hover {
@@ -98,12 +116,16 @@
 
 /* Buttons - keep your current button styling */
 .btn-primary {
-  background-color: #1976d2; /* Keep your current blue */
+  background-color: #1976d2;
+  /* Keep your current blue */
   color: white;
   border: none;
-  border-radius: 6px; /* Keep your current radius */
-  padding: 8px 12px; /* Keep your current padding */
-  font-size: 14px; /* Keep your current font size */
+  border-radius: 6px;
+  /* Keep your current radius */
+  padding: 8px 12px;
+  /* Keep your current padding */
+  font-size: 14px;
+  /* Keep your current font size */
   display: flex;
   align-items: center;
   gap: 6px;
@@ -116,12 +138,16 @@
 }
 
 .btn-secondary {
-  background-color: #6c757d; /* Keep your current gray */
+  background-color: #6c757d;
+  /* Keep your current gray */
   color: white;
   border: none;
-  border-radius: 6px; /* Keep your current radius */
-  padding: 8px 12px; /* Keep your current padding */
-  font-size: 14px; /* Keep your current font size */
+  border-radius: 6px;
+  /* Keep your current radius */
+  padding: 8px 12px;
+  /* Keep your current padding */
+  font-size: 14px;
+  /* Keep your current font size */
   display: flex;
   align-items: center;
   gap: 6px;
@@ -150,10 +176,13 @@
 
 .modal-content {
   background: white !important;
-  border-radius: 8px !important; /* Keep your current radius */
+  border-radius: 8px !important;
+  /* Keep your current radius */
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
-  width: 80% !important; /* Keep your current width */
-  max-height: 80% !important; /* Keep your current max-height */
+  width: 80% !important;
+  /* Keep your current width */
+  max-height: 80% !important;
+  /* Keep your current max-height */
   overflow-y: auto !important;
   position: relative !important;
   direction: rtl !important;
@@ -190,6 +219,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -206,33 +236,35 @@
 }
 
 @keyframes spin {
-  to { 
-    transform: rotate(360deg); 
+  to {
+    transform: rotate(360deg);
   }
 }
 
 /* Responsive Design - keep your current breakpoints */
 @media (max-width: 1024px) {
+
   .main-content,
   .page-container {
     padding: 0 0.75rem;
   }
-  
+
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
 
 @media (max-width: 768px) {
+
   .main-content,
   .page-container {
     padding: 0 0.5rem;
   }
-  
+
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
-  
+
   .page-header {
     flex-direction: column;
     text-align: center;
@@ -243,7 +275,7 @@
   .products-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .product-card {
     max-width: 100%;
   }

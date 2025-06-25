@@ -4,14 +4,14 @@ import { deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
 import { Edit, Eye, Trash2, Calendar, Phone, Package, ClipboardCheck } from 'lucide-react';
 
-const EventModal = ({ 
-  show, 
-  selectedDate, 
-  selectedEvents, 
-  allItems, 
-  setShowReport, 
-  setShowItemsModal, 
-  setEditItemModal, 
+const EventModal = ({
+  show,
+  selectedDate,
+  selectedEvents,
+  allItems,
+  setShowReport,
+  setShowItemsModal,
+  setEditItemModal,
   fetchItemsAndOrders,
   onStartReturnInspection
 }) => {
@@ -22,7 +22,7 @@ const EventModal = ({
     } else {
       document.body.style.overflow = 'unset';
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -42,7 +42,7 @@ const EventModal = ({
 
   const groupEventsByOrder = (events) => {
     const grouped = new Map();
-    
+
     events.forEach(event => {
       if (!grouped.has(event.orderId)) {
         grouped.set(event.orderId, {
@@ -57,7 +57,7 @@ const EventModal = ({
       }
       grouped.get(event.orderId).events.push(event);
     });
-    
+
     return Array.from(grouped.values());
   };
 
@@ -118,13 +118,13 @@ const EventModal = ({
           }
         }
       `}</style>
-      
-      <div 
+
+      <div
         className="modal-overlay"
         onClick={handleBackdropClick}
       >
-        <div 
-          className="modal-content" 
+        <div
+          className="modal-content"
           dir="rtl"
           onClick={(e) => e.stopPropagation()}
         >
@@ -141,16 +141,16 @@ const EventModal = ({
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <Calendar size={24} />
-                <h3 style={{ 
-                  fontSize: '1.25rem', 
+                <h3 style={{
+                  fontSize: '1.25rem',
                   fontWeight: 'bold',
                   margin: 0
                 }}>
                   אירועים ליום {selectedDate?.toLocaleDateString('he-IL')}
                 </h3>
               </div>
-              <button 
-                onClick={() => setShowReport(false)} 
+              <button
+                onClick={() => setShowReport(false)}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -163,8 +163,8 @@ const EventModal = ({
                 ×
               </button>
             </div>
-            <div style={{ 
-              marginTop: '0.5rem', 
+            <div style={{
+              marginTop: '0.5rem',
               color: '#bfdbfe'
             }}>
               {groupedEvents.length} הזמנ{groupedEvents.length !== 1 ? 'ות' : 'ה'}
@@ -222,7 +222,7 @@ const EventModal = ({
                             הזמנה #{index + 1}
                           </span>
                         </div>
-                        
+
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -259,8 +259,8 @@ const EventModal = ({
                               borderRadius: '12px',
                               fontSize: '0.75rem',
                               fontWeight: '500',
-                              background: event.type === 'השאלה' ? '#10b981' : 
-                                         event.type === 'החזרה' ? '#f59e0b' : '#3b82f6',
+                              background: event.type === 'השאלה' ? '#10b981' :
+                                event.type === 'החזרה' ? '#f59e0b' : '#3b82f6',
                               color: 'white'
                             }}>
                               <span>{event.icon}</span>
@@ -340,12 +340,12 @@ const EventModal = ({
                       flexWrap: 'wrap'
                     }}>
                       {orderGroup.events.some(e => e.icon === '📦') && (
-                        <button 
-                          onClick={() => setEditItemModal({ 
-                            open: true, 
-                            eventId: `${orderGroup.orderId}-edit`, 
-                            items: orderGroup.items.map(i => ({ ...i })) 
-                          })} 
+                        <button
+                          onClick={() => setEditItemModal({
+                            open: true,
+                            eventId: `${orderGroup.orderId}-edit`,
+                            items: orderGroup.items.map(i => ({ ...i }))
+                          })}
                           style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -364,7 +364,7 @@ const EventModal = ({
                         </button>
                       )}
 
-                      <button 
+                      <button
                         onClick={() => {
                           const orderEvents = selectedEvents.filter(e => e.orderId === orderGroup.orderId);
                           setShowItemsModal(orderEvents);
@@ -387,8 +387,8 @@ const EventModal = ({
                       </button>
 
                       {orderGroup.events.some(e => e.icon === '📦') && (
-                        <button 
-                          onClick={() => handleDeleteOrder(orderGroup.orderId)} 
+                        <button
+                          onClick={() => handleDeleteOrder(orderGroup.orderId)}
                           style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -408,7 +408,7 @@ const EventModal = ({
                       )}
 
                       {onStartReturnInspection && orderGroup.events.some(e => e.type === 'החזרה') && (
-                        <button 
+                        <button
                           onClick={() => onStartReturnInspection(orderGroup.orderId)}
                           style={{
                             display: 'flex',
@@ -451,8 +451,8 @@ const EventModal = ({
               }}>
                 סה"כ {groupedEvents.reduce((sum, orderGroup) => sum + (orderGroup.items?.reduce((itemSum, item) => itemSum + (item.quantity || 1), 0) || 0), 0)} פריטים
               </div>
-              <button 
-                onClick={() => setShowReport(false)} 
+              <button
+                onClick={() => setShowReport(false)}
                 style={{
                   background: '#2563eb',
                   color: 'white',

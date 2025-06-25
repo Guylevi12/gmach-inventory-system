@@ -34,9 +34,9 @@ const Catalog = () => {
   );
 
   return (
-    <div style={{ 
-      padding: '2rem', 
-      direction: 'rtl', 
+    <div style={{
+      padding: '2rem',
+      direction: 'rtl',
       textAlign: 'right',
       // 📱 תיקון למובייל
       paddingLeft: '1rem',
@@ -69,10 +69,10 @@ const Catalog = () => {
         marginTop: '1rem'
       }}>
         {filteredItems.length === 0 ? (
-          <div style={{ 
-            textAlign: 'center', 
-            gridColumn: '1 / -1', 
-            marginTop: '2rem' 
+          <div style={{
+            textAlign: 'center',
+            gridColumn: '1 / -1',
+            marginTop: '2rem'
           }}>
             <h3>לא נמצאו פריטים.</h3>
             <p>אנה נסה לחפש שוב.</p>
@@ -113,7 +113,7 @@ const Catalog = () => {
                 flexDirection: 'column',
                 justifyContent: 'space-between'
               }}>
-                <h3 style={{ 
+                <h3 style={{
                   marginBottom: '0.5rem',
                   fontSize: '0.9rem', // 📱 טקסט קצת יותר קטן במובייל
                   lineHeight: '1.2',
@@ -122,8 +122,8 @@ const Catalog = () => {
                   {item.name}
                 </h3>
                 {item.publicComment && (
-                  <p style={{ 
-                    fontSize: '0.75rem', 
+                  <p style={{
+                    fontSize: '0.75rem',
                     color: '#444',
                     textAlign: 'center',
                     margin: '0.3rem 0 0 0'
@@ -136,7 +136,7 @@ const Catalog = () => {
           ))
         )}
       </div>
-      
+
       {/* 📱 CSS נוסף למובייל */}
       <style jsx>{`
         @media (max-width: 768px) {

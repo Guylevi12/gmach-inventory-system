@@ -19,7 +19,7 @@ const BarcodeScanner = ({ onScanSuccess, onClose }) => {
     return () => {
       try {
         codeReader.reset();
-      } catch (_) {}
+      } catch (_) { }
     };
   }, [onScanSuccess]);
 

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Calendar, User, FileText, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '@/firebase/firebase-config'; 
+import { db } from '@/firebase/firebase-config';
 
 const InspectionHistoryView = () => {
   const [inspections, setInspections] = useState([]);
@@ -28,13 +28,13 @@ const InspectionHistoryView = () => {
         where('status', 'in', ['under_inspection', 'closed']),
         orderBy('returnInspection.inspectionDate', 'desc')
       );
-      
+
       const snapshot = await getDocs(q);
       const inspectionData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })).filter(order => order.returnInspection);
-      
+
       setInspections(inspectionData);
     } catch (error) {
       console.error('Error fetching inspection history:', error);
@@ -183,7 +183,7 @@ const InspectionHistoryView = () => {
             {filteredInspections.length}
           </p>
         </div>
-        
+
         <div style={{
           background: '#fef3c7',
           padding: '1rem',
@@ -195,7 +195,7 @@ const InspectionHistoryView = () => {
             {filteredInspections.filter(i => i.status === 'under_inspection').length}
           </p>
         </div>
-        
+
         <div style={{
           background: '#ecfdf5',
           padding: '1rem',
@@ -207,7 +207,7 @@ const InspectionHistoryView = () => {
             {filteredInspections.filter(i => i.status === 'closed').length}
           </p>
         </div>
-        
+
         <div style={{
           background: '#fef2f2',
           padding: '1rem',
@@ -282,7 +282,7 @@ const InspectionHistoryView = () => {
                       </div>
                     </td>
                     <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
-                      {inspection.returnInspection.inspectionDate 
+                      {inspection.returnInspection.inspectionDate
                         ? new Date(inspection.returnInspection.inspectionDate.seconds * 1000).toLocaleDateString('he-IL')
                         : 'לא זמין'
                       }
@@ -305,8 +305,8 @@ const InspectionHistoryView = () => {
                     </td>
                     <td style={{ padding: '1rem' }}>
                       {inspection.returnInspection.totalDamages > 0 ? (
-                        <span style={{ 
-                          color: '#f59e0b', 
+                        <span style={{
+                          color: '#f59e0b',
                           fontSize: '0.875rem',
                           fontWeight: '500'
                         }}>
@@ -433,7 +433,7 @@ const InspectionDetailModal = ({ inspection, onClose }) => {
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.875rem' }}>
               <div><strong>תאריך בדיקה:</strong> {
-                inspection.returnInspection.inspectionDate 
+                inspection.returnInspection.inspectionDate
                   ? new Date(inspection.returnInspection.inspectionDate.seconds * 1000).toLocaleDateString('he-IL')
                   : 'לא זמין'
               }</div>
@@ -443,14 +443,14 @@ const InspectionDetailModal = ({ inspection, onClose }) => {
               <div><strong>עלות תיקון:</strong> ₪{inspection.returnInspection.totalRepairCost || 0}</div>
               <div><strong>סטטוס:</strong> {getStatusText(inspection.status)}</div>
             </div>
-            
+
             {inspection.returnInspection.managerNotes && (
               <div style={{ marginTop: '1rem' }}>
                 <strong>הערות מנהל:</strong>
-                <p style={{ 
-                  margin: '0.5rem 0 0 0', 
-                  padding: '0.75rem', 
-                  background: 'white', 
+                <p style={{
+                  margin: '0.5rem 0 0 0',
+                  padding: '0.75rem',
+                  background: 'white',
                   borderRadius: '6px',
                   fontSize: '0.875rem'
                 }}>
@@ -506,11 +506,11 @@ const InspectionDetailModal = ({ inspection, onClose }) => {
                         {getDamageIcon(insp.condition)}
                         <span style={{
                           fontWeight: '500',
-                          color: insp.condition === 'good' ? '#10b981' : 
-                                insp.condition === 'damaged' ? '#f59e0b' : '#ef4444'
+                          color: insp.condition === 'good' ? '#10b981' :
+                            insp.condition === 'damaged' ? '#f59e0b' : '#ef4444'
                         }}>
-                          {insp.condition === 'good' ? 'תקין' : 
-                           insp.condition === 'damaged' ? 'פגום' : 'חסר'}
+                          {insp.condition === 'good' ? 'תקין' :
+                            insp.condition === 'damaged' ? 'פגום' : 'חסר'}
                         </span>
                         {insp.damageType && (
                           <span style={{
@@ -524,28 +524,28 @@ const InspectionDetailModal = ({ inspection, onClose }) => {
                           </span>
                         )}
                       </div>
-                      
+
                       {insp.damageDescription && (
-                        <p style={{ 
-                          fontSize: '0.875rem', 
-                          color: '#374151', 
+                        <p style={{
+                          fontSize: '0.875rem',
+                          color: '#374151',
                           margin: '0.5rem 0',
                           lineHeight: '1.4'
                         }}>
                           {insp.damageDescription}
                         </p>
                       )}
-                      
-                      <div style={{ 
-                        display: 'flex', 
-                        gap: '1rem', 
-                        fontSize: '0.75rem', 
-                        color: '#6b7280' 
+
+                      <div style={{
+                        display: 'flex',
+                        gap: '1rem',
+                        fontSize: '0.75rem',
+                        color: '#6b7280'
                       }}>
                         {insp.severity && <span>חומרה: {insp.severity}</span>}
                         {insp.repairCost > 0 && <span>עלות תיקון: ₪{insp.repairCost}</span>}
                       </div>
-                      
+
                       {insp.notes && (
                         <p style={{
                           fontSize: '0.75rem',
@@ -561,10 +561,10 @@ const InspectionDetailModal = ({ inspection, onClose }) => {
                   ))}
                 </div>
               )) || (
-                <p style={{ color: '#6b7280', fontStyle: 'italic' }}>
-                  אין פרטי בדיקה זמינים
-                </p>
-              )}
+                  <p style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                    אין פרטי בדיקה זמינים
+                  </p>
+                )}
             </div>
           </div>
         </div>

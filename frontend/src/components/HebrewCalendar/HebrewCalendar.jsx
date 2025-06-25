@@ -39,7 +39,7 @@ const HebrewCalendar = ({
           pickupDate: orderEvents[0].pickupDate,
           returnDate: orderEvents[0].returnDate
         };
-        
+
         setReturnInspection({ show: true, order: orderData });
         setShowReport(false); // Close the event modal
       }
@@ -67,16 +67,16 @@ const HebrewCalendar = ({
       };
 
       await updateDoc(doc(db, 'orders', orderId), orderUpdate);
-      
+
       // Refresh data
       await fetchItemsAndOrders();
-      
+
       // Close any open modals
       setShowReport(false);
-      
+
       // Show success message
       alert('ההזמנה נסגרה ידנית והועברה להיסטוריה!');
-      
+
     } catch (error) {
       console.error('Error manually closing order:', error);
       alert('שגיאה בסגירת ההזמנה. נסה שוב.');
@@ -116,16 +116,16 @@ const HebrewCalendar = ({
       };
 
       await updateDoc(doc(db, 'orders', orderId), orderUpdate);
-      
+
       // Refresh data
       await fetchItemsAndOrders();
-      
+
       // Close inspection modal
       setReturnInspection({ show: false, order: null });
-      
+
       // Show success message
       alert('בדיקת החזרה הושלמה בהצלחה! ההזמנה הועברה להיסטוריה.');
-      
+
     } catch (error) {
       console.error('Error completing return inspection:', error);
       alert('שגיאה בהשלמת בדיקת החזרה. נסה שוב.');
@@ -142,7 +142,7 @@ const HebrewCalendar = ({
         setSelectedDate={setSelectedDate}
         setShowReport={setShowReport}
       />
-      
+
       <EventModal
         show={showReport}
         selectedDate={selectedDate}
@@ -155,7 +155,7 @@ const HebrewCalendar = ({
         onStartReturnInspection={initializeReturnInspection}
         onCloseOrderManually={manuallyCloseOrder}
       />
-      
+
       <ItemsModal
         show={!!showItemsModal}
         setShow={() => setShowItemsModal(false)}
@@ -163,7 +163,7 @@ const HebrewCalendar = ({
         allItems={allItems}
       />
 
-    
+
       <EditItemModal
         show={editItemModal.open}
         data={editItemModal}
@@ -185,6 +185,6 @@ const HebrewCalendar = ({
       />
     </div>
   );
-}; 
+};
 
 export default HebrewCalendar;

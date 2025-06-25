@@ -246,30 +246,30 @@
   .calendar-container {
     padding: 10px;
   }
-  
+
   .day-cell {
     min-height: 80px;
     padding: 4px;
   }
-  
+
   .calendar-title {
     font-size: 1.25rem;
   }
-  
+
   .calendar-legend {
     gap: 10px;
   }
-  
+
   .legend-item {
     font-size: 0.75rem;
     padding: 3px 8px;
   }
-  
+
   .event-tag {
     font-size: 0.65rem;
     padding: 1px 3px;
   }
-  
+
   .event-count {
     width: 16px;
     height: 16px;
@@ -383,20 +383,20 @@
   .calendar-container {
     padding: 10px;
   }
-  
+
   .day-cell {
     min-height: 80px;
     padding: 4px;
   }
-  
+
   .calendar-title {
     font-size: 1.25rem;
   }
-  
+
   .calendar-legend {
     gap: 10px;
   }
-  
+
   .legend-item {
     font-size: 0.75rem;
     padding: 3px 8px;

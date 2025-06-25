@@ -4,7 +4,8 @@
   justify-content: center;
   align-items: center;
   background: #f8f8f8;
-  padding: 1rem; /* הוסף padding למובייל */
+  padding: 1rem;
+  /* הוסף padding למובייל */
 }
 
 .loan-form-box {
@@ -15,8 +16,8 @@
   border: 1px solid #ccc;
   border-radius: 10px;
   background-color: #fff;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
-  
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+
   /* 🔧 תיקון למובייל */
   margin: 0 auto;
   box-sizing: border-box;
@@ -29,7 +30,7 @@
     align-items: flex-start;
     padding-top: 2rem;
   }
-  
+
   .loan-form-box {
     padding: 1.5rem;
     margin: 0;
@@ -37,29 +38,30 @@
     width: 100%;
     max-width: none;
   }
-  
+
   .loan-form-box h2 {
     text-align: center !important;
     margin-bottom: 2rem;
     font-size: 1.5rem;
   }
-  
+
   /* יישור שדות למרכז במובייל */
-  .loan-form-box > div {
+  .loan-form-box>div {
     margin-bottom: 1.5rem !important;
     text-align: center !important;
   }
-  
+
   .loan-form-box label {
     display: block !important;
     margin-bottom: 0.5rem !important;
-    text-align: right !important; /* מימין לשמאל */
+    text-align: right !important;
+    /* מימין לשמאל */
     width: 100% !important;
     max-width: none !important;
     margin: 0 0 0.5rem 0 !important;
     font-weight: 500;
   }
-  
+
   .loan-form-box input {
     display: block !important;
     width: 100% !important;
@@ -68,12 +70,15 @@
     padding: 12px !important;
     border: 1px solid #ccc;
     border-radius: 8px;
-    font-size: 16px; /* מונע זום במובייל */
+    font-size: 16px;
+    /* מונע זום במובייל */
     box-sizing: border-box;
-    text-align: right; /* טקסט מימין לשמאל */
-    direction: rtl; /* כיוון עברית */
+    text-align: right;
+    /* טקסט מימין לשמאל */
+    direction: rtl;
+    /* כיוון עברית */
   }
-  
+
   /* תיקון מיוחד לשדות תאריך - גישה חדשה */
   .loan-form-box input[type="date"] {
     appearance: none !important;
@@ -96,7 +101,7 @@
     text-indent: 0 !important;
     letter-spacing: 1px !important;
   }
-  
+
   /* הסתרת כל האייקונים המקוריים */
   .loan-form-box input[type="date"]::-webkit-calendar-picker-indicator {
     opacity: 0 !important;
@@ -108,22 +113,22 @@
     cursor: pointer !important;
     background: transparent !important;
   }
-  
+
   .loan-form-box input[type="date"]::-webkit-inner-spin-button,
   .loan-form-box input[type="date"]::-webkit-outer-spin-button {
     opacity: 0 !important;
     -webkit-appearance: none !important;
     margin: 0 !important;
   }
-  
+
   /* תיקון לפיירפוקס */
   .loan-form-box input[type="date"]::-moz-focus-inner {
     border: 0 !important;
     padding: 0 !important;
   }
-  
+
   /* תיקון לקונטיינר של שדות תאריך */
-  .loan-form-box > div:has(input[type="date"]) {
+  .loan-form-box>div:has(input[type="date"]) {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -131,40 +136,41 @@
     width: 100% !important;
     position: relative;
   }
-  
+
   /* הודעות שגיאה */
-  .loan-form-box > div > div {
+  .loan-form-box>div>div {
     color: red;
     font-size: 0.85rem;
-    text-align: right !important; /* מימין לשמאל */
+    text-align: right !important;
+    /* מימין לשמאל */
     margin: 0.5rem 0 0 0 !important;
     width: 100%;
     direction: rtl;
   }
-  
+
   /* כפתורים במובייל */
-  .loan-form-box > div:last-child {
+  .loan-form-box>div:last-child {
     display: flex !important;
     flex-direction: column !important;
     gap: 12px !important;
     margin-top: 2rem;
   }
-  
+
   .loan-form-box .btn {
     width: 100% !important;
     padding: 14px 20px !important;
     font-size: 16px !important;
     margin: 0 !important;
   }
-  
+
   /* כפתור "בחירת מוצרים" */
-  .loan-form-box > div:nth-last-child(2) {
+  .loan-form-box>div:nth-last-child(2) {
     display: flex !important;
     justify-content: center !important;
     margin-bottom: 1.5rem !important;
   }
-  
-  .loan-form-box > div:nth-last-child(2) .btn {
+
+  .loan-form-box>div:nth-last-child(2) .btn {
     width: 100% !important;
     max-width: 300px;
     padding: 12px 20px;
@@ -192,14 +198,28 @@
   transform: none;
 }
 
-.btn-blue { background-color: #1976d2; }
-.btn-green { background-color: #28a745; }
-.btn-red { background-color: #d32f2f; }
-.btn-gray { background-color: #6c757d; }
+.btn-blue {
+  background-color: #1976d2;
+}
+
+.btn-green {
+  background-color: #28a745;
+}
+
+.btn-red {
+  background-color: #d32f2f;
+}
+
+.btn-gray {
+  background-color: #6c757d;
+}
 
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
@@ -227,7 +247,7 @@
     align-items: flex-start;
     padding-top: 2rem;
   }
-  
+
   .modal-box {
     width: 100%;
     max-width: none;
@@ -236,12 +256,12 @@
     border-radius: 12px;
     max-height: 85vh;
   }
-  
+
   .modal-box h3 {
     font-size: 1.3rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .modal-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
     gap: 0.8rem !important;
@@ -301,7 +321,7 @@
     flex-direction: column;
     gap: 0.8rem;
   }
-  
+
   .modal-actions .btn {
     width: 100%;
     padding: 14px;
@@ -328,7 +348,7 @@
 }
 
 .item-card:hover {
-  box-shadow: 0 0 8px rgba(0,0,0,0.15);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   transform: scale(1.01);
   transition: all 0.2s ease-in-out;

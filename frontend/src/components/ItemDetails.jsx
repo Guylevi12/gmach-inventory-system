@@ -56,10 +56,10 @@ const ItemDetails = () => {
             <p style={{ fontSize: '0.85rem', color: '#666' }}>נוצר על ידי: {item.createdBy || 'לא ידוע'}</p>
             <p style={{ fontSize: '0.85rem', color: '#666' }}>עודכן לאחרונה על ידי: {item.updatedBy || 'לא ידוע'}</p>
             {item.createdAt && (
-              <p style={{ fontSize: '0.85rem', color: '#666' }}>נוצר בתאריך: {new Date(item.createdAt.seconds * 1000).toLocaleString('he-IL')}</p>
+                <p style={{ fontSize: '0.85rem', color: '#666' }}>נוצר בתאריך: {new Date(item.createdAt.seconds * 1000).toLocaleString('he-IL')}</p>
             )}
             {item.updatedAt && (
-              <p style={{ fontSize: '0.85rem', color: '#666' }}>עודכן בתאריך: {new Date(item.updatedAt.seconds * 1000).toLocaleString('he-IL')}</p>
+                <p style={{ fontSize: '0.85rem', color: '#666' }}>עודכן בתאריך: {new Date(item.updatedAt.seconds * 1000).toLocaleString('he-IL')}</p>
             )}
         </div>
     );

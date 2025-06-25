@@ -157,9 +157,9 @@ const NewLoan = ({ onOrderCreated }) => {
         const result = itemsData.map(item => {
           const availableQty = (item.quantity || 0) - (reserved[item.id] || 0);
           const prevSelection = previousSelections[item.id];
-          
-          return { 
-            ...item, 
+
+          return {
+            ...item,
             quantity: availableQty,
             selected: prevSelection ? prevSelection.selected : false,
             selectedQty: prevSelection ? prevSelection.selectedQty : 0

@@ -107,7 +107,7 @@ const ItemFormModal = ({
           &times;
         </button>
 
-        <h3 style={{ 
+        <h3 style={{
           textAlign: 'center',
           marginBottom: '2rem',
           fontSize: '1.5rem',
@@ -115,7 +115,7 @@ const ItemFormModal = ({
         }}>
           {editingItem ? 'עריכת מוצר' : 'הוספת מוצר חדש'}
         </h3>
-        
+
         <form onSubmit={onSubmit}>
           <div style={fieldContainerStyle}>
             <label style={labelStyle}>שם המוצר:</label>
@@ -193,8 +193,8 @@ const ItemFormModal = ({
           </div>
 
           {(imageUrl || imageFile) && (
-            <div style={{ 
-              marginBottom: '1.5rem', 
+            <div style={{
+              marginBottom: '1.5rem',
               textAlign: 'center',
               padding: '1rem',
               backgroundColor: '#f8f9fa',
@@ -221,8 +221,8 @@ const ItemFormModal = ({
             marginTop: '2rem',
             flexWrap: 'wrap' // למובייל
           }}>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               style={{
                 ...submitBtnStyle,
                 minWidth: '120px' // רוחב מינימלי
@@ -230,9 +230,9 @@ const ItemFormModal = ({
             >
               {editingItem ? 'שמור שינויים' : 'הוסף מוצר'}
             </button>
-            <button 
-              type="button" 
-              onClick={onCancel} 
+            <button
+              type="button"
+              onClick={onCancel}
               style={{
                 ...cancelBtnStyle,
                 minWidth: '120px' // רוחב מינימלי

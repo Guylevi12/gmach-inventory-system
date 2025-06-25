@@ -302,10 +302,10 @@ const ItemManager = () => {
       {/* Active Items Section */}
       <div style={{ width: '100%' }}>
         <h2>ניהול מוצרים</h2>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'flex-start', 
-          gap: '1rem', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'flex-start',
+          gap: '1rem',
           marginBottom: '1rem',
           flexWrap: 'wrap'
         }}>
@@ -415,18 +415,18 @@ const ItemManager = () => {
                   מזהה מוצר: {item.ItemId}
                 </p>
                 {item.inUse && (
-                  <p style={{ 
-                    color: '#d97706', 
-                    fontWeight: 'bold', 
-                    fontSize: '0.85rem', 
-                    margin: '0.25rem 0' 
+                  <p style={{
+                    color: '#d97706',
+                    fontWeight: 'bold',
+                    fontSize: '0.85rem',
+                    margin: '0.25rem 0'
                   }}>
                     🕐 מוצר זה נמצא בהזמנה פעילה
                   </p>
                 )}
-                <div className="button-group" style={{ 
-                  display: 'flex', 
-                  gap: '0.5rem', 
+                <div className="button-group" style={{
+                  display: 'flex',
+                  gap: '0.5rem',
                   marginTop: 'auto',
                   width: '100%'
                 }}>

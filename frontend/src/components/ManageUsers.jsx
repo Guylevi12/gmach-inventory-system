@@ -213,9 +213,9 @@ const ManageUsers = () => {
       marginBottom: '1rem',
       boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
     }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'flex-start',
         marginBottom: '0.5rem'
       }}>
@@ -223,8 +223,8 @@ const ManageUsers = () => {
           {u.username}
         </h4>
         <span style={{
-          backgroundColor: u.role === 'MainAdmin' ? '#6f42c1' : 
-                          u.role === 'GmachAdmin' ? '#17a2b8' : '#6c757d',
+          backgroundColor: u.role === 'MainAdmin' ? '#6f42c1' :
+            u.role === 'GmachAdmin' ? '#17a2b8' : '#6c757d',
           color: 'white',
           padding: '4px 8px',
           borderRadius: '12px',
@@ -232,20 +232,20 @@ const ManageUsers = () => {
           fontWeight: '500'
         }}>
           {u.role === 'User' ? 'משתמש רגיל' :
-           u.role === 'GmachAdmin' ? 'מנהל גמ"ח' :
-           u.role === 'MainAdmin' ? 'מנהל ראשי' : u.role}
+            u.role === 'GmachAdmin' ? 'מנהל גמ"ח' :
+              u.role === 'MainAdmin' ? 'מנהל ראשי' : u.role}
         </span>
       </div>
-      
-      <p style={{ 
-        margin: '0.5rem 0', 
-        color: '#666', 
+
+      <p style={{
+        margin: '0.5rem 0',
+        color: '#666',
         fontSize: '0.9rem',
         wordBreak: 'break-all'
       }}>
         📧 {u.email}
       </p>
-      
+
       {u.role !== 'MainAdmin' && (
         <div style={{ marginTop: '1rem' }}>
           {u.role === 'User' ? (
@@ -374,8 +374,8 @@ const ManageUsers = () => {
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ 
-                    textAlign: 'center', 
+                  <td colSpan="4" style={{
+                    textAlign: 'center',
                     padding: '2rem',
                     color: '#666'
                   }}>

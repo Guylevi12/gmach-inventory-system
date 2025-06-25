@@ -29,24 +29,24 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
   useEffect(() => {
     if (show && data.eventId && allEvents.length > 0) {
       console.log('🚀 Initializing edit modal');
-      
+
       // Find this order's events to get the dates
       const currentOrderId = data.eventId.split('-')[0];
       const orderEvents = allEvents.filter(event => event.orderId === currentOrderId);
-      
+
       if (orderEvents.length > 0) {
         const firstEvent = orderEvents[0];
         setOrderDates({
           pickupDate: new Date(firstEvent.pickupDate),
           returnDate: new Date(firstEvent.returnDate)
         });
-        
+
         console.log('📅 Order dates:', {
           pickup: firstEvent.pickupDate,
           return: firstEvent.returnDate
         });
       }
-      
+
       setFormData({
         items: [...(data.items || [])]
       });
@@ -143,7 +143,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
       });
     }
   };
-  
+
   // Update item quantity with availability check
   const updateItemQuantity = (itemName, newQuantity) => {
     console.log(`🔄 Updating ${itemName} to quantity: ${newQuantity}`);
@@ -291,7 +291,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
 
       <div className="edit-modal-overlay" onClick={handleBackdropClick}>
         <div className="edit-modal-content" dir="rtl" onClick={(e) => e.stopPropagation()}>
-          
+
           {/* Header */}
           <div style={{
             background: 'linear-gradient(to right, #2563eb, #1d4ed8)',
@@ -328,7 +328,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                 ×
               </button>
             </div>
-            
+
             {/* Show order dates */}
             {orderDates.pickupDate && orderDates.returnDate && (
               <div style={{
@@ -346,7 +346,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
             overflowY: 'auto',
             flex: 1
           }}>
-            
+
             {/* Current Items Section */}
             <div style={{ marginBottom: '1.5rem' }}>
               <h4 style={{
@@ -357,14 +357,14 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
               }}>
                 פריטים נוכחיים בהזמנה ({formData.items.length})
               </h4>
-              
+
               {formData.items.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {formData.items.map((item, index) => {
                     const itemData = allItems.find(i => i.name === item.name);
                     const availableQuantity = getAvailableQuantityForDates(item.name);
                     const maxPossible = availableQuantity + item.quantity; // Current quantity + what's available
-                    
+
                     return (
                       <div key={index} style={{
                         display: 'flex',
@@ -418,7 +418,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                             </div>
                           </div>
                         </div>
-                        
+
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -443,7 +443,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                           >
                             <Minus size={12} />
                           </button>
-                          
+
                           <span style={{
                             width: '1.5rem',
                             textAlign: 'center',
@@ -452,7 +452,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                           }}>
                             {item.quantity}
                           </span>
-                          
+
                           <button
                             onClick={() => updateItemQuantity(item.name, item.quantity + 1)}
                             style={{
@@ -471,7 +471,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                           >
                             <Plus size={12} />
                           </button>
-                          
+
                           <button
                             onClick={() => removeItem(item.name)}
                             style={{
@@ -560,7 +560,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                   const quantityInOrder = isInOrder ? formData.items.find(i => i.name === item.name)?.quantity : 0;
                   const availableQuantity = getAvailableQuantityForDates(item.name);
                   const canAdd = quantityInOrder < (availableQuantity + quantityInOrder);
-                  
+
                   return (
                     <div
                       key={index}
@@ -622,7 +622,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                               בהזמנה: {quantityInOrder}
                             </div>
                           )}
-                        
+
                         </div>
                       </div>
                     </div>
