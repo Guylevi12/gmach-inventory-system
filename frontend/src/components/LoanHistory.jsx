@@ -245,18 +245,62 @@ const LoanHistory = () => {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }} dir="rtl">
+    <div style={{ 
+      padding: '1rem', 
+      maxWidth: '1200px', 
+      margin: '0 auto', 
+      fontFamily: 'Arial, sans-serif' 
+    }} dir="rtl">
+      {/* Add mobile date field styling */}
+      <style>{`
+        @media (max-width: 768px) {
+          .date-input {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background: white !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
+            font-size: 16px !important;
+            text-align: center !important;
+            direction: ltr !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            cursor: pointer !important;
+            letter-spacing: 1px !important;
+          }
+          
+          .date-input::-webkit-calendar-picker-indicator {
+            opacity: 0 !important;
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            cursor: pointer !important;
+            background: transparent !important;
+          }
+          
+          .date-input::-webkit-inner-spin-button,
+          .date-input::-webkit-outer-spin-button {
+            opacity: 0 !important;
+            -webkit-appearance: none !important;
+            margin: 0 !important;
+          }
+        }
+      `}</style>
       {/* Header */}
       <div style={{
         background: 'linear-gradient(to right, #3b82f6, #1e40af)',
         color: 'white',
-        padding: '2rem',
+        padding: '1.5rem',
         borderRadius: '12px',
         marginBottom: '2rem',
         textAlign: 'center'
       }}>
         <h1 style={{
-          fontSize: '2rem',
+          fontSize: '1.8rem',
           fontWeight: 'bold',
           margin: 0,
           marginBottom: '0.5rem'
@@ -264,7 +308,7 @@ const LoanHistory = () => {
           📚 היסטוריית השאלות
         </h1>
         <p style={{
-          fontSize: '1rem',
+          fontSize: '0.95rem',
           opacity: 0.9,
           margin: 0
         }}>
@@ -277,19 +321,19 @@ const LoanHistory = () => {
           {/* Search and Filter */}
           <div style={{
             background: 'white',
-            padding: '1.5rem',
+            padding: window.innerWidth < 768 ? '1rem' : '1.5rem',
             borderRadius: '12px',
             marginBottom: '2rem',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
             border: '1px solid #e5e7eb'
           }}>
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              display: 'flex',
+              flexDirection: window.innerWidth < 768 ? 'column' : 'row',
               gap: '1rem',
-              alignItems: 'end'
+              alignItems: window.innerWidth < 768 ? 'stretch' : 'end'
             }}>
-              <div>
+              <div style={{ flex: window.innerWidth < 768 ? 'none' : '2' }}>
                 <label style={{
                   display: 'block',
                   fontSize: '0.875rem',
@@ -309,12 +353,13 @@ const LoanHistory = () => {
                     padding: '0.75rem',
                     border: '2px solid #e5e7eb',
                     borderRadius: '8px',
-                    fontSize: '1rem'
+                    fontSize: '1rem',
+                    boxSizing: 'border-box'
                   }}
                   placeholder="הקלד שם או טלפון..."
                 />
               </div>
-              <div>
+              <div style={{ flex: '1' }}>
                 <label style={{
                   display: 'block',
                   fontSize: '0.875rem',
@@ -329,16 +374,18 @@ const LoanHistory = () => {
                   type="date"
                   value={dateFrom}
                   onChange={e => setDateFrom(e.target.value)}
+                  className="date-input"
                   style={{
                     width: '100%',
                     padding: '0.75rem',
                     border: '2px solid #e5e7eb',
                     borderRadius: '8px',
-                    fontSize: '1rem'
+                    fontSize: '1rem',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
-              <div>
+              <div style={{ flex: '1' }}>
                 <label style={{
                   display: 'block',
                   fontSize: '0.875rem',
@@ -353,12 +400,14 @@ const LoanHistory = () => {
                   type="date"
                   value={dateTo}
                   onChange={e => setDateTo(e.target.value)}
+                  className="date-input"
                   style={{
                     width: '100%',
                     padding: '0.75rem',
                     border: '2px solid #e5e7eb',
                     borderRadius: '8px',
-                    fontSize: '1rem'
+                    fontSize: '1rem',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -377,11 +426,15 @@ const LoanHistory = () => {
             </div>
           </div>
 
-          {/* Loans Grid */}
+          {/* Loans Grid - הנה התיקון העיקרי! */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-            gap: '1.5rem'
+            gridTemplateColumns: window.innerWidth < 768 
+              ? '1fr' 
+              : window.innerWidth < 1024 
+                ? 'repeat(2, 1fr)' 
+                : 'repeat(3, 1fr)',
+            gap: window.innerWidth < 768 ? '1rem' : '1.5rem'
           }}>
             {filteredLoans.length === 0 ? (
               <div style={{
@@ -407,24 +460,22 @@ const LoanHistory = () => {
                   onClick={() => setSelectedLoan(loan)}
                   style={{
                     background: 'white',
-                    padding: '1.5rem',
+                    padding: window.innerWidth < 768 ? '1rem' : '1.5rem',
                     borderRadius: '12px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     border: '1px solid #e5e7eb',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    ':hover': {
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                      transform: 'translateY(-2px)'
-                    }
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                    e.target.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                    e.target.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   {/* Loan Header */}
@@ -432,23 +483,29 @@ const LoanHistory = () => {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'flex-start',
-                    marginBottom: '1rem'
+                    marginBottom: '1rem',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem'
                   }}>
-                    <div>
+                    <div style={{ flex: '1', minWidth: '0' }}>
                       <h3 style={{
-                        fontSize: '1.25rem',
+                        fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem',
                         fontWeight: 'bold',
                         margin: 0,
-                        color: '#1f2937'
+                        color: '#1f2937',
+                        wordBreak: 'break-word'
                       }}>
                         {loan.clientName}
                       </h3>
                       <p style={{
-                        fontSize: '0.875rem',
+                        fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem',
                         color: '#6b7280',
-                        margin: '0.25rem 0 0 0'
+                        margin: '0.25rem 0 0 0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
                       }}>
-                        <User size={14} style={{ display: 'inline', marginLeft: '0.25rem' }} />
+                        <User size={window.innerWidth < 768 ? 12 : 14} />
                         {loan.volunteerName}
                       </p>
                     </div>
@@ -457,8 +514,9 @@ const LoanHistory = () => {
                       color: 'white',
                       padding: '0.25rem 0.75rem',
                       borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold'
+                      fontSize: window.innerWidth < 768 ? '0.6rem' : '0.75rem',
+                      fontWeight: 'bold',
+                      whiteSpace: 'nowrap'
                     }}>
                       הושלם
                     </div>
@@ -469,20 +527,21 @@ const LoanHistory = () => {
                     display: 'grid',
                     gridTemplateColumns: '1fr',
                     gap: '0.5rem',
-                    marginBottom: '1rem',
-                    fontSize: '0.875rem',
+                    fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem',
                     color: '#6b7280'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <Phone size={14} style={{ marginLeft: '0.5rem' }} />
-                      {loan.phone}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Phone size={window.innerWidth < 768 ? 12 : 14} />
+                      <span style={{ wordBreak: 'break-all' }}>{loan.phone}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <Clock size={14} style={{ marginLeft: '0.5rem' }} />
-                      {formatDate(loan.pickupDate)} → {formatDate(loan.returnDate)}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Clock size={window.innerWidth < 768 ? 12 : 14} />
+                      <span style={{ fontSize: window.innerWidth < 768 ? '0.7rem' : '0.875rem' }}>
+                        {formatDate(loan.pickupDate)} → {formatDate(loan.returnDate)}
+                      </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <Package size={14} style={{ marginLeft: '0.5rem' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Package size={window.innerWidth < 768 ? 12 : 14} />
                       {loan.items?.reduce((sum, item) => sum + item.quantity, 0)} פריטים
                     </div>
                   </div>
@@ -497,7 +556,7 @@ const LoanHistory = () => {
       {selectedLoan && (
         <div style={{
           background: 'white',
-          padding: '2rem',
+          padding: window.innerWidth < 768 ? '1rem' : '2rem',
           borderRadius: '12px',
           boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
           border: '1px solid #e5e7eb'
@@ -509,11 +568,13 @@ const LoanHistory = () => {
             alignItems: 'center',
             marginBottom: '2rem',
             paddingBottom: '1rem',
-            borderBottom: '2px solid #e5e7eb'
+            borderBottom: '2px solid #e5e7eb',
+            flexWrap: 'wrap',
+            gap: '1rem'
           }}>
             <div>
               <h2 style={{
-                fontSize: '2rem',
+                fontSize: window.innerWidth < 768 ? '1.25rem' : '2rem',
                 fontWeight: 'bold',
                 margin: 0,
                 color: '#1f2937'
@@ -521,7 +582,7 @@ const LoanHistory = () => {
                 השאלה - {selectedLoan.clientName}
               </h2>
               <p style={{
-                fontSize: '1rem',
+                fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem',
                 color: '#6b7280',
                 margin: '0.5rem 0 0 0'
               }}>
@@ -537,7 +598,7 @@ const LoanHistory = () => {
                 borderRadius: '8px',
                 border: 'none',
                 cursor: 'pointer',
-                fontSize: '1rem',
+                fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem'
@@ -551,7 +612,9 @@ const LoanHistory = () => {
           {/* Client Info */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gridTemplateColumns: window.innerWidth < 768 
+              ? '1fr' 
+              : 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: '1rem',
             marginBottom: '2rem',
             padding: '1.5rem',
@@ -611,9 +674,11 @@ const LoanHistory = () => {
                     padding: '1rem',
                     background: 'white',
                     border: '1px solid #e5e7eb',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    flexWrap: window.innerWidth < 768 ? 'wrap' : 'nowrap',
+                    gap: '0.5rem'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: '1', minWidth: '200px' }}>
                       <Package size={20} style={{ color: '#6b7280' }} />
                       <div>
                         <h4 style={{
@@ -676,7 +741,9 @@ const LoanHistory = () => {
                 
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                  gridTemplateColumns: window.innerWidth < 768 
+                    ? '1fr' 
+                    : 'repeat(auto-fit, minmax(250px, 1fr))',
                   gap: '2rem',
                   marginBottom: '1rem'
                 }}>
