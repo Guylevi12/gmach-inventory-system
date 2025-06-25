@@ -9,9 +9,8 @@ import NewLoan from './components/NewLoan/NewLoan';
 import ItemManager from './components/ItemManager';
 import Catalog from './components/Catalog';
 import ItemDetails from './components/ItemDetails';
-import CalendarPage from './components/CalendarPage'; 
-// import Dashboard from './components/Dashboard';
-import ContactBubble from './components/contactBubble';
+import CalendarPage from './components/CalendarPage';
+import ContactBubble from './components/ContactBubble';
 import LoanHistory from './components/LoanHistory';
 
 function App() {
@@ -28,9 +27,9 @@ function App() {
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/catalog/:id" element={<ItemDetails />} />
         <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/history" element={<LoanHistory />} />        
-        </Routes>
-      <ContactBubble/>
+        <Route path="/history" element={<LoanHistory />} />
+      </Routes>
+      <ContactBubble />
     </>
   );
 }

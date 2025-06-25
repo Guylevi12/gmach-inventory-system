@@ -1,5 +1,7 @@
 # 📦 Gmach Inventory System - Frontend
 
+A comprehensive rental management system for non-profit organizations (עמותות) with automated email reminders, inventory tracking, and loan management.
+
 ## ⚡ Quick Setup
 
 After cloning the repository:
@@ -19,101 +21,215 @@ After cloning the repository:
 4. Fill in your Firebase credentials inside the new `.env` file:
     ```dotenv
     VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
-VITE_FIREBASE_APP_ID=
-VITE_FIREBASE_MEASUREMENT_ID=
+    VITE_FIREBASE_AUTH_DOMAIN=
+    VITE_FIREBASE_PROJECT_ID=
+    VITE_FIREBASE_STORAGE_BUCKET=
+    VITE_FIREBASE_MESSAGING_SENDER_ID=
+    VITE_FIREBASE_APP_ID=
+    VITE_FIREBASE_MEASUREMENT_ID=
     ```
-5. Start the development server:
+
+## 📧 Email Reminder System Setup
+
+This system automatically sends email reminders to customers 2 days before their return date.
+
+### Step 1: Create EmailJS Account
+1. Go to [EmailJS.com](https://www.emailjs.com)
+2. Sign up with your organization email
+3. Verify your email address
+
+### Step 2: Setup Email Service
+1. In EmailJS Dashboard, click **"Email Services"**
+2. Click **"Add New Service"**
+3. Choose **"Gmail"** (recommended)
+4. Connect your Gmail account with **full permissions**
+5. Copy your **Service ID** (looks like `service_abc123`)
+
+### Step 3: Create Email Template
+1. Click **"Email Templates"**
+2. Click **"Create New Template"**
+3. **Template Name:** "Rental Return Reminder"
+4. **Subject:** `תזכורת: החזרת פריטים בעוד יומיים - {{client_name}}`
+5. **Content:** Use the Hebrew template provided in setup documentation
+6. Copy your **Template ID** (looks like `template_xyz789`)
+
+### Step 4: Get Public Key
+1. Go to **"Account" → "General"**
+2. Copy your **Public Key** (looks like `abcdefghijklmnop`)
+
+### Step 5: Configure EmailJS in Code
+Update `src/components/EmailReminderSystem.jsx`:
+```javascript
+const EMAILJS_CONFIG = {
+  serviceId: 'your_actual_service_id',     // Replace with your Service ID
+  templateId: 'your_actual_template_id',   // Replace with your Template ID  
+  publicKey: 'your_actual_public_key'      // Replace with your Public Key
+};
+```
+
+### Step 6: Test the System
+1. Create a test order with return date = today + 2 days
+2. Go to "היסטוריות השאלות" (Loan History)
+3. Click "🔍 בדוק תזכורות" (Check Reminders)
+4. Verify email delivery
+
+## 🚀 Deployment
+
+1. Build the app for production:
     ```bash
-    npm run dev
+    npm run build
+    ```
+2. Deploy to Firebase Hosting:
+    ```bash
+    firebase deploy
     ```
 
-## 📂 Project Structure Highlights
+## 📂 Project Structure
 
-- `src/components/` ➔ React components (pages, layouts, features)
-- `src/services/` ➔ Firebase services and API communication
-- `src/firebase/` ➔ Firebase configuration
-- `src/contexts/` ➔ React Context Providers
-- `src/css/` ➔ Stylesheets
-- `public/` ➔ Static files (favicon, manifest, images)
+```
+frontend/
+├── src/
+│   ├── components/           # React components
+│   │   ├── EmailReminderSystem.jsx    # Email automation system
+│   │   ├── LoanHistory.jsx            # Loan management & statistics
+│   │   ├── LoanStatisticsModal.jsx    # Analytics dashboard
+│   │   └── ...
+│   ├── services/            # Firebase services
+│   ├── firebase/            # Firebase configuration
+│   ├── contexts/            # React Context Providers
+│   └── css/                # Stylesheets
+├── public/                  # Static files
+└── functions/              # Firebase Cloud Functions (optional)
+```
 
-**Important:**  
-- Use alias imports (e.g., `@/firebase/firebase-config`) instead of relative paths (`../../`) to keep code clean.
-- Never commit your personal `.env` file! Use `.env.example` as the shared template.
+## ✨ Key Features
+
+### 📧 **Automated Email Reminders**
+- Sends Hebrew email reminders 2 days before return date
+- Professional templates with organization branding
+- Automatic daily checks at 9:00 AM (Israel time)
+- Admin dashboard for testing and monitoring
+
+### 📊 **Analytics & Statistics**
+- Comprehensive loan statistics and trends
+- Most popular items and active clients
+- Monthly comparison and performance metrics
+- Return inspection analytics
+
+### 🎯 **Inventory Management**
+- Real-time stock tracking
+- Barcode scanning for quick item identification
+- Image management with Cloudinary integration
+- Advanced search and filtering
+
+### 📅 **Hebrew Calendar Integration**
+- Jewish calendar support for religious events
+- Visual loan scheduling and conflict detection
+- Multi-day event handling
+
+### 🔐 **User Management**
+- Role-based access control
+- Firebase Authentication integration
+- Admin and volunteer permission levels
+
+## 🛠️ Development Scripts
+
+### `npm start`
+Runs the app in development mode at [http://localhost:3000](http://localhost:3000)
+
+### `npm test`
+Launches the test runner in interactive watch mode
+
+### `npm run build`
+Builds the app for production to the `build` folder
+
+### `npm run eject`
+⚠️ **One-way operation!** Ejects from Create React App for full control
+
+## 🔧 Configuration Notes
+
+### Import Aliases
+Use alias imports for cleaner code:
+```javascript
+// ✅ Good
+import { db } from '@/firebase/firebase-config';
+
+// ❌ Avoid
+import { db } from '../../firebase/firebase-config';
+```
+
+### Environment Variables
+- Never commit your `.env` file
+- Use `.env.example` as the shared template
+- All environment variables must start with `VITE_`
+
+### Firebase Configuration
+- Ensure Firestore security rules are properly configured
+- Set up proper authentication rules for admin features
+- Configure storage rules for image uploads
+
+## 📱 Mobile Compatibility
+
+The system is fully responsive and optimized for:
+- ✅ Desktop administrators
+- ✅ Tablet volunteers
+- ✅ Mobile field workers
+
+## 🌐 Browser Support
+
+- ✅ Chrome (recommended)
+- ✅ Firefox
+- ✅ Safari
+- ✅ Edge
+
+## 🔒 Security Features
+
+- Firebase Authentication with role-based access
+- Secure API endpoints with proper validation
+- Client-side form validation and sanitization
+- Proper error handling and user feedback
+
+## 📞 Support & Maintenance
+
+### For Developers:
+- React 18+ with modern hooks
+- Firebase v9 modular SDK
+- Responsive design with CSS Grid/Flexbox
+- EmailJS for reliable email delivery
+
+### For Organizations:
+- Simple admin interface requiring no technical knowledge
+- Visual email template editor through EmailJS dashboard
+- Clear documentation for daily operations
+- Backup and export capabilities
+
+## 🎯 Perfect for Non-Profits
+
+This system is specifically designed for:
+- **עמותות** (Non-profit organizations)
+- **גמחים** (Free loan societies) 
+- **Community centers**
+- **Religious institutions**
+- **Event rental services**
+
+## 📈 Scalability
+
+- Handles thousands of items and loans
+- Efficient Firebase querying with pagination
+- Optimized image loading and caching
+- Email system scales with organization growth
+
+## 🏆 Production Ready
+
+- Comprehensive error handling
+- Loading states and user feedback
+- Data validation and sanitization
+- Professional Hebrew UI/UX
+- Mobile-first responsive design
 
 ---
 
-
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [Create React App Documentation](https://facebook.github.io/create-react-app/docs/getting-started)
+- [React Documentation](https://reactjs.org/)
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [EmailJS Documentation](https://www.emailjs.com/docs/)

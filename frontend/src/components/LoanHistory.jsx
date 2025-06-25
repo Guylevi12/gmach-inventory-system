@@ -3,7 +3,9 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { ArrowRight, Download, Search, Calendar, Package, CheckCircle, XCircle, AlertTriangle, User, Phone, MapPin, Clock } from 'lucide-react';
+import { ArrowRight, Download, Search, Calendar, Package, CheckCircle, XCircle, AlertTriangle, User, Phone, MapPin, Clock, BarChart3 } from 'lucide-react';
+import LoanStatisticsModal from './LoanStatisticsModal'; // Add this line
+import EmailReminderSystem from './EmailReminderSystem';
 
 const LoanHistory = () => {
   const [allLoans, setAllLoans] = useState([]);
@@ -13,54 +15,56 @@ const LoanHistory = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+
 
   useEffect(() => {
     const fetchClosedLoans = async () => {
       try {
         setLoading(true);
-        
+
         // קודם נביא את כל ההזמנות לדיבוג
         console.log('🔍 מחפש את כל ההזמנות...');
         const allOrdersQuery = query(collection(db, 'orders'));
         const allSnapshot = await getDocs(allOrdersQuery);
-        const allOrdersData = allSnapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
+        const allOrdersData = allSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
         }));
-        
+
         console.log('📋 כל ההזמנות:', allOrdersData);
-        console.log('📊 סטטוסים:', allOrdersData.map(order => ({ 
-          id: order.id, 
-          client: order.clientName, 
-          status: order.status 
+        console.log('📊 סטטוסים:', allOrdersData.map(order => ({
+          id: order.id,
+          client: order.clientName,
+          status: order.status
         })));
-        
+
         // עכשיו נחפש הזמנות סגורות
         console.log('🔍 מחפש הזמנות סגורות...');
         const q = query(
-          collection(db, 'orders'), 
+          collection(db, 'orders'),
           where('status', '==', 'closed')
         );
         const snapshot = await getDocs(q);
         const loans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
+
         console.log('✅ הזמנות סגורות:', loans);
         setAllLoans(loans);
-        
+
         // גם נחפש הזמנות עם סטטוס 'returned' למקרה שהן לא מתעדכנות ל-'closed'
         console.log('🔍 מחפש הזמנות שהוחזרו...');
         const returnedQuery = query(
-          collection(db, 'orders'), 
+          collection(db, 'orders'),
           where('status', '==', 'returned')
         );
         const returnedSnapshot = await getDocs(returnedQuery);
-        const returnedLoans = returnedSnapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
+        const returnedLoans = returnedSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
         }));
-        
+
         console.log('🔄 הזמנות שהוחזרו:', returnedLoans);
-        
+
       } catch (error) {
         console.error('❌ שגיאה בטעינת ההזמנות:', error);
       } finally {
@@ -105,15 +109,15 @@ const LoanHistory = () => {
     }
 
     const inspections = loan.returnInspection.itemInspections;
-    
+
     const totalItemsExpected = inspections.reduce((sum, item) => sum + (item.quantityExpected || 0), 0);
     const totalItemsReturned = inspections.reduce((sum, item) => sum + (item.quantityReturned || 0), 0);
     const totalItemsNotReturned = inspections.reduce((sum, item) => sum + Math.max(0, (item.quantityExpected || 0) - (item.quantityReturned || 0)), 0);
-    
+
     const totalDamagedItems = inspections
       .filter(item => item.condition === 'damaged')
       .reduce((sum, item) => sum + (item.quantityReturned || 0), 0);
-    
+
     const totalLostItems = inspections
       .filter(item => item.condition === 'lost')
       .reduce((sum, item) => sum + Math.max(0, (item.quantityExpected || 0) - (item.quantityReturned || 0)), 0);
@@ -130,17 +134,17 @@ const LoanHistory = () => {
   useEffect(() => {
     const from = dateFrom ? new Date(dateFrom) : null;
     const to = dateTo ? new Date(dateTo) : null;
-    
+
     const filtered = allLoans.filter(loan => {
       const nameMatch = loan.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) || '';
       const phoneMatch = loan.phone?.includes(searchTerm) || '';
       const searchMatch = nameMatch || phoneMatch;
-      
+
       const pickup = loan.pickupDate?.seconds
         ? new Date(loan.pickupDate.seconds * 1000)
         : new Date(loan.pickupDate);
       const dateMatch = (!from || pickup >= from) && (!to || pickup <= to);
-      
+
       return searchMatch && dateMatch;
     });
     setFilteredLoans(filtered);
@@ -176,14 +180,14 @@ const LoanHistory = () => {
   const exportToPDF = (loan) => {
     const doc = new jsPDF();
     const summary = calculateReturnSummary(loan);
-    
+
     // Set Hebrew font direction
     doc.setFont('helvetica');
-    
+
     // Header
     doc.setFontSize(16);
     doc.text(`דוח השאלה - ${loan.clientName}`, 20, 20);
-    
+
     // Basic info
     doc.setFontSize(12);
     doc.text(`מתנדבת: ${loan.volunteerName}`, 20, 35);
@@ -192,7 +196,7 @@ const LoanHistory = () => {
     doc.text(`תאריך איסוף: ${formatDate(loan.pickupDate)}`, 20, 65);
     doc.text(`תאריך החזרה: ${formatDate(loan.returnDate)}`, 20, 75);
     doc.text(`סוג אירוע: ${loan.eventType}`, 20, 85);
-    
+
     // Items table
     const itemRows = loan.items?.map((item, i) => [
       i + 1,
@@ -214,7 +218,7 @@ const LoanHistory = () => {
       const finalY = doc.lastAutoTable.finalY + 15;
       doc.setFontSize(14);
       doc.text('סיכום בדיקת החזרה:', 20, finalY);
-      
+
       doc.setFontSize(11);
       doc.text(`סה"כ פריטים שהושאלו: ${summary.totalItemsExpected}`, 20, finalY + 15);
       doc.text(`סה"כ פריטים שהוחזרו: ${summary.totalItemsReturned}`, 20, finalY + 25);
@@ -222,11 +226,11 @@ const LoanHistory = () => {
       doc.text(`פריטים פגומים: ${summary.totalDamagedItems}`, 20, finalY + 45);
       doc.text(`פריטים אבודים: ${summary.totalLostItems}`, 20, finalY + 55);
       doc.text(`עלות נזקים: ₪${loan.returnInspection.summary?.totalRepairCost || 0}`, 20, finalY + 65);
-      
+
       if (loan.returnInspection.summary?.managerNotes) {
         doc.text(`הערות: ${loan.returnInspection.summary.managerNotes}`, 20, finalY + 75);
       }
-      
+
       doc.text(`תאריך בדיקה: ${formatDateTime(loan.returnInspection.completedAt)}`, 20, finalY + 85);
     }
 
@@ -245,11 +249,11 @@ const LoanHistory = () => {
   }
 
   return (
-    <div style={{ 
-      padding: '1rem', 
-      maxWidth: '1200px', 
-      margin: '0 auto', 
-      fontFamily: 'Arial, sans-serif' 
+    <div style={{
+      padding: '1rem',
+      maxWidth: '1200px',
+      margin: '0 auto',
+      fontFamily: 'Arial, sans-serif'
     }} dir="rtl">
       {/* Add mobile date field styling */}
       <style>{`
@@ -297,23 +301,61 @@ const LoanHistory = () => {
         padding: '1.5rem',
         borderRadius: '12px',
         marginBottom: '2rem',
-        textAlign: 'center'
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem'
       }}>
-        <h1 style={{
-          fontSize: '1.8rem',
-          fontWeight: 'bold',
-          margin: 0,
-          marginBottom: '0.5rem'
-        }}>
-          📚 היסטוריית השאלות
-        </h1>
-        <p style={{
-          fontSize: '0.95rem',
-          opacity: 0.9,
-          margin: 0
-        }}>
-          כל ההזמנות שהושלמו עם פרטי בדיקת החזרה
-        </p>
+        <div style={{ textAlign: window.innerWidth < 768 ? 'center' : 'right', flex: '1' }}>
+          <h1 style={{
+            fontSize: '1.8rem',
+            fontWeight: 'bold',
+            margin: 0,
+            marginBottom: '0.5rem'
+          }}>
+            📚 היסטוריית השאלות
+          </h1>
+          <p style={{
+            fontSize: '0.95rem',
+            opacity: 0.9,
+            margin: 0
+          }}>
+            כל ההזמנות שהושלמו עם פרטי בדיקת החזרה
+          </p>
+        </div>
+
+        {/* Statistics Button */}
+        <button
+          onClick={() => setShowStatsModal(true)}
+          style={{
+            background: 'rgba(255, 255, 255, 0.2)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            color: 'white',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            transition: 'all 0.2s ease',
+            backdropFilter: 'blur(10px)',
+            whiteSpace: 'nowrap'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <BarChart3 size={20} />
+          📊 סטטיסטיקות
+        </button>
       </div>
 
       {!selectedLoan && (
@@ -429,10 +471,10 @@ const LoanHistory = () => {
           {/* Loans Grid - הנה התיקון העיקרי! */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: window.innerWidth < 768 
-              ? '1fr' 
-              : window.innerWidth < 1024 
-                ? 'repeat(2, 1fr)' 
+            gridTemplateColumns: window.innerWidth < 768
+              ? '1fr'
+              : window.innerWidth < 1024
+                ? 'repeat(2, 1fr)'
                 : 'repeat(3, 1fr)',
             gap: window.innerWidth < 768 ? '1rem' : '1.5rem'
           }}>
@@ -612,8 +654,8 @@ const LoanHistory = () => {
           {/* Client Info */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: window.innerWidth < 768 
-              ? '1fr' 
+            gridTemplateColumns: window.innerWidth < 768
+              ? '1fr'
               : 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: '1rem',
             marginBottom: '2rem',
@@ -665,7 +707,7 @@ const LoanHistory = () => {
                 const inspection = selectedLoan.returnInspection?.itemInspections?.find(
                   insp => insp.itemId === item.id || insp.name === item.name
                 );
-                
+
                 return (
                   <div key={i} style={{
                     display: 'flex',
@@ -698,7 +740,7 @@ const LoanHistory = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       {getConditionIcon(inspection?.condition)}
                       <span style={{
@@ -738,11 +780,11 @@ const LoanHistory = () => {
                   <CheckCircle size={24} />
                   סיכום בדיקת החזרה
                 </h3>
-                
+
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: window.innerWidth < 768 
-                    ? '1fr' 
+                  gridTemplateColumns: window.innerWidth < 768
+                    ? '1fr'
                     : 'repeat(auto-fit, minmax(250px, 1fr))',
                   gap: '2rem',
                   marginBottom: '1rem'
@@ -763,7 +805,7 @@ const LoanHistory = () => {
                       ❌ פריטים שלא הוחזרו/פגומים
                     </span>
                     <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#ef4444' }}>
-                      {summary.totalItemsNotReturned }
+                      {summary.totalItemsNotReturned}
                     </span>
                     <span style={{ fontSize: '0.875rem', color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
                       אבודים/פגומים/לא הוחזרו
@@ -819,6 +861,13 @@ const LoanHistory = () => {
           </div>
         </div>
       )}
+      {/* Statistics Modal */}
+      <LoanStatisticsModal
+        showStatsModal={showStatsModal}
+        setShowStatsModal={setShowStatsModal}
+        loanHistory={allLoans}
+      />
+      <EmailReminderSystem />
     </div>
   );
 };

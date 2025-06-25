@@ -7,7 +7,7 @@ const ContactBubble = () => {
   const [isClosing, setIsClosing] = useState(false);
   const [buttonContent, setButtonContent] = useState('phone');
   const [contentTransition, setContentTransition] = useState('fade-in');
-  const phoneNumber = "054-477-3388";
+  const phoneNumber = "054-257-5886";
   const whatsappNumber = "+972 54-257-5886";
 
   const handlePhoneClick = () => {
