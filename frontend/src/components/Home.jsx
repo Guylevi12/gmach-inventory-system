@@ -1,6 +1,7 @@
 // src/components/Home.jsx
 import React from 'react';
 import { useUser } from '../UserContext';
+import gemachImage from '../assets/images/GmachPic.jpeg';
 
 const Home = () => {
   const { user } = useUser();
@@ -64,17 +65,17 @@ const Home = () => {
     <div style={containerStyle}>
       <h2 style={sectionTitle}>ברוכים הבאים לגמ"ח שמחת זקנתי</h2>
 
-      <img
-        src="https://www.loan4all.co.il/wp-content/uploads/elementor/thumbs/%D7%A2%D7%99%D7%A6%D7%95%D7%91-%D7%9C%D7%9C%D7%90-%D7%A9%D7%9D-66-pk7bw0x4rbkrwfq7lsj9ow3fqrr6og52r04ld4c6uw.jpg"
-        alt='תמונה זמנית של גמ"ח'
-        style={{
-          width: '100%',
-          height: 'auto',
-          borderRadius: '12px',
-          marginBottom: '2rem',
-          maxWidth: '800px'
-        }}
-      />
+<img
+  src={gemachImage}
+  alt='תמונה של גמ"ח'
+  style={{
+    width: '65%',
+    height: 'auto',
+    borderRadius: '12px',
+    marginBottom: '2rem',
+    maxWidth: '600px'
+  }}
+/>
 
       <div style={descriptionStyle}>
         פני פתחה את גמ"ח הציוד לשמחות ואירועים "שמחת זקנתי" לפני כ־10 שנים, לזכר סבה וסבתה – אברהם ואסתר ליבן ז"ל, ממקימי הקיבוץ. הגמ"ח החל לפעול מתוך ביתם ממש ולאחר מכן עבר למבנה שהוקצה ושופץ על ידי הקיבוץ.
