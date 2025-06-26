@@ -189,7 +189,7 @@ const NewLoanModal = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // ✅ הגדרת כמות פריטים בעמוד לפי גודל מסך - מאוזן ונוח
-  const itemsPerPage = isMobile ? 6 : 10;
+  const itemsPerPage = isMobile ? 6 : 8;
 
   // ✅ מעקב אחר שינויי גודל מסך
   useEffect(() => {
