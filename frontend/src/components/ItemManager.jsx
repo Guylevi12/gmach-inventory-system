@@ -10,6 +10,7 @@ import imageCompression from 'browser-image-compression';
 import ItemFormModal from './ItemFormModal';
 import { FaEdit, FaTrash, FaPlus, FaUndo } from 'react-icons/fa';
 import { useUser } from '../UserContext';
+import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 
 // הוספת imports חדשים
 import { 
@@ -18,6 +19,168 @@ import {
   migrateExistingItems 
 } from '../utils/imageUtils';
 import ImageGallery from './ImageGallery';
+
+// רכיב Pagination
+const Pagination = ({ 
+  currentPage, 
+  totalItems, 
+  itemsPerPage, 
+  onPageChange,
+  className = ""
+}) => {
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const isMobile = window.innerWidth <= 768;
+  
+  if (totalPages <= 1) return null;
+
+  const getVisiblePages = () => {
+    const maxVisible = isMobile ? 5 : 7;
+    const half = Math.floor(maxVisible / 2);
+    
+    let start = Math.max(1, currentPage - half);
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    const pages = [];
+    
+    if (start > 1) {
+      pages.push(1);
+      if (start > 2) {
+        pages.push('...');
+      }
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    if (end < totalPages) {
+      if (end < totalPages - 1) {
+        pages.push('...');
+      }
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+
+  const visiblePages = getVisiblePages();
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  return (
+    <div className={`pagination-container ${className}`} style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '1rem',
+      margin: '2rem 0',
+      direction: 'rtl'
+    }}>
+      <div style={{
+        fontSize: isMobile ? '0.875rem' : '1rem',
+        color: '#6b7280',
+        textAlign: 'center'
+      }}>
+        מציג {startItem}-{endItem} מתוך {totalItems} מוצרים
+      </div>
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: isMobile ? '0.25rem' : '0.5rem',
+        flexWrap: 'wrap',
+        justifyContent: 'center'
+      }}>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: isMobile ? '36px' : '40px',
+            height: isMobile ? '36px' : '40px',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            background: currentPage === 1 ? '#f9fafb' : 'white',
+            color: currentPage === 1 ? '#9ca3af' : '#374151',
+            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <ChevronRight size={isMobile ? 16 : 20} />
+        </button>
+
+        {visiblePages.map((page, index) => {
+          if (page === '...') {
+            return (
+              <div key={`dots-${index}`} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: isMobile ? '36px' : '40px',
+                height: isMobile ? '36px' : '40px',
+                color: '#9ca3af'
+              }}>
+                <MoreHorizontal size={isMobile ? 16 : 20} />
+              </div>
+            );
+          }
+
+          const isActive = page === currentPage;
+          
+          return (
+            <button
+              key={page}
+              onClick={() => onPageChange(page)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: isMobile ? '36px' : '40px',
+                height: isMobile ? '36px' : '40px',
+                border: isActive ? '2px solid #3b82f6' : '1px solid #d1d5db',
+                borderRadius: '8px',
+                background: isActive ? '#3b82f6' : 'white',
+                color: isActive ? 'white' : '#374151',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: isActive ? 'bold' : 'normal',
+                fontSize: isMobile ? '14px' : '16px'
+              }}
+            >
+              {page}
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: isMobile ? '36px' : '40px',
+            height: isMobile ? '36px' : '40px',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            background: currentPage === totalPages ? '#f9fafb' : 'white',
+            color: currentPage === totalPages ? '#9ca3af' : '#374151',
+            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <ChevronLeft size={isMobile ? 16 : 20} />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const ItemManager = () => {
   const [name, setName] = useState('');
@@ -33,10 +196,44 @@ const ItemManager = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [publicComment, setPublicComment] = useState('');
   const [internalComment, setInternalComment] = useState('');
+  
+  // ✅ הוספת state לפגינציה
+  const [currentPage, setCurrentPage] = useState(1);
+  const [deletedCurrentPage, setDeletedCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
   const { user } = useUser();
   const userName = user?.username || 'משתמש לא ידוע';
-
   const deletedModalRef = useRef(null);
+
+  // ✅ הגדרת כמות פריטים בעמוד לפי גודל מסך
+  const itemsPerPage = isMobile ? 12 : 20;
+  const deletedItemsPerPage = isMobile ? 12 : 20;
+
+  // ✅ מעקב אחר שינויי גודל מסך
+  useEffect(() => {
+    const handleResize = () => {
+      const newIsMobile = window.innerWidth <= 768;
+      if (newIsMobile !== isMobile) {
+        setIsMobile(newIsMobile);
+        // איפוס לעמוד ראשון כאשר מתחלף מצב המסך
+        setCurrentPage(1);
+        setDeletedCurrentPage(1);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobile]);
+
+  // ✅ איפוס עמוד כאשר משתנה החיפוש
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setDeletedCurrentPage(1);
+  }, [deletedSearch]);
 
   // Remove spinner arrows on number inputs
   useEffect(() => {
@@ -227,12 +424,23 @@ const ItemManager = () => {
     };
   }, [showDeletedPopup]);
 
+  // ✅ חישוב פריטים מסוננים ופגינציה
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
   const filteredDeleted = deletedItems.filter(item =>
     item.name.toLowerCase().includes(deletedSearch.toLowerCase())
   );
+
+  // ✅ חישוב פריטים לתצוגה בעמוד הנוכחי
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredItems.slice(startIndex, endIndex);
+
+  const deletedStartIndex = (deletedCurrentPage - 1) * deletedItemsPerPage;
+  const deletedEndIndex = deletedStartIndex + deletedItemsPerPage;
+  const currentDeletedItems = filteredDeleted.slice(deletedStartIndex, deletedEndIndex);
 
   const handleDeleteItem = async id => {
     if (!window.confirm('האם את/ה בטוח/ה שברצונך למחוק את המוצר?')) return;
@@ -241,6 +449,13 @@ const ItemManager = () => {
       toast.success('המוצר הוסר מהרשימה.');
       fetchItems();
       fetchDeletedItems();
+      
+      // ✅ בדיקה אם צריך לחזור לעמוד קודם אחרי מחיקה
+      const newFilteredCount = filteredItems.length - 1;
+      const maxPage = Math.ceil(newFilteredCount / itemsPerPage);
+      if (currentPage > maxPage && maxPage > 0) {
+        setCurrentPage(maxPage);
+      }
     } catch {
       toast.error('שגיאה במחיקת המוצר');
     }
@@ -253,6 +468,13 @@ const ItemManager = () => {
       toast.success('המוצר הושב למלאי בהצלחה.');
       fetchItems();
       fetchDeletedItems();
+      
+      // ✅ בדיקה אם צריך לחזור לעמוד קודם אחרי שחזור
+      const newDeletedCount = filteredDeleted.length - 1;
+      const maxDeletedPage = Math.ceil(newDeletedCount / deletedItemsPerPage);
+      if (deletedCurrentPage > maxDeletedPage && maxDeletedPage > 0) {
+        setDeletedCurrentPage(maxDeletedPage);
+      }
     } catch {
       toast.error('שגיאה בהחזרת המוצר');
     }
@@ -280,7 +502,7 @@ const ItemManager = () => {
           name: itemData.name,
           quantity: parseInt(itemData.quantity),
           images: itemData.images || [],
-          imageUrl: itemData.images?.[0] || null, // תאימות לאחור
+          imageUrl: itemData.images?.[0] || null,
           publicComment: itemData.publicComment,
           internalComment: itemData.internalComment,
           updatedBy: userName,
@@ -300,7 +522,7 @@ const ItemManager = () => {
                   name: itemData.name,
                   quantity: parseInt(itemData.quantity),
                   images: itemData.images || [],
-                  imageUrl: itemData.images?.[0] || null, // תאימות לאחור
+                  imageUrl: itemData.images?.[0] || null,
                   publicComment: itemData.publicComment,
                   internalComment: itemData.internalComment,
                   createdBy: userName,
@@ -323,7 +545,7 @@ const ItemManager = () => {
           name: itemData.name,
           quantity: parseInt(itemData.quantity),
           images: itemData.images || [],
-          imageUrl: itemData.images?.[0] || null, // תאימות לאחור
+          imageUrl: itemData.images?.[0] || null,
           publicComment: itemData.publicComment,
           internalComment: itemData.internalComment,
           createdBy: userName,
@@ -417,11 +639,29 @@ const ItemManager = () => {
           }}
         />
 
+        {/* ✅ תצוגת סטטיסטיקות */}
+        {searchTerm && (
+          <div style={{
+            background: '#f0f9ff',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            border: '1px solid #0ea5e9'
+          }}>
+            <p style={{ margin: 0, color: '#0369a1' }}>
+              🔍 נמצאו {filteredItems.length} מוצרים עבור "{searchTerm}"
+            </p>
+          </div>
+        )}
+
+        {/* ✅ רשת מוצרים עם פגינציה */}
         <div className="products-grid-mobile">
-          {filteredItems.length === 0 ? (
-            <p style={{ gridColumn: '1 / -1', textAlign: 'center' }}>לא נמצא מוצרים במלאי.</p>
+          {currentItems.length === 0 ? (
+            <p style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+              {searchTerm ? `לא נמצאו מוצרים לחיפוש "${searchTerm}"` : 'לא נמצא מוצרים במלאי.'}
+            </p>
           ) : (
-            filteredItems.map(item => (
+            currentItems.map(item => (
               <div
                 key={item.id}
                 className="product-card product-card-mobile"
@@ -441,7 +681,6 @@ const ItemManager = () => {
                   boxSizing: 'border-box'
                 }}
               >
-                {/* החלפת img ב-ImageGallery */}
                 <ImageGallery 
                   item={item}
                   width="100%"
@@ -528,6 +767,14 @@ const ItemManager = () => {
             ))
           )}
         </div>
+
+        {/* ✅ Pagination לפריטים רגילים */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredItems.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Deleted Items Modal */}
@@ -594,11 +841,28 @@ const ItemManager = () => {
               }}
             />
 
+            {/* ✅ תצוגת סטטיסטיקות למוצרים שנמחקו */}
+            {deletedSearch && (
+              <div style={{
+                background: '#fef2f2',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1rem',
+                border: '1px solid #fca5a5'
+              }}>
+                <p style={{ margin: 0, color: '#dc2626' }}>
+                  🔍 נמצאו {filteredDeleted.length} מוצרים שנמחקו עבור "{deletedSearch}"
+                </p>
+              </div>
+            )}
+
             <div className="products-grid-mobile">
-              {filteredDeleted.length === 0 ? (
-                <p style={{ gridColumn: '1 / -1', textAlign: 'center' }}>אין פריטים שנמחקו.</p>
+              {currentDeletedItems.length === 0 ? (
+                <p style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+                  {deletedSearch ? `לא נמצאו מוצרים שנמחקו לחיפוש "${deletedSearch}"` : 'אין פריטים שנמחקו.'}
+                </p>
               ) : (
-                filteredDeleted.map(item => (
+                currentDeletedItems.map(item => (
                   <div
                     key={item.id}
                     className="product-card-mobile"
@@ -617,7 +881,6 @@ const ItemManager = () => {
                       boxSizing: 'border-box'
                     }}
                   >
-                    {/* גם כאן החלפת img ב-ImageGallery */}
                     <ImageGallery 
                       item={item}
                       width="100%"
@@ -650,6 +913,14 @@ const ItemManager = () => {
                 ))
               )}
             </div>
+
+            {/* ✅ Pagination למוצרים שנמחקו */}
+            <Pagination
+              currentPage={deletedCurrentPage}
+              totalItems={filteredDeleted.length}
+              itemsPerPage={deletedItemsPerPage}
+              onPageChange={setDeletedCurrentPage}
+            />
           </div>
         </div>
       )}

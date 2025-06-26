@@ -172,7 +172,7 @@ const RequestLoan = ({ onRequestSubmitted }) => {
           });
         });
 
-        // שמירת בחירות קודמות
+        // 🔧 שמירת בחירות קודמות
         const previousSelections = {};
         availableItems.forEach(item => {
           if (item.selected && item.selectedQty > 0) {
@@ -300,6 +300,7 @@ const RequestLoan = ({ onRequestSubmitted }) => {
         </div>
       </div>
 
+      {/* ✅ המודל עם hideBarcodeScanner=true */}
       <NewLoanModal
         showCatalogPopup={showCatalogPopup}
         setShowCatalogPopup={setShowCatalogPopup}
@@ -311,6 +312,7 @@ const RequestLoan = ({ onRequestSubmitted }) => {
         changeQty={changeQty}
         form={form}
         loadingItems={loadingItems}
+        hideBarcodeScanner={true}  // 🔥 מסתיר את כפתור הסריקה
       />
     </div>
   );
