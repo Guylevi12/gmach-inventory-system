@@ -830,7 +830,7 @@ const LoanHistory = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Clock size={window.innerWidth < 768 ? 12 : 14} />
                       <span style={{ fontSize: window.innerWidth < 768 ? '0.7rem' : '0.875rem' }}>
-                        {formatDate(loan.pickupDate)} → {formatDate(loan.returnDate)}
+                        {formatDate(loan.pickupDate)} ← {formatDate(loan.returnDate)}
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -931,7 +931,7 @@ const LoanHistory = () => {
             <div>
               <span style={{ fontSize: '0.875rem', color: '#6b7280', display: 'block' }}>תאריכים</span>
               <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1f2937' }}>
-                {formatDate(selectedLoan.pickupDate)} → {formatDate(selectedLoan.returnDate)}
+                {formatDate(selectedLoan.pickupDate)} ← {formatDate(selectedLoan.returnDate)}
               </span>
             </div>
             <div>
