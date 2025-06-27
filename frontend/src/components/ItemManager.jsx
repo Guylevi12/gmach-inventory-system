@@ -8,7 +8,7 @@ import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import imageCompression from 'browser-image-compression';
 import ItemFormModal from './ItemFormModal';
-import { FaEdit, FaTrash, FaPlus, FaUndo } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaUndo, FaEye } from 'react-icons/fa'; // ✅ הוספת FaEye
 import { useUser } from '../UserContext';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 
@@ -19,6 +19,7 @@ import {
   migrateExistingItems 
 } from '../utils/imageUtils';
 import ImageGallery from './ImageGallery';
+import ActiveOrdersModal from './ActiveOrdersModal'; // ✅ יבוא הקומפוננטה החדשה
 
 // רכיב Pagination
 const Pagination = ({ 
@@ -201,6 +202,10 @@ const ItemManager = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [deletedCurrentPage, setDeletedCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  // ✅ הוספת state למודל הזמנות פעילות
+  const [showActiveOrdersModal, setShowActiveOrdersModal] = useState(false);
+  const [selectedItemForOrders, setSelectedItemForOrders] = useState(null);
   
   const { user } = useUser();
   const userName = user?.username || 'משתמש לא ידוע';
@@ -441,6 +446,13 @@ const ItemManager = () => {
   const deletedStartIndex = (deletedCurrentPage - 1) * deletedItemsPerPage;
   const deletedEndIndex = deletedStartIndex + deletedItemsPerPage;
   const currentDeletedItems = filteredDeleted.slice(deletedStartIndex, deletedEndIndex);
+
+  // ✅ פונקציה לפתיחת מודל הזמנות פעילות
+  const handleViewActiveOrders = (item) => {
+    console.log('🔍 פותח מודל הזמנות פעילות עבור:', item.name);
+    setSelectedItemForOrders(item);
+    setShowActiveOrdersModal(true);
+  };
 
   const handleDeleteItem = async id => {
     if (!window.confirm('האם את/ה בטוח/ה שברצונך למחוק את המוצר?')) return;
@@ -699,6 +711,7 @@ const ItemManager = () => {
                 <p style={{ fontSize: '0.85rem', color: '#555', margin: '0.25rem 0' }}>
                   מזהה מוצר: {item.ItemId}
                 </p>
+                {/* ✅ שינוי הטקסט למספר רבים */}
                 {item.inUse && (
                   <p style={{
                     color: '#d97706',
@@ -706,62 +719,94 @@ const ItemManager = () => {
                     fontSize: '0.85rem',
                     margin: '0.25rem 0'
                   }}>
-                    🕐 מוצר זה נמצא בהזמנה פעילה
+                    🕐 מוצר זה נמצא בהזמנות פעילות
                   </p>
                 )}
                 <div className="button-group" style={{
                   display: 'flex',
-                  gap: '0.5rem',
+                  gap: '0.4rem',
                   marginTop: 'auto',
-                  width: '100%'
+                  width: '100%',
+                  flexDirection: 'column' // ✅ תמיד טור, גם בדסקטופ
                 }}>
-                  <button
-                    onClick={() => {
-                      setEditingItem(item);
-                      setName(item.name);
-                      setQuantity(item.quantity.toString());
-                      setImageUrl(getPrimaryImage(item) || '');
-                      setImageFile(null);
-                      setShowPopup(true);
-                      setPublicComment(item.publicComment || '');
-                      setInternalComment(item.internalComment || '');
-                    }}
-                    style={{
-                      backgroundColor: '#6c757d',
-                      color: 'white',
-                      border: 'none',
-                      padding: '6px 10px',
-                      borderRadius: '5px',
-                      fontSize: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      cursor: 'pointer',
-                      flex: '1'
-                    }}
-                  >
-                    <FaEdit size={14} /> עריכה
-                  </button>
-                  <button
-                    onClick={() => handleDeleteItem(item.id)}
-                    style={{
-                      backgroundColor: '#d32f2f',
-                      color: 'white',
-                      border: 'none',
-                      padding: '6px 10px',
-                      borderRadius: '5px',
-                      fontSize: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      cursor: 'pointer',
-                      flex: '1'
-                    }}
-                  >
-                    <FaTrash size={14} /> מחיקה
-                  </button>
+                  {/* ✅ כפתור "ראה הזמנות" - מוצג רק אם המוצר בשימוש */}
+                  {item.inUse && (
+                    <button
+                      onClick={() => handleViewActiveOrders(item)}
+                      style={{
+                        backgroundColor: '#17a2b8',
+                        color: 'white',
+                        border: 'none',
+                        padding: isMobile ? '4px 8px' : '6px 10px',
+                        borderRadius: '5px',
+                        fontSize: isMobile ? '0.75rem' : '0.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        cursor: 'pointer',
+                        width: '100%',
+                        minHeight: isMobile ? '28px' : '32px'
+                      }}
+                    >
+                      <FaEye size={isMobile ? 12 : 14} /> ראה הזמנות
+                    </button>
+                  )}
+                  <div style={{
+                    display: 'flex',
+                    gap: '0.4rem',
+                    width: '100%'
+                  }}>
+                    <button
+                      onClick={() => {
+                        setEditingItem(item);
+                        setName(item.name);
+                        setQuantity(item.quantity.toString());
+                        setImageUrl(getPrimaryImage(item) || '');
+                        setImageFile(null);
+                        setShowPopup(true);
+                        setPublicComment(item.publicComment || '');
+                        setInternalComment(item.internalComment || '');
+                      }}
+                      style={{
+                        backgroundColor: '#6c757d',
+                        color: 'white',
+                        border: 'none',
+                        padding: isMobile ? '4px 8px' : '6px 10px',
+                        borderRadius: '5px',
+                        fontSize: isMobile ? '0.75rem' : '0.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        cursor: 'pointer',
+                        flex: '1',
+                        minHeight: isMobile ? '28px' : '32px'
+                      }}
+                    >
+                      <FaEdit size={isMobile ? 12 : 14} /> עריכה
+                    </button>
+                    <button
+                      onClick={() => handleDeleteItem(item.id)}
+                      style={{
+                        backgroundColor: '#d32f2f',
+                        color: 'white',
+                        border: 'none',
+                        padding: isMobile ? '4px 8px' : '6px 10px',
+                        borderRadius: '5px',
+                        fontSize: isMobile ? '0.75rem' : '0.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        cursor: 'pointer',
+                        flex: '1',
+                        minHeight: isMobile ? '28px' : '32px'
+                      }}
+                    >
+                      <FaTrash size={isMobile ? 12 : 14} /> מחיקה
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
@@ -943,6 +988,17 @@ const ItemManager = () => {
           onInternalCommentChange={e => setInternalComment(e.target.value)}
           onCancel={() => setShowPopup(false)}
           onSubmit={handleSubmit}
+        />
+      )}
+
+      {/* ✅ Active Orders Modal */}
+      {showActiveOrdersModal && (
+        <ActiveOrdersModal
+          item={selectedItemForOrders}
+          onClose={() => {
+            setShowActiveOrdersModal(false);
+            setSelectedItemForOrders(null);
+          }}
         />
       )}
 
