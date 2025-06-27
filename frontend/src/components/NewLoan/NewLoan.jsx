@@ -4,6 +4,7 @@ import NewLoanForm from './NewLoanForm';
 import NewLoanModal from './NewLoanModal';
 import { db } from '@/firebase/firebase-config';
 import { collection, getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { phoneAutoCompleteService } from '@/services/phoneAutoCompleteService'; // ✅ יבוא השירות החדש
 
 const NewLoan = ({ onOrderCreated }) => {
   const [form, setForm] = useState({
@@ -17,9 +18,43 @@ const NewLoan = ({ onOrderCreated }) => {
   const [loadingItems, setLoadingItems] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
+  
+  // ✅ state חדש למעקב אחר טעינת פרטי לקוח אוטומטית
+  const [isLoadingClientData, setIsLoadingClientData] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  // ✅ פונקציה משופרת לטיפול בשינויים
+  const handleChange = async (e) => {
+    const { name, value } = e.target;
+    
+    // עדכון הטופס
+    setForm(prevForm => ({ ...prevForm, [name]: value }));
+    
+    // ✅ אם השדה הוא מספר טלפון ואורכו 10 ספרות - נחפש פרטי לקוח
+    if (name === 'phone' && value.length === 10 && /^\d{10}$/.test(value)) {
+      setIsLoadingClientData(true);
+      
+      try {
+        const result = await phoneAutoCompleteService.findClientByPhone(value);
+        
+        if (result.found) {
+          // ✅ מילוי אוטומטי של הפרטים
+          setForm(prevForm => ({
+            ...prevForm,
+            phone: value, // שמירת המספר שהוזן
+            clientName: result.clientData.clientName,
+            address: result.clientData.address,
+            email: result.clientData.email
+          }));
+          
+          // הצגת הודעה למשתמש
+          alert(`נמצא לקוח קיים! הפרטים מולאו אוטומטית:\nשם: ${result.clientData.clientName}\nכתובת: ${result.clientData.address}`);
+        }
+      } catch (error) {
+        console.error('שגיאה בחיפוש פרטי לקוח:', error);
+      } finally {
+        setIsLoadingClientData(false);
+      }
+    }
   };
 
   const validateForm = () => {
@@ -69,10 +104,10 @@ const NewLoan = ({ onOrderCreated }) => {
 
     const items = availableItems.filter(i => i.selected).map(i => ({
       id: i.id,
-      ItemId: i.ItemId,    // ✅ הוסף ItemId
+      ItemId: i.ItemId,
       name: i.name,
       quantity: i.selectedQty,
-      imageUrl: i.imageUrl // ✅ הוסף תמונה
+      imageUrl: i.imageUrl
     }));
 
     setSaving(true);
@@ -143,7 +178,6 @@ const NewLoan = ({ onOrderCreated }) => {
           });
         });
 
-        // 🔧 שמירת בחירות קודמות
         const previousSelections = {};
         availableItems.forEach(item => {
           if (item.selected && item.selectedQty > 0) {
@@ -199,6 +233,7 @@ const NewLoan = ({ onOrderCreated }) => {
         handleClear={handleClear}
         setShowCatalogPopup={setShowCatalogPopup}
         saving={saving}
+        isLoadingClientData={isLoadingClientData} // ✅ מעבר סטטוס הטעינה לטופס
       />
       <NewLoanModal
         showCatalogPopup={showCatalogPopup}

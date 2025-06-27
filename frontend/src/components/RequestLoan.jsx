@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import './NewLoan/css/NewLoan.css'; // נשתמש באותו CSS
-import NewLoanModal from './NewLoan/NewLoanModal'; // נשתמש באותו מודל לבחירת מוצרים
+import './NewLoan/css/NewLoan.css';
+import NewLoanModal from './NewLoan/NewLoanModal';
 import { db } from '@/firebase/firebase-config';
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '../UserContext';
+import { phoneAutoCompleteService } from '@/services/phoneAutoCompleteService';
 
 const RequestLoan = ({ onRequestSubmitted }) => {
-  const { user } = useUser(); // נשתמש בפרטי המשתמש המחובר
+  const { user } = useUser();
   
   const [form, setForm] = useState({
     clientName: '', 
@@ -17,7 +18,6 @@ const RequestLoan = ({ onRequestSubmitted }) => {
     pickupDate: '', 
     eventDate: '', 
     returnDate: ''
-    // הסרנו volunteerName כי המשתמש ממלא בעצמו
   });
   
   const [errors, setErrors] = useState({});
@@ -26,10 +26,41 @@ const RequestLoan = ({ onRequestSubmitted }) => {
   const [loadingItems, setLoadingItems] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isLoadingClientData, setIsLoadingClientData] = useState(false);
 
-  const handleChange = useCallback((e) => {
+  // פונקציה משופרת לטיפול בשינויים עם חיפוש אוטומטי
+  const handleChange = useCallback(async (e) => {
     const { name, value } = e.target;
+    
+    // עדכון הטופס
     setForm(prevForm => ({ ...prevForm, [name]: value }));
+    
+    // אם השדה הוא מספר טלפון ואורכו 10 ספרות - נחפש פרטי לקוח
+    if (name === 'phone' && value.length === 10 && /^\d{10}$/.test(value)) {
+      setIsLoadingClientData(true);
+      
+      try {
+        const result = await phoneAutoCompleteService.findClientByPhone(value);
+        
+        if (result.found) {
+          // מילוי אוטומטי של הפרטים
+          setForm(prevForm => ({
+            ...prevForm,
+            phone: value,
+            clientName: result.clientData.clientName,
+            address: result.clientData.address,
+            email: result.clientData.email
+          }));
+          
+          // הצגת הודעה למשתמש
+          alert(`נמצא לקוח קיים! הפרטים מולאו אוטומטית:\nשם: ${result.clientData.clientName}\nכתובת: ${result.clientData.address}`);
+        }
+      } catch (error) {
+        console.error('שגיאה בחיפוש פרטי לקוח:', error);
+      } finally {
+        setIsLoadingClientData(false);
+      }
+    }
   }, []);
 
   const validateForm = () => {
@@ -37,7 +68,6 @@ const RequestLoan = ({ onRequestSubmitted }) => {
     const today = new Date().toISOString().split('T')[0];
     const { pickupDate, eventDate, returnDate } = form;
 
-    // אותן בדיקות כמו ב-NewLoan, רק בלי volunteerName
     if (!form.clientName.trim()) newErrors.clientName = 'שדה חובה';
     if (!form.address.trim()) newErrors.address = 'שדה חובה';
     if (!form.phone.trim()) newErrors.phone = 'שדה חובה';
@@ -93,20 +123,18 @@ const RequestLoan = ({ onRequestSubmitted }) => {
 
     setSaving(true);
     try {
-      // שמירה בקולקציה orderRequests במקום orders
       await addDoc(collection(db, 'orderRequests'), {
         ...form,
         items,
-        status: 'pending', // סטטוס ממתין לאישור
-        requestedBy: user.uid, // מזהה המשתמש שביקש
-        requestedByUsername: user.username, // שם המשתמש
-        requestedByEmail: user.email, // אימייל המשתמש
+        status: 'pending',
+        requestedBy: user.uid,
+        requestedByUsername: user.username,
+        requestedByEmail: user.email,
         requestedAt: serverTimestamp(),
         approvedBy: null,
         approvedAt: null
       });
 
-      // איפוס הטופס
       setForm({
         clientName: '', 
         address: '',
@@ -131,7 +159,7 @@ const RequestLoan = ({ onRequestSubmitted }) => {
     setSaving(false);
   };
 
-  // אותה לוגיקה לחישוב זמינות כמו ב-NewLoan
+  // חישוב זמינות פריטים
   useEffect(() => {
     if (!showCatalogPopup) return;
 
@@ -172,7 +200,6 @@ const RequestLoan = ({ onRequestSubmitted }) => {
           });
         });
 
-        // 🔧 שמירת בחירות קודמות
         const previousSelections = {};
         availableItems.forEach(item => {
           if (item.selected && item.selectedQty > 0) {
@@ -204,7 +231,7 @@ const RequestLoan = ({ onRequestSubmitted }) => {
     };
 
     fetchAvailable();
-  }, [showCatalogPopup, form.pickupDate, form.returnDate]);
+  }, [showCatalogPopup, form.pickupDate, form.returnDate, availableItems]);
 
   const toggleSelectItem = id => {
     setAvailableItems(av => av.map(it =>
@@ -218,11 +245,11 @@ const RequestLoan = ({ onRequestSubmitted }) => {
     ));
   };
 
-  // רשימת השדות - נעביר אותה מחוץ לקומפוננטה
+  // רשימת השדות עם מספר פלאפון ראשון
   const fields = [
+    { label: 'מספר פלאפון', name: 'phone', required: true },
     { label: 'שם לקוח', name: 'clientName', required: true },
     { label: 'מקום מגורים', name: 'address', required: true },
-    { label: 'מספר פלאפון', name: 'phone', required: true },
     { label: 'אימייל', name: 'email', required: false },
     { label: 'סוג האירוע', name: 'eventType', required: true },
     { label: 'תאריך לקיחת מוצרים', name: 'pickupDate', type: 'date', required: true },
@@ -245,34 +272,72 @@ const RequestLoan = ({ onRequestSubmitted }) => {
               margin: '0 auto', textAlign: 'right'
             }}>
               {label}{required && ' *'}
+              {/* אינדיקטור טעינה עבור שדות שמתמלאים אוטומטית */}
+              {isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') && (
+                <span style={{ marginRight: '0.5rem', color: '#4caf50' }}>
+                  ⏳
+                </span>
+              )}
             </label>
-            <input
-              id={name}
-              type={type}
-              name={name}
-              value={form[name] || ''} // הוספת || '' למניעת undefined
-              onChange={handleChange}
-              autoComplete="off" // מניעת התערבות של ה-browser
-              min={
-                type === 'date'
-                  ? name === 'pickupDate'
-                    ? new Date().toISOString().split('T')[0]
-                    : name === 'eventDate' || name === 'returnDate'
-                      ? form.pickupDate || new Date().toISOString().split('T')[0]
-                      : undefined
-                  : undefined
-              }
-              style={{
-                display: 'block',
-                width: '100%',
-                maxWidth: '400px',
-                margin: '0 auto',
-                padding: '10px',
-                border: errors[name] ? '1px solid red' : '1px solid #ccc',
-                borderRadius: '6px',
-                fontSize: '1rem'
-              }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                id={name}
+                type={type}
+                name={name}
+                value={form[name] || ''}
+                onChange={handleChange}
+                autoComplete="off"
+                disabled={isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email')}
+                min={
+                  type === 'date'
+                    ? name === 'pickupDate'
+                      ? new Date().toISOString().split('T')[0]
+                      : name === 'eventDate' || name === 'returnDate'
+                        ? form.pickupDate || new Date().toISOString().split('T')[0]
+                        : undefined
+                    : undefined
+                }
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  maxWidth: '400px',
+                  margin: '0 auto',
+                  padding: '10px',
+                  border: errors[name] ? '1px solid red' : '1px solid #ccc',
+                  borderRadius: '6px',
+                  fontSize: '1rem',
+                  backgroundColor: isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') 
+                    ? '#f5f5f5' : 'white',
+                  opacity: isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') 
+                    ? 0.7 : 1
+                }}
+                placeholder={
+                  isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') 
+                    ? 'טוען...' : ''
+                }
+              />
+              
+              {/* אינדיקטור ספינר עבור שדה הטלפון */}
+              {isLoadingClientData && name === 'phone' && (
+                <div style={{
+                  position: 'absolute',
+                  left: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#4caf50'
+                }}>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid #e8f5e8',
+                    borderTop: '2px solid #4caf50',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                </div>
+              )}
+            </div>
+            
             {errors[name] && (
               <div style={{
                 color: 'red', fontSize: '0.85rem', maxWidth: '400px',
@@ -285,22 +350,42 @@ const RequestLoan = ({ onRequestSubmitted }) => {
         ))}
         
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-          <button className="btn btn-blue" onClick={() => setShowCatalogPopup(true)}>
+          <button 
+            className="btn btn-blue" 
+            onClick={() => setShowCatalogPopup(true)}
+            disabled={isLoadingClientData}
+          >
             בחירת מוצרים
           </button>
         </div>
         
         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-          <button className="btn btn-green" onClick={handleSubmit} disabled={saving}>
+          <button 
+            className="btn btn-green" 
+            onClick={handleSubmit} 
+            disabled={saving || isLoadingClientData}
+          >
             {saving ? 'שולח בקשה...' : '📨 שלח בקשה לאישור'}
           </button>
-          <button className="btn btn-red" onClick={handleClear} disabled={saving}>
+          <button 
+            className="btn btn-red" 
+            onClick={handleClear} 
+            disabled={saving || isLoadingClientData}
+          >
             ביטול
           </button>
         </div>
+
+        {/* CSS לאנימציית הספינר */}
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: translateY(-50%) rotate(0deg); }
+            100% { transform: translateY(-50%) rotate(360deg); }
+          }
+        `}</style>
       </div>
 
-      {/* ✅ המודל עם hideBarcodeScanner=true */}
+      {/* המודל עם hideBarcodeScanner=true */}
       <NewLoanModal
         showCatalogPopup={showCatalogPopup}
         setShowCatalogPopup={setShowCatalogPopup}
@@ -312,7 +397,7 @@ const RequestLoan = ({ onRequestSubmitted }) => {
         changeQty={changeQty}
         form={form}
         loadingItems={loadingItems}
-        hideBarcodeScanner={true}  // 🔥 מסתיר את כפתור הסריקה
+        hideBarcodeScanner={true}
       />
     </div>
   );
