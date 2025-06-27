@@ -1,133 +1,148 @@
-// src/components/BorrowingGuidelines.jsx
 import React from 'react';
 
 const BorrowingGuidelines = () => {
+  // Check if mobile
+  const isMobile = window.innerWidth <= 768;
+
   const containerStyle = {
-    maxWidth: '900px',
-    margin: '20px auto',
-    padding: '40px',
+    maxWidth: isMobile ? '100%' : '900px',
+    width: '100%',
+    margin: isMobile ? '0' : '20px auto',
+    padding: isMobile ? '10px' : '40px',
     backgroundColor: '#ffffff',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    borderRadius: isMobile ? '0' : '8px',
+    boxShadow: isMobile ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.08)',
     fontFamily: 'system-ui, -apple-system, sans-serif',
     direction: 'rtl',
-    lineHeight: '1.7'
+    lineHeight: isMobile ? '1.6' : '1.7',
+    boxSizing: 'border-box'
   };
 
   const headerStyle = {
     textAlign: 'center',
-    marginBottom: '50px',
-    padding: '30px 20px',
+    marginBottom: isMobile ? '30px' : '50px',
+    padding: isMobile ? '20px 15px' : '30px 20px',
     backgroundColor: '#fafbfc',
     borderRadius: '6px',
     border: '3px solid #718096',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)'
+    boxShadow: isMobile ? '0 2px 8px rgba(0, 0, 0, 0.1)' : '0 4px 12px rgba(0, 0, 0, 0.12)'
   };
 
   const titleStyle = {
-    fontSize: '32px',
+    fontSize: 'clamp(24px, 5vw, 32px)',
     fontWeight: '600',
     color: '#1a202c',
-    marginBottom: '12px'
+    marginBottom: '8px',
+    lineHeight: '1.2'
   };
 
   const subtitleStyle = {
-    fontSize: '18px',
+    fontSize: 'clamp(14px, 3.5vw, 18px)',
     color: '#4a5568',
-    fontWeight: '400'
+    fontWeight: '400',
+    margin: '0'
   };
 
   const sectionStyle = {
-    marginBottom: '40px',
-    padding: '32px',
+    marginBottom: isMobile ? '25px' : '40px',
+    padding: isMobile ? '20px 15px' : '32px',
     backgroundColor: '#ffffff',
     borderRadius: '8px',
-    border: '3px solid #a0aec0',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)'
-  };
-
-  const mainProcessSectionStyle = {
-    marginBottom: '40px',
-    padding: '32px',
-    backgroundColor: '#f8fafc',
-    borderRadius: '8px',
-    border: '4px solid #2d3748',
-    boxShadow: '0 6px 16px rgba(45, 55, 72, 0.15)'
+    border: isMobile ? '2px solid #a0aec0' : '3px solid #a0aec0',
+    boxShadow: isMobile ? '0 2px 8px rgba(0, 0, 0, 0.08)' : '0 4px 12px rgba(0, 0, 0, 0.12)'
   };
 
   const sectionTitleStyle = {
-    fontSize: '24px',
+    fontSize: 'clamp(18px, 4vw, 24px)',
     fontWeight: '600',
     color: '#2d3748',
-    marginBottom: '24px',
+    marginBottom: '20px',
     display: 'flex',
     alignItems: 'center',
-    gap: '12px'
+    gap: '8px',
+    flexWrap: 'wrap'
   };
 
   const stepStyle = {
     display: 'flex',
     alignItems: 'flex-start',
-    marginBottom: '24px',
-    padding: '24px',
+    marginBottom: isMobile ? '20px' : '24px',
+    padding: isMobile ? '15px' : '24px',
     backgroundColor: '#ffffff',
     borderRadius: '8px',
-    border: '2px solid #a0aec0',
-    boxShadow: '0 3px 8px rgba(0, 0, 0, 0.1)'
+    border: isMobile ? '1px solid #e2e8f0' : '2px solid #a0aec0',
+    boxShadow: isMobile ? '0 1px 4px rgba(0, 0, 0, 0.05)' : '0 3px 8px rgba(0, 0, 0, 0.1)',
+    gap: isMobile ? '12px' : '20px'
   };
 
   const stepNumberStyle = {
     backgroundColor: '#4299e1',
     color: 'white',
     borderRadius: '50%',
-    width: '36px',
-    height: '36px',
+    width: isMobile ? '32px' : '36px',
+    height: isMobile ? '32px' : '36px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: '600',
-    fontSize: '16px',
-    marginLeft: '20px',
-    flexShrink: 0
+    fontSize: isMobile ? '14px' : '16px',
+    flexShrink: 0,
+    minWidth: isMobile ? '32px' : '36px'
   };
 
   const stepContentStyle = {
     flex: 1,
-    fontSize: '16px',
+    fontSize: 'clamp(14px, 3.5vw, 16px)',
     color: '#4a5568',
-    lineHeight: '1.6'
+    lineHeight: '1.5',
+    minWidth: 0
   };
 
   const highlightBoxStyle = {
     backgroundColor: '#f7fafc',
-    border: '3px solid #718096',
+    border: isMobile ? '2px solid #718096' : '3px solid #718096',
     borderRadius: '8px',
-    padding: '24px',
-    marginBottom: '20px',
+    padding: isMobile ? '15px' : '24px',
+    marginBottom: isMobile ? '15px' : '20px',
     textAlign: 'center',
-    boxShadow: '0 3px 8px rgba(0, 0, 0, 0.1)'
+    boxShadow: isMobile ? 'none' : '0 3px 8px rgba(0, 0, 0, 0.1)'
   };
 
   const warningBoxStyle = {
     backgroundColor: '#fffaf0',
-    border: '3px solid #b7791f',
+    border: isMobile ? '2px solid #b7791f' : '3px solid #b7791f',
     borderRadius: '8px',
-    padding: '24px',
-    marginBottom: '20px',
-    boxShadow: '0 3px 8px rgba(0, 0, 0, 0.1)'
+    padding: isMobile ? '15px' : '24px',
+    marginBottom: isMobile ? '15px' : '20px',
+    boxShadow: isMobile ? 'none' : '0 3px 8px rgba(0, 0, 0, 0.1)'
   };
 
   const cardStyle = {
-    padding: '20px',
+    padding: isMobile ? '15px' : '20px',
     backgroundColor: '#ffffff',
     borderRadius: '8px',
-    border: '2px solid #a0aec0',
-    boxShadow: '0 3px 8px rgba(0, 0, 0, 0.1)'
+    border: isMobile ? '1px solid #e2e8f0' : '2px solid #a0aec0',
+    boxShadow: isMobile ? '0 1px 4px rgba(0, 0, 0, 0.05)' : '0 3px 8px rgba(0, 0, 0, 0.1)',
+    marginBottom: isMobile ? '15px' : '0'
+  };
+
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '15px',
+    width: '100%'
+  };
+
+  const mobileGridStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '15px',
+    width: '100%'
   };
 
   const iconStyle = {
-    fontSize: '20px',
-    marginLeft: '8px'
+    fontSize: 'clamp(16px, 4vw, 20px)',
+    marginLeft: '4px'
   };
 
   return (
@@ -145,9 +160,8 @@ const BorrowingGuidelines = () => {
       <div style={{
         ...sectionStyle,
         backgroundColor: '#f8fafc',
-        borderRadius: '8px',
-        padding: '32px',
-        border: '1px solid #e2e8f0'
+        border: isMobile ? '1px solid #e2e8f0' : '4px solid #2d3748',
+        boxShadow: isMobile ? '0 2px 8px rgba(0, 0, 0, 0.08)' : '0 6px 16px rgba(45, 55, 72, 0.15)'
       }}>
         <h2 style={sectionTitleStyle}>
           <span style={iconStyle}>🔄</span>
@@ -157,7 +171,7 @@ const BorrowingGuidelines = () => {
         <div style={stepStyle}>
           <div style={stepNumberStyle}>1</div>
           <div style={stepContentStyle}>
-            <strong style={{ color: '#2d3748', fontSize: '17px' }}>הזמנה ורישום בלוח:</strong><br/>
+            <strong style={{ color: '#2d3748', fontSize: 'clamp(15px, 3.5vw, 17px)' }}>הזמנה ורישום בלוח:</strong><br/>
             מתקשרים/מגיעים לגמ"ח בזמני הפתיחה ומשריינים תאריך לארוע. רושמים אתכם ביומן השמחות לפי סדר הרישום.
             <br/><strong>הזמנת רשימת ציוד:</strong> משריינים עם המתנדבות רשימה של הציוד הנדרש ומסכמים מתי לקחת.
           </div>
@@ -166,7 +180,7 @@ const BorrowingGuidelines = () => {
         <div style={stepStyle}>
           <div style={stepNumberStyle}>2</div>
           <div style={stepContentStyle}>
-            <strong style={{ color: '#2d3748', fontSize: '17px' }}>איסוף הציוד:</strong><br/>
+            <strong style={{ color: '#2d3748', fontSize: 'clamp(15px, 3.5vw, 17px)' }}>איסוף הציוד:</strong><br/>
             מגיעים לקחת את הציוד שהוזמן מראש. 
             <strong style={{ color: '#e53e3e' }}> חשוב להיצמד לרשימה</strong> - זה מקל על המתנדבות לתת שירות לכולם.
           </div>
@@ -175,116 +189,95 @@ const BorrowingGuidelines = () => {
         <div style={stepStyle}>
           <div style={stepNumberStyle}>3</div>
           <div style={stepContentStyle}>
-            <strong style={{ color: '#2d3748', fontSize: '17px' }}>החזרת הציוד:</strong><br/>
+            <strong style={{ color: '#2d3748', fontSize: 'clamp(15px, 3.5vw, 17px)' }}>החזרת הציוד:</strong><br/>
             לאחר הארוע מחזירים את הציוד. המתנדבות יבדקו את ההחזרה וידריכו איך להחזיר הכל למקומו.
           </div>
         </div>
 
-        <div style={{
-          ...highlightBoxStyle,
-          backgroundColor: '#edf2f7',
-          border: '3px solid #718096'
-        }}>
-          <p style={{ fontSize: '16px', margin: 0, fontWeight: '500', color: '#2d3748' }}>
+        <div style={highlightBoxStyle}>
+          <p style={{ fontSize: 'clamp(14px, 3.5vw, 16px)', margin: 0, fontWeight: '500', color: '#2d3748' }}>
             🏆 <strong>עדיפויות:</strong> ההשאלה היא לפי סדר הרישום - מי שנרשם ראשון לתאריך מסוים, משאיל ראשון!
           </p>
         </div>
       </div>
 
-      {/* כללים חשובים - מקוצר */}
+      {/* כללים חשובים */}
       <div style={sectionStyle}>
         <h2 style={sectionTitleStyle}>
           <span style={iconStyle}>📝</span>
           כללים חשובים לזכור
         </h2>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '20px'
-        }}>
+        <div style={isMobile ? mobileGridStyle : gridStyle}>
           <div style={cardStyle}>
-            <strong style={{ color: '#2d3748' }}>⏰ זמני פתיחה:</strong><br/>
+            <strong style={{ color: '#2d3748', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>⏰ זמני פתיחה:</strong><br/>
             הגמ"ח פתוח רק בשעות המפורסמות. הטלפון זמין בשעות הפתיחה.<br/>
-            <span style={{ color: '#4a5568', fontSize: '14px', fontStyle: 'italic' }}>
+            <span style={{ color: '#4a5568', fontSize: 'clamp(12px, 3vw, 14px)', fontStyle: 'italic' }}>
               המתנדבות עסוקות בנתינת שירות - הן עונות כשהן פנויות, אנא האזרו בסבלנות.
             </span>
           </div>
           
           <div style={cardStyle}>
-            <strong style={{ color: '#2d3748' }}>📅 החזרה בזמן:</strong><br/>
+            <strong style={{ color: '#2d3748', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>📅 החזרה בזמן:</strong><br/>
             הקפידו להחזיר את הציוד ביום שנקבע מראש.
           </div>
 
           <div style={cardStyle}>
-            <strong style={{ color: '#e53e3e' }}>🚗 איסור חמור:</strong><br/>
+            <strong style={{ color: '#e53e3e', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>🚗 איסור חמור:</strong><br/>
             אין לשמור חפצים ברכב לפני ואחרי האירוע!
           </div>
 
           <div style={cardStyle}>
-            <strong style={{ color: '#2d3748' }}>📸 המלצה:</strong><br/>
+            <strong style={{ color: '#2d3748', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>📸 המלצה:</strong><br/>
             צלמו את החפצים שלוקחים כדי לזכור מה להחזיר.<br/>
-            <span style={{ color: '#4a5568', fontSize: '14px', fontStyle: 'italic' }}>
+            <span style={{ color: '#4a5568', fontSize: 'clamp(12px, 3vw, 14px)', fontStyle: 'italic' }}>
               החפצים יקרים ומאוד עדינים - אנא שימרו עליהם כשלכם.
             </span>
           </div>
         </div>
       </div>
 
-      {/* תרומות ונזקים - משולב */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: '24px',
-        marginBottom: '40px'
-      }}>
-        <div style={{
-          ...highlightBoxStyle,
-          backgroundColor: '#f7fafc',
-          border: '3px solid #718096'
-        }}>
-          <h3 style={{ color: '#2d3748', marginBottom: '12px', fontSize: '18px', fontWeight: '600' }}>
+      {/* תרומות ונזקים */}
+      <div style={isMobile ? mobileGridStyle : gridStyle}>
+        <div style={highlightBoxStyle}>
+          <h3 style={{ color: '#2d3748', marginBottom: '8px', fontSize: 'clamp(16px, 4vw, 18px)', fontWeight: '600' }}>
             <span style={iconStyle}>💝</span>
             תרומות
           </h3>
-          <p style={{ fontSize: '15px', margin: 0, color: '#4a5568' }}>
+          <p style={{ fontSize: 'clamp(13px, 3vw, 15px)', margin: 0, color: '#4a5568' }}>
             הגמ"ח מאפשר השאלה ללא תשלום. בכדי שנוכל להרחיב ולהעשיר אותו 
             נשמח מאוד לתרומתכם.
           </p>
         </div>
 
         <div style={warningBoxStyle}>
-          <h3 style={{ color: '#2d3748', marginBottom: '12px', fontSize: '18px', fontWeight: '600' }}>
+          <h3 style={{ color: '#2d3748', marginBottom: '8px', fontSize: 'clamp(16px, 4vw, 18px)', fontWeight: '600' }}>
             <span style={iconStyle}>🔧</span>
             במקרה של נזק
           </h3>
-          <p style={{ fontSize: '15px', margin: 0, color: '#4a5568' }}>
+          <p style={{ fontSize: 'clamp(13px, 3vw, 15px)', margin: 0, color: '#4a5568' }}>
             אם נגרם נזק בטעות - הפנו את תשומת ליבנו ונאמר כמה לשלם 
             בכדי שנוכל לקנות חדש.
           </p>
         </div>
       </div>
 
-      {/* הוראות ניקוי - מקוצר */}
+      {/* הוראות ניקוי */}
       <div style={sectionStyle}>
         <h2 style={sectionTitleStyle}>
           <span style={iconStyle}>🧽</span>
           הוראות ניקוי והחזרה
         </h2>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '20px'
-        }}>
+        <div style={isMobile ? mobileGridStyle : gridStyle}>
           <div style={{
             ...cardStyle,
             textAlign: 'center',
-            padding: '24px'
+            padding: '20px 15px'
           }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🧺</div>
-            <strong style={{ color: '#2d3748', fontSize: '16px' }}>מפות</strong><br/>
-            <span style={{ color: '#4a5568', fontSize: '14px' }}>
+            <div style={{ fontSize: 'clamp(28px, 8vw, 36px)', marginBottom: '8px' }}>🧺</div>
+            <strong style={{ color: '#2d3748', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>מפות</strong><br/>
+            <span style={{ color: '#4a5568', fontSize: 'clamp(12px, 3vw, 14px)' }}>
               נקיות, מקופלות ויבשות<br/>
               (מסיר כתמים לפני כביסה)<br/>
               <em>עדיף לייבש בשמש, אם לא - במייבש</em>
@@ -294,21 +287,21 @@ const BorrowingGuidelines = () => {
           <div style={{
             ...cardStyle,
             textAlign: 'center',
-            padding: '24px'
+            padding: '20px 15px'
           }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🕯️</div>
-            <strong style={{ color: '#2d3748', fontSize: '16px' }}>מעמדי נרות</strong><br/>
-            <span style={{ color: '#4a5568', fontSize: '14px' }}>נקיים משעווה</span>
+            <div style={{ fontSize: 'clamp(28px, 8vw, 36px)', marginBottom: '8px' }}>🕯️</div>
+            <strong style={{ color: '#2d3748', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>מעמדי נרות</strong><br/>
+            <span style={{ color: '#4a5568', fontSize: 'clamp(12px, 3vw, 14px)' }}>נקיים משעווה</span>
           </div>
 
           <div style={{
             ...cardStyle,
             textAlign: 'center',
-            padding: '24px'
+            padding: '20px 15px'
           }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>☕</div>
-            <strong style={{ color: '#2d3748', fontSize: '16px' }}>ערכת קפה ומגשים</strong><br/>
-            <span style={{ color: '#4a5568', fontSize: '14px' }}>חובה לשטוף ולנגב</span>
+            <div style={{ fontSize: 'clamp(28px, 8vw, 36px)', marginBottom: '8px' }}>☕</div>
+            <strong style={{ color: '#2d3748', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>ערכת קפה ומגשים</strong><br/>
+            <span style={{ color: '#4a5568', fontSize: 'clamp(12px, 3vw, 14px)' }}>חובה לשטוף ולנגב</span>
           </div>
         </div>
       </div>
@@ -316,14 +309,12 @@ const BorrowingGuidelines = () => {
       {/* סיום */}
       <div style={{
         ...highlightBoxStyle,
-        backgroundColor: '#f7fafc',
-        border: '3px solid #718096',
-        marginTop: '40px'
+        marginTop: isMobile ? '30px' : '40px'
       }}>
-        <h3 style={{ color: '#2d3748', fontSize: '20px', marginBottom: '12px', fontWeight: '600' }}>
+        <h3 style={{ color: '#2d3748', fontSize: 'clamp(18px, 4vw, 20px)', marginBottom: '8px', fontWeight: '600' }}>
           מזל טוב, שפע ברכה ושמחה
         </h3>
-        <p style={{ fontSize: '16px', fontStyle: 'italic', margin: 0, color: '#4a5568' }}>
+        <p style={{ fontSize: 'clamp(14px, 3.5vw, 16px)', fontStyle: 'italic', margin: 0, color: '#4a5568' }}>
           תודה על שיתוף הפעולה ועל שמירת הכללים
         </p>
       </div>
