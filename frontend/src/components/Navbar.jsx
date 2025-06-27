@@ -238,6 +238,10 @@ const Navbar = () => {
           <div style={desktopMenuStyle}>
             <Link to="/" style={getLinkStyle('/')}>דף הבית</Link>
             <Link to="/catalog" style={getLinkStyle('/catalog')}>קטלוג מוצרים</Link>
+            {/* נוהל השאלה רק אם לא מחובר */}
+            {!user && (
+              <Link to="/borrowing-guidelines" style={getLinkStyle('/borrowing-guidelines')}>נוהל השאלה</Link>
+            )}
             {user?.role === 'User' && (
               <>
                 {/* "ההזמנות שלי" תמיד זמין למשתמש רגיל */}
@@ -246,6 +250,8 @@ const Navbar = () => {
                 {onlineOrdering && (
                   <Link to="/request" style={getLinkStyle('/request')}>בקשת השאלה</Link>
                 )}
+                {/* נוהל השאלה למשתמש רגיל - אחד לפני אחרון */}
+                <Link to="/borrowing-guidelines" style={getLinkStyle('/borrowing-guidelines')}>נוהל השאלה</Link>
               </>
             )}
             {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
@@ -257,21 +263,42 @@ const Navbar = () => {
                 )}
                 <Link to="/Calendar" style={getLinkStyle('/Calendar')}>השאלות פתוחות</Link>
                 <Link to="/history" style={getLinkStyle('/history')}>היסטוריית השאלות</Link>
-                <Link to="/manage-product" style={getLinkStyle('/manage-product')}>ניהול מוצרים</Link>
               </>
+            )}
+            {/* ניהול מוצרים רק למנהל ראשי */}
+            {user?.role === 'MainAdmin' && (
+              <Link to="/manage-product" style={getLinkStyle('/manage-product')}>ניהול מוצרים</Link>
             )}
             {user?.role === 'MainAdmin' && (
               <Link to="/manage-users" style={getLinkStyle('/manage-users')}>ניהול משתמשים</Link>
             )}
-            {!user && (
-              <>
-                <Link to="/login" style={getLinkStyle('/login')}>התחברות</Link>
-                <Link to="/register" style={getLinkStyle('/register')}>הרשמה</Link>
-              </>
+            {/* נוהל השאלה למנהלים - בסוף */}
+            {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
+              <Link to="/borrowing-guidelines" style={getLinkStyle('/borrowing-guidelines')}>נוהל השאלה</Link>
             )}
             {/* הכפתור "לתרומות" רק למשתמש רגיל או לא מחובר */}
             {shouldShowDonations() && (
               <Link to="/donations" style={getLinkStyle('/donations')}>לתרומות</Link>
+            )}
+            {!user && (
+              <>
+                <Link to="/login" style={{
+                  ...getLinkStyle('/login'),
+                  marginRight: '20px',
+                  backgroundColor: '#2b6cb0',
+                  color: 'white',
+                  borderRadius: '6px',
+                  fontWeight: '600'
+                }}>התחברות</Link>
+                <Link to="/register" style={{
+                  ...getLinkStyle('/register'),
+                  backgroundColor: 'transparent',
+                  color: '#2b6cb0',
+                  border: '2px solid #2b6cb0',
+                  borderRadius: '6px',
+                  fontWeight: '600'
+                }}>הרשמה</Link>
+              </>
             )}
           </div>
         )}
@@ -283,6 +310,10 @@ const Navbar = () => {
             <div style={sidebarStyle}>
               <Link to="/" style={getLinkStyle('/')} onClick={handleCloseMenu}>דף הבית</Link>
               <Link to="/catalog" style={getLinkStyle('/catalog')} onClick={handleCloseMenu}>קטלוג מוצרים</Link>
+              {/* נוהל השאלה רק אם לא מחובר */}
+              {!user && (
+                <Link to="/borrowing-guidelines" style={getLinkStyle('/borrowing-guidelines')} onClick={handleCloseMenu}>נוהל השאלה</Link>
+              )}
 
               {user?.role === 'User' && (
                 <>
@@ -292,6 +323,8 @@ const Navbar = () => {
                   {onlineOrdering && (
                     <Link to="/request" style={getLinkStyle('/request')} onClick={handleCloseMenu}>בקשת השאלה</Link>
                   )}
+                  {/* נוהל השאלה למשתמש רגיל - אחד לפני אחרון */}
+                  <Link to="/borrowing-guidelines" style={getLinkStyle('/borrowing-guidelines')} onClick={handleCloseMenu}>נוהל השאלה</Link>
                 </>
               )}
               {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
@@ -303,21 +336,44 @@ const Navbar = () => {
                   )}
                   <Link to="/Calendar" style={getLinkStyle('/Calendar')} onClick={handleCloseMenu}>השאלות פתוחות</Link>
                   <Link to="/history" style={getLinkStyle('/history')} onClick={handleCloseMenu}>היסטוריית השאלות</Link>
-                  <Link to="/manage-product" style={getLinkStyle('/manage-product')} onClick={handleCloseMenu}>ניהול מוצרים</Link>
                 </>
+              )}
+              {/* ניהול מוצרים רק למנהל ראשי */}
+              {user?.role === 'MainAdmin' && (
+                <Link to="/manage-product" style={getLinkStyle('/manage-product')} onClick={handleCloseMenu}>ניהול מוצרים</Link>
               )}
               {user?.role === 'MainAdmin' && (
                 <Link to="/manage-users" style={getLinkStyle('/manage-users')} onClick={handleCloseMenu}>ניהול משתמשים</Link>
               )}
-              {!user && (
-                <>
-                  <Link to="/login" style={getLinkStyle('/login')} onClick={handleCloseMenu}>התחברות</Link>
-                  <Link to="/register" style={getLinkStyle('/register')} onClick={handleCloseMenu}>הרשמה</Link>
-                </>
+              {/* נוהל השאלה למנהלים - בסוף */}
+              {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
+                <Link to="/borrowing-guidelines" style={getLinkStyle('/borrowing-guidelines')} onClick={handleCloseMenu}>נוהל השאלה</Link>
               )}
               {/* הכפתור "לתרומות" רק למשתמש רגיל או לא מחובר */}
               {shouldShowDonations() && (
                 <Link to="/donations" style={getLinkStyle('/donations')} onClick={handleCloseMenu}>לתרומות</Link>
+              )}
+              {!user && (
+                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+                  <Link to="/login" style={{
+                    ...getLinkStyle('/login'),
+                    backgroundColor: '#2b6cb0',
+                    color: 'white',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    marginBottom: '10px'
+                  }} onClick={handleCloseMenu}>התחברות</Link>
+                  <Link to="/register" style={{
+                    ...getLinkStyle('/register'),
+                    backgroundColor: 'transparent',
+                    color: '#2b6cb0',
+                    border: '2px solid #2b6cb0',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    textAlign: 'center'
+                  }} onClick={handleCloseMenu}>הרשמה</Link>
+                </div>
               )}
             </div>
           </>

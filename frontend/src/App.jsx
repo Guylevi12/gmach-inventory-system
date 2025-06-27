@@ -1,4 +1,4 @@
-// src/App.jsx - גרסה מתוקנת
+// src/App.jsx - גרסה מתוקנת עם נוהל השאלה
 import React from 'react';
 import { Routes, Route } from 'react-router-dom'; // הסרנו BrowserRouter מכאן
 import { UserProvider } from './UserContext';
@@ -17,6 +17,7 @@ import Catalog from './components/Catalog';
 import LoanHistory from './components/LoanHistory';
 import ContactBubble from './components/ContactBubble';
 import DonationsPage from './components/DonationsPage';
+import BorrowingGuidelines from './components/BorrowingGuidelines'; // הקומפוננט החדש
 
 const App = () => {
   return (
@@ -28,6 +29,9 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/donations" element={<DonationsPage />} />
+        
+        {/* נתיב חדש לנוהל השאלה - זמין לכל המשתמשים */}
+        <Route path="/borrowing-guidelines" element={<BorrowingGuidelines />} />
 
         {/* רוט חדש לבקשת השאלה */}
         <Route path="/request" element={<RequestLoan />} />
