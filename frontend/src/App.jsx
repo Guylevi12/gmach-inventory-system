@@ -15,6 +15,7 @@ import ItemManager from './components/ItemManager';
 import ManageUsers from './components/ManageUsers';
 import Catalog from './components/Catalog';
 import LoanHistory from './components/LoanHistory';
+import ContactBubble from './components/ContactBubble';
 
 const App = () => {
   return (
@@ -25,22 +26,23 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/catalog" element={<Catalog />} />
-        
+
         {/* רוט חדש לבקשת השאלה */}
         <Route path="/request" element={<RequestLoan />} />
-        
+
         {/* רוט חדש להזמנות שלי */}
         <Route path="/my-orders" element={<MyOrders />} />
-        
+
         {/* רוט חדש לבקשות להזמנה למנהלים */}
         <Route path="/requests" element={<PendingRequests />} />
-        
+
         <Route path="/new-loan" element={<NewLoan />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/manage-product" element={<ItemManager />} />
         <Route path="/manage-users" element={<ManageUsers />} />
         <Route path="/history" element={<LoanHistory />} />
       </Routes>
+      <ContactBubble />
     </UserProvider>
   );
 };

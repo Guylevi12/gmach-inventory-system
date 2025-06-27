@@ -1,5 +1,5 @@
 // src/components/ContactBubble.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Phone, X, MessageCircle } from 'lucide-react';
 
 const ContactBubble = () => {
@@ -7,34 +7,62 @@ const ContactBubble = () => {
   const [isClosing, setIsClosing] = useState(false);
   const [buttonContent, setButtonContent] = useState('phone');
   const [contentTransition, setContentTransition] = useState('fade-in');
+  const bubbleRef = useRef(null);
+
   const phoneNumber = "054-257-5886";
-  const whatsappNumber = "+972 54-257-5886";
+  const phoneNumberForDialing = "0542575886"; // מספר ללא מקפים לחיוג
+  // תיקון פורמט מספר WhatsApp - הסרת רווחים ומקפים
+  const whatsappNumber = "972542575886"; // פורמט נכון: קוד מדינה + מספר ללא 0 ברישה
+
+  // פונקציה לסגירת הבועה כשלוחצים מחוץ לה
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (bubbleRef.current && !bubbleRef.current.contains(event.target) && isExpanded) {
+        handleClose();
+      }
+    };
+
+    if (isExpanded) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isExpanded]);
 
   const handlePhoneClick = () => {
-    window.open(`tel:${phoneNumber}`, '_self');
+    window.open(`tel:${phoneNumberForDialing}`, '_self');
   };
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("שלום, אני מעוניין לקבל מידע נוסף על השירות");
-    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+    // תיקון URL של WhatsApp
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+    console.log('WhatsApp URL:', whatsappUrl); // לבדיקה
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleClose = () => {
+    // התחל אנימציית סגירה
+    setIsClosing(true);
+
+    // אנימציה לתוכן הכפתור
+    setContentTransition('fade-out');
+    setTimeout(() => {
+      setButtonContent('phone');
+      setContentTransition('fade-in');
+    }, 150);
+
+    setTimeout(() => {
+      setIsExpanded(false);
+      setIsClosing(false);
+    }, 250);
   };
 
   const handleToggle = () => {
     if (isExpanded) {
-      // התחל אנימציית סגירה
-      setIsClosing(true);
-
-      // אנימציה לתוכן הכפתור
-      setContentTransition('fade-out');
-      setTimeout(() => {
-        setButtonContent('phone');
-        setContentTransition('fade-in');
-      }, 150);
-
-      setTimeout(() => {
-        setIsExpanded(false);
-        setIsClosing(false);
-      }, 250);
+      handleClose();
     } else {
       setIsExpanded(true);
 
@@ -239,7 +267,7 @@ const ContactBubble = () => {
         }
       `}</style>
 
-      <div className="contact-bubble">
+      <div className="contact-bubble" ref={bubbleRef}>
         {/* Expanded Menu */}
         {(isExpanded || isClosing) && (
           <div className={`expanded-menu ${isClosing ? 'closing' : ''}`} dir="rtl">
