@@ -4,7 +4,8 @@ import NewLoanForm from './NewLoanForm';
 import NewLoanModal from './NewLoanModal';
 import { db } from '@/firebase/firebase-config';
 import { collection, getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { phoneAutoCompleteService } from '@/services/phoneAutoCompleteService'; // ✅ יבוא השירות החדש
+import { phoneAutoCompleteService } from '@/services/phoneAutoCompleteService';
+import { closedDatesService } from '@/services/closedDatesService'; // ✅ יבוא השירות החדש
 
 const NewLoan = ({ onOrderCreated }) => {
   const [form, setForm] = useState({
@@ -18,18 +19,33 @@ const NewLoan = ({ onOrderCreated }) => {
   const [loadingItems, setLoadingItems] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
-  
-  // ✅ state חדש למעקב אחר טעינת פרטי לקוח אוטומטית
   const [isLoadingClientData, setIsLoadingClientData] = useState(false);
+  
+  // ✅ state חדש לימים סגורים
+  const [closedDates, setClosedDates] = useState([]);
 
-  // ✅ פונקציה משופרת לטיפול בשינויים
+  // ✅ טעינת ימים סגורים כשהקומפוננט נטען
+  useEffect(() => {
+    loadClosedDates();
+  }, []);
+
+  const loadClosedDates = async () => {
+    try {
+      const dates = await closedDatesService.getClosedDates();
+      setClosedDates(dates);
+      console.log('📅 נטענו ימים סגורים למערכת הזמנות:', dates.length);
+    } catch (error) {
+      console.error('❌ שגיאה בטעינת ימים סגורים:', error);
+    }
+  };
+
   const handleChange = async (e) => {
     const { name, value } = e.target;
     
     // עדכון הטופס
     setForm(prevForm => ({ ...prevForm, [name]: value }));
     
-    // ✅ אם השדה הוא מספר טלפון ואורכו 10 ספרות - נחפש פרטי לקוח
+    // אם השדה הוא מספר טלפון ואורכו 10 ספרות - נחפש פרטי לקוח
     if (name === 'phone' && value.length === 10 && /^\d{10}$/.test(value)) {
       setIsLoadingClientData(true);
       
@@ -37,16 +53,15 @@ const NewLoan = ({ onOrderCreated }) => {
         const result = await phoneAutoCompleteService.findClientByPhone(value);
         
         if (result.found) {
-          // ✅ מילוי אוטומטי של הפרטים
+          // מילוי אוטומטי של הפרטים
           setForm(prevForm => ({
             ...prevForm,
-            phone: value, // שמירת המספר שהוזן
+            phone: value,
             clientName: result.clientData.clientName,
             address: result.clientData.address,
             email: result.clientData.email
           }));
           
-          // הצגת הודעה למשתמש
           alert(`נמצא לקוח קיים! הפרטים מולאו אוטומטית:\nשם: ${result.clientData.clientName}\nכתובת: ${result.clientData.address}`);
         }
       } catch (error) {
@@ -57,29 +72,57 @@ const NewLoan = ({ onOrderCreated }) => {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    const today = new Date().toISOString().split('T')[0];
-    const { pickupDate, eventDate, returnDate } = form;
+// תיקון פונקציית validateForm ב-NewLoan.jsx ו-RequestLoan.jsx
 
-    if (!form.volunteerName.trim()) newErrors.volunteerName = 'שדה חובה';
-    if (!form.clientName.trim()) newErrors.clientName = 'שדה חובה';
-    if (!form.address.trim()) newErrors.address = 'שדה חובה';
-    if (!form.phone.trim()) newErrors.phone = 'שדה חובה';
-    else if (!/^\d{10}$/.test(form.phone)) newErrors.phone = 'מספר טלפון לא תקין';
-    if (!form.eventType.trim()) newErrors.eventType = 'שדה חובה';
+const validateForm = () => {
+  const newErrors = {};
+  const today = new Date().toISOString().split('T')[0];
+  const { pickupDate, eventDate, returnDate } = form;
 
-    if (!pickupDate) newErrors.pickupDate = 'שדה חובה';
-    if (!eventDate) newErrors.eventDate = 'שדה חובה';
-    if (!returnDate) newErrors.returnDate = 'שדה חובה';
+  // בדיקות בסיסיות
+  if (form.volunteerName !== undefined && !form.volunteerName.trim()) {
+    newErrors.volunteerName = 'שדה חובה';
+  }
+  if (!form.clientName.trim()) newErrors.clientName = 'שדה חובה';
+  if (!form.address.trim()) newErrors.address = 'שדה חובה';
+  if (!form.phone.trim()) newErrors.phone = 'שדה חובה';
+  else if (!/^\d{10}$/.test(form.phone)) newErrors.phone = 'מספר טלפון לא תקין';
+  if (!form.eventType.trim()) newErrors.eventType = 'שדה חובה';
 
-    if (pickupDate && pickupDate < today) newErrors.pickupDate = 'תאריך לא יכול להיות בעבר';
-    if (eventDate && pickupDate && eventDate < pickupDate) newErrors.eventDate = 'תאריך האירוע לא יכול להיות לפני לקיחה';
-    if (returnDate && pickupDate && returnDate <= pickupDate) newErrors.returnDate = 'החזרה אחרי לקיחה';
+  if (!pickupDate) newErrors.pickupDate = 'שדה חובה';
+  if (!eventDate) newErrors.eventDate = 'שדה חובה';
+  if (!returnDate) newErrors.returnDate = 'שדה חובה';
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // בדיקות תאריכים בסיסיות
+  if (pickupDate && pickupDate < today) {
+    newErrors.pickupDate = 'תאריך לא יכול להיות בעבר';
+  }
+  if (eventDate && pickupDate && eventDate < pickupDate) {
+    newErrors.eventDate = 'תאריך האירוע לא יכול להיות לפני לקיחה';
+  }
+  if (returnDate && pickupDate && returnDate <= pickupDate) {
+    newErrors.returnDate = 'החזרה אחרי לקיחה';
+  }
+
+  // בדיקת ימים סגורים - רק לקיחה והחזרה (לא אירוע!)
+  const dateValidation = closedDatesService.validateOrderDates(pickupDate, returnDate, closedDates);
+  
+  if (!dateValidation.isValid) {
+    Object.assign(newErrors, dateValidation.errors);
+  }
+
+  // לוג לצורך דיבוג
+  console.log('🔍 בדיקת תאריכים:', {
+    pickupDate,
+    returnDate,
+    closedDatesCount: closedDates.length,
+    validation: dateValidation,
+    errors: newErrors
+  });
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleClear = () => {
     if (window.confirm('האם אתה בטוח שברצונך לבטל את ההזמנה?')) {
@@ -109,6 +152,16 @@ const NewLoan = ({ onOrderCreated }) => {
       quantity: i.selectedQty,
       imageUrl: i.imageUrl
     }));
+
+    // ✅ בדיקה נוספת לפני שמירה
+    const hasClosedDates = [form.pickupDate, form.eventDate, form.returnDate].some(date => 
+      closedDatesService.isDateClosed(date, closedDates)
+    );
+
+    if (hasClosedDates) {
+      alert('🔒 אחד או יותר מהתאריכים שנבחרו חלים בימים סגורים. אנא בדוק ותקן את התאריכים.');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -233,7 +286,7 @@ const NewLoan = ({ onOrderCreated }) => {
         handleClear={handleClear}
         setShowCatalogPopup={setShowCatalogPopup}
         saving={saving}
-        isLoadingClientData={isLoadingClientData} // ✅ מעבר סטטוס הטעינה לטופס
+        isLoadingClientData={isLoadingClientData}
       />
       <NewLoanModal
         showCatalogPopup={showCatalogPopup}

@@ -1,7 +1,7 @@
-// src/components/HebrewCalendar/HebrewCalendar.jsx
+// src/components/HebrewCalendar/HebrewCalendar.jsx - עודכן עם תמיכה בימים סגורים
 import React, { useState, useEffect } from 'react';
 import { updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/firebase/firebase-config'; // Updated Firebase path
+import { db } from '@/firebase/firebase-config';
 import CalendarGrid from './CalendarGrid';
 import EventModal from './EventModal';
 import ItemsModal from './ItemsModal';
@@ -141,6 +141,8 @@ const HebrewCalendar = ({
         setSelectedEvents={setSelectedEvents}
         setSelectedDate={setSelectedDate}
         setShowReport={setShowReport}
+        // ✅ העברת פונקציית רענון הנתונים ל-CalendarGrid
+        fetchItemsAndOrders={fetchItemsAndOrders}
       />
 
       <EventModal
@@ -162,7 +164,6 @@ const HebrewCalendar = ({
         selectedEvents={showItemsModal}
         allItems={allItems}
       />
-
 
       <EditItemModal
         show={editItemModal.open}
