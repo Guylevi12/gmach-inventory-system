@@ -5,7 +5,7 @@ import NewLoanModal from './NewLoanModal';
 import { db } from '@/firebase/firebase-config';
 import { collection, getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { phoneAutoCompleteService } from '@/services/phoneAutoCompleteService';
-import { closedDatesService } from '@/services/closedDatesService'; // ✅ יבוא השירות החדש
+import { closedDatesService } from '@/services/closedDatesService';
 
 const NewLoan = ({ onOrderCreated }) => {
   const [form, setForm] = useState({
@@ -20,11 +20,8 @@ const NewLoan = ({ onOrderCreated }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
   const [isLoadingClientData, setIsLoadingClientData] = useState(false);
-  
-  // ✅ state חדש לימים סגורים
   const [closedDates, setClosedDates] = useState([]);
 
-  // ✅ טעינת ימים סגורים כשהקומפוננט נטען
   useEffect(() => {
     loadClosedDates();
   }, []);
@@ -42,10 +39,8 @@ const NewLoan = ({ onOrderCreated }) => {
   const handleChange = async (e) => {
     const { name, value } = e.target;
     
-    // עדכון הטופס
     setForm(prevForm => ({ ...prevForm, [name]: value }));
     
-    // אם השדה הוא מספר טלפון ואורכו 10 ספרות - נחפש פרטי לקוח
     if (name === 'phone' && value.length === 10 && /^\d{10}$/.test(value)) {
       setIsLoadingClientData(true);
       
@@ -53,7 +48,6 @@ const NewLoan = ({ onOrderCreated }) => {
         const result = await phoneAutoCompleteService.findClientByPhone(value);
         
         if (result.found) {
-          // מילוי אוטומטי של הפרטים
           setForm(prevForm => ({
             ...prevForm,
             phone: value,
@@ -72,57 +66,54 @@ const NewLoan = ({ onOrderCreated }) => {
     }
   };
 
-// תיקון פונקציית validateForm ב-NewLoan.jsx ו-RequestLoan.jsx
+  const validateForm = () => {
+    const newErrors = {};
+    const today = new Date().toISOString().split('T')[0];
+    const { pickupDate, eventDate, returnDate } = form;
 
-const validateForm = () => {
-  const newErrors = {};
-  const today = new Date().toISOString().split('T')[0];
-  const { pickupDate, eventDate, returnDate } = form;
+    // בדיקות בסיסיות
+    if (form.volunteerName !== undefined && !form.volunteerName.trim()) {
+      newErrors.volunteerName = 'שדה חובה';
+    }
+    if (!form.clientName.trim()) newErrors.clientName = 'שדה חובה';
+    if (!form.address.trim()) newErrors.address = 'שדה חובה';
+    if (!form.phone.trim()) newErrors.phone = 'שדה חובה';
+    else if (!/^\d{10}$/.test(form.phone)) newErrors.phone = 'מספר טלפון לא תקין';
+    if (!form.eventType.trim()) newErrors.eventType = 'שדה חובה';
 
-  // בדיקות בסיסיות
-  if (form.volunteerName !== undefined && !form.volunteerName.trim()) {
-    newErrors.volunteerName = 'שדה חובה';
-  }
-  if (!form.clientName.trim()) newErrors.clientName = 'שדה חובה';
-  if (!form.address.trim()) newErrors.address = 'שדה חובה';
-  if (!form.phone.trim()) newErrors.phone = 'שדה חובה';
-  else if (!/^\d{10}$/.test(form.phone)) newErrors.phone = 'מספר טלפון לא תקין';
-  if (!form.eventType.trim()) newErrors.eventType = 'שדה חובה';
+    if (!pickupDate) newErrors.pickupDate = 'שדה חובה';
+    if (!eventDate) newErrors.eventDate = 'שדה חובה';
+    if (!returnDate) newErrors.returnDate = 'שדה חובה';
 
-  if (!pickupDate) newErrors.pickupDate = 'שדה חובה';
-  if (!eventDate) newErrors.eventDate = 'שדה חובה';
-  if (!returnDate) newErrors.returnDate = 'שדה חובה';
+    // בדיקות תאריכים בסיסיות
+    if (pickupDate && pickupDate < today) {
+      newErrors.pickupDate = 'תאריך לא יכול להיות בעבר';
+    }
+    if (eventDate && pickupDate && eventDate < pickupDate) {
+      newErrors.eventDate = 'תאריך האירוע לא יכול להיות לפני לקיחה';
+    }
+    if (returnDate && pickupDate && returnDate <= pickupDate) {
+      newErrors.returnDate = 'החזרה אחרי לקיחה';
+    }
 
-  // בדיקות תאריכים בסיסיות
-  if (pickupDate && pickupDate < today) {
-    newErrors.pickupDate = 'תאריך לא יכול להיות בעבר';
-  }
-  if (eventDate && pickupDate && eventDate < pickupDate) {
-    newErrors.eventDate = 'תאריך האירוע לא יכול להיות לפני לקיחה';
-  }
-  if (returnDate && pickupDate && returnDate <= pickupDate) {
-    newErrors.returnDate = 'החזרה אחרי לקיחה';
-  }
+    // ✅ בדיקת ימים סגורים - רק לקיחה והחזרה (לא אירוע!)
+    const dateValidation = closedDatesService.validateOrderDates(pickupDate, returnDate, closedDates);
+    
+    if (!dateValidation.isValid) {
+      Object.assign(newErrors, dateValidation.errors);
+    }
 
-  // בדיקת ימים סגורים - רק לקיחה והחזרה (לא אירוע!)
-  const dateValidation = closedDatesService.validateOrderDates(pickupDate, returnDate, closedDates);
-  
-  if (!dateValidation.isValid) {
-    Object.assign(newErrors, dateValidation.errors);
-  }
+    console.log('🔍 בדיקת תאריכים:', {
+      pickupDate,
+      returnDate,
+      closedDatesCount: closedDates.length,
+      validation: dateValidation,
+      errors: newErrors
+    });
 
-  // לוג לצורך דיבוג
-  console.log('🔍 בדיקת תאריכים:', {
-    pickupDate,
-    returnDate,
-    closedDatesCount: closedDates.length,
-    validation: dateValidation,
-    errors: newErrors
-  });
-
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleClear = () => {
     if (window.confirm('האם אתה בטוח שברצונך לבטל את ההזמנה?')) {
@@ -153,15 +144,14 @@ const validateForm = () => {
       imageUrl: i.imageUrl
     }));
 
-    // ✅ בדיקה נוספת לפני שמירה
-    const hasClosedDates = [form.pickupDate, form.eventDate, form.returnDate].some(date => 
-      closedDatesService.isDateClosed(date, closedDates)
-    );
-
-    if (hasClosedDates) {
-      alert('🔒 אחד או יותר מהתאריכים שנבחרו חלים בימים סגורים. אנא בדוק ותקן את התאריכים.');
-      return;
-    }
+    // ❌ הסרנו את הבדיקה הכפולה הרעה!
+    // const hasClosedDates = [form.pickupDate, form.eventDate, form.returnDate].some(date => 
+    //   closedDatesService.isDateClosed(date, closedDates)
+    // );
+    // if (hasClosedDates) {
+    //   alert('🔒 אחד או יותר מהתאריכים שנבחרו חלים בימים סגורים. אנא בדוק ותקן את התאריכים.');
+    //   return;
+    // }
 
     setSaving(true);
     try {

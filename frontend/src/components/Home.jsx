@@ -223,11 +223,11 @@ const Home = () => {
                 מוצאי שבת
               </div>
               <div style={{ fontSize: '15px', marginBottom: '4px' }}>
-                <span style={{ color: '#dc2626', fontWeight: '700' }}>קיץ:</span>
+                <span style={{fontWeight: '700' }}>קיץ:</span>
                 <span style={{ color: '#059669', fontWeight: '700', marginRight: '10px' }}>21:30 - 21:00</span>
               </div>
               <div style={{ fontSize: '15px' }}>
-                <span style={{ color: '#2563eb', fontWeight: '700' }}>חורף:</span>
+                <span style={{fontWeight: '700' }}>חורף:</span>
                 <span style={{ color: '#059669', fontWeight: '700', marginRight: '10px' }}>20:30 - 20:00</span>
               </div>
             </div>

@@ -1,4 +1,4 @@
-// src/components/CalendarGrid.jsx - גרסה סופית ללא כפתור מחק הכל
+// src/components/CalendarGrid.jsx - תיקון כפתור שמור במצב עריכה
 import React, { useState, useEffect } from 'react';
 import './css/CalendarGrid.css';
 import { ChevronRight, ChevronLeft, Calendar, Ban, Save, X } from 'lucide-react';
@@ -20,6 +20,9 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   const [editMode, setEditMode] = useState(false);
   const [selectedDatesForClosure, setSelectedDatesForClosure] = useState(new Set());
   const [saving, setSaving] = useState(false);
+  
+  // ✅ מעקב אחר המצב המקורי של ימים סגורים
+  const [originalClosedDates, setOriginalClosedDates] = useState(new Set());
 
   // טעינת ימים סגורים
   useEffect(() => {
@@ -109,6 +112,31 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     return targetDate.getDate() === today.getDate() &&
            targetDate.getMonth() === today.getMonth() &&
            targetDate.getFullYear() === today.getFullYear();
+  };
+
+  // ✅ פונקציה לחישוב אם יש שינויים
+  const hasChanges = () => {
+    // אם יש ימים שנבחרו לסגירה - זה שינוי
+    if (selectedDatesForClosure.size > 0) {
+      return true;
+    }
+    
+    // בדיקה אם המצב הנוכחי שונה מהמצב המקורי
+    const currentClosedDatesSet = new Set(closedDates.map(d => d.date || d.id));
+    
+    // אם הגדלים שונים - יש שינוי
+    if (currentClosedDatesSet.size !== originalClosedDates.size) {
+      return true;
+    }
+    
+    // אם יש תאריכים שונים - יש שינוי
+    for (const date of currentClosedDatesSet) {
+      if (!originalClosedDates.has(date)) {
+        return true;
+      }
+    }
+    
+    return false;
   };
 
   // טיפול בלחיצה על תאריך
@@ -205,60 +233,75 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     }
   };
 
-  // הפעלת מצב עריכה - עם לוג
+  // הפעלת מצב עריכה - עם לוג ושמירת מצב מקורי
   const startEditMode = () => {
     console.log('🔧 מפעיל מצב עריכה');
     setEditMode(true);
     setSelectedDatesForClosure(new Set());
-    console.log('✅ מצב עריכה פעיל');
+    
+    // ✅ שמירת המצב המקורי של ימים סגורים
+    const currentClosedDatesSet = new Set(closedDates.map(d => d.date || d.id));
+    setOriginalClosedDates(currentClosedDatesSet);
+    
+    console.log('✅ מצב עריכה פעיל, נשמר מצב מקורי:', currentClosedDatesSet);
   };
 
-  // ביטול מצב עריכה - עם לוג
+  // ביטול מצב עריכה - עם לוג וניקוי מצב מקורי
   const cancelEditMode = () => {
     console.log('❌ מבטל מצב עריכה');
     setEditMode(false);
     setSelectedDatesForClosure(new Set());
+    setOriginalClosedDates(new Set()); // ✅ ניקוי מצב מקורי
     console.log('✅ יצאנו ממצב עריכה');
   };
 
-  // שמירת ימים סגורים - מתוקן
+  // שמירת ימים סגורים - מתוקן לטיפול בכל סוגי השינויים
   const saveClosedDates = async () => {
-    if (selectedDatesForClosure.size === 0) {
-      alert('לא נבחרו תאריכים לסגירה');
-      return;
-    }
-
     setSaving(true);
     try {
-      const dates = Array.from(selectedDatesForClosure);
-      console.log('📅 שומר ימים סגורים:', dates);
-      
-      const results = await closedDatesService.addMultipleClosedDates(
-        dates, 
-        user.uid, 
-        'יום סגור - נקבע על ידי המנהל'
-      );
-
-      if (results.success.length > 0) {
-        alert(`✅ ${results.success.length} ימים נסגרו בהצלחה`);
-        await loadClosedDates();
+      // אם יש ימים שנבחרו לסגירה - סגור אותם
+      if (selectedDatesForClosure.size > 0) {
+        const dates = Array.from(selectedDatesForClosure);
+        console.log('📅 שומר ימים סגורים:', dates);
         
-        // 🔄 רק כאן נרענן את כל הנתונים כי אנחנו יוצאים ממצב עריכה
+        const results = await closedDatesService.addMultipleClosedDates(
+          dates, 
+          user.uid, 
+          'יום סגור - נקבע על ידי המנהל'
+        );
+
+        if (results.success.length > 0) {
+          alert(`✅ ${results.success.length} ימים נסגרו בהצלחה`);
+          await loadClosedDates();
+          
+          // 🔄 רענון כל הנתונים אחרי סגירת ימים
+          if (fetchItemsAndOrders) {
+            await fetchItemsAndOrders();
+          }
+        }
+
+        if (results.failed.length > 0) {
+          alert(`⚠️ ${results.failed.length} ימים לא הצליחו להיסגר`);
+        }
+      } else {
+        // ✅ אין ימים לסגירה אבל יש שינויים (כמו ביטול ימים שכבר בוטלו)
+        console.log('✅ שינויים כבר בוצעו (ביטול ימים סגורים), מסיים מצב עריכה');
+        alert('✅ השינויים נשמרו בהצלחה!');
+        
+        // 🔄 רענון כל הנתונים גם אחרי ביטול ימים
         if (fetchItemsAndOrders) {
           await fetchItemsAndOrders();
         }
       }
 
-      if (results.failed.length > 0) {
-        alert(`⚠️ ${results.failed.length} ימים לא הצליחו להיסגר`);
-      }
-
-      // יציאה ממצב עריכה רק אחרי שמירה מוצלחת
+      // יציאה ממצב עריכה תמיד בסוף
       setEditMode(false);
       setSelectedDatesForClosure(new Set());
+      setOriginalClosedDates(new Set()); // ✅ ניקוי מצב מקורי
+      
     } catch (error) {
-      console.error('❌ שגיאה בשמירת ימים סגורים:', error);
-      alert('שגיאה בשמירת הימים הסגורים');
+      console.error('❌ שגיאה בשמירת שינויים:', error);
+      alert('שגיאה בשמירת השינויים');
     } finally {
       setSaving(false);
     }
@@ -395,7 +438,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
         </button>
       </div>
 
-      {/* כלי עריכה למנהלים - ללא כפתור מחק הכל */}
+      {/* כלי עריכה למנהלים */}
       {isManager() && (
         <div className="calendar-controls">
           {!editMode ? (
@@ -418,7 +461,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
                 <button 
                   className="btn-save"
                   onClick={saveClosedDates}
-                  disabled={saving || selectedDatesForClosure.size === 0}
+                  disabled={saving || !hasChanges()} // ✅ שימוש בפונקציה החדשה
                 >
                   <Save size={16} />
                   {saving ? 'שומר...' : 'שמור'}

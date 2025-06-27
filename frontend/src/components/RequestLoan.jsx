@@ -5,7 +5,7 @@ import { db } from '@/firebase/firebase-config';
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '../UserContext';
 import { phoneAutoCompleteService } from '@/services/phoneAutoCompleteService';
-import { closedDatesService } from '@/services/closedDatesService'; // ✅ יבוא השירות החדש
+import { closedDatesService } from '@/services/closedDatesService';
 
 const RequestLoan = ({ onRequestSubmitted }) => {
   const { user } = useUser();
@@ -28,11 +28,8 @@ const RequestLoan = ({ onRequestSubmitted }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
   const [isLoadingClientData, setIsLoadingClientData] = useState(false);
-  
-  // ✅ state חדש לימים סגורים
   const [closedDates, setClosedDates] = useState([]);
 
-  // ✅ טעינת ימים סגורים כשהקומפוננט נטען
   useEffect(() => {
     loadClosedDates();
   }, []);
@@ -47,14 +44,11 @@ const RequestLoan = ({ onRequestSubmitted }) => {
     }
   };
 
-  // פונקציה משופרת לטיפול בשינויים עם חיפוש אוטומטי
   const handleChange = useCallback(async (e) => {
     const { name, value } = e.target;
     
-    // עדכון הטופס
     setForm(prevForm => ({ ...prevForm, [name]: value }));
     
-    // אם השדה הוא מספר טלפון ואורכו 10 ספרות - נחפש פרטי לקוח
     if (name === 'phone' && value.length === 10 && /^\d{10}$/.test(value)) {
       setIsLoadingClientData(true);
       
@@ -62,7 +56,6 @@ const RequestLoan = ({ onRequestSubmitted }) => {
         const result = await phoneAutoCompleteService.findClientByPhone(value);
         
         if (result.found) {
-          // מילוי אוטומטי של הפרטים
           setForm(prevForm => ({
             ...prevForm,
             phone: value,
@@ -71,7 +64,6 @@ const RequestLoan = ({ onRequestSubmitted }) => {
             email: result.clientData.email
           }));
           
-          // הצגת הודעה למשתמש
           alert(`נמצא לקוח קיים! הפרטים מולאו אוטומטית:\nשם: ${result.clientData.clientName}\nכתובת: ${result.clientData.address}`);
         }
       } catch (error) {
@@ -82,57 +74,54 @@ const RequestLoan = ({ onRequestSubmitted }) => {
     }
   }, []);
 
-// תיקון פונקציית validateForm ב-NewLoan.jsx ו-RequestLoan.jsx
+  const validateForm = () => {
+    const newErrors = {};
+    const today = new Date().toISOString().split('T')[0];
+    const { pickupDate, eventDate, returnDate } = form;
 
-const validateForm = () => {
-  const newErrors = {};
-  const today = new Date().toISOString().split('T')[0];
-  const { pickupDate, eventDate, returnDate } = form;
+    // בדיקות בסיסיות
+    if (form.volunteerName !== undefined && !form.volunteerName.trim()) {
+      newErrors.volunteerName = 'שדה חובה';
+    }
+    if (!form.clientName.trim()) newErrors.clientName = 'שדה חובה';
+    if (!form.address.trim()) newErrors.address = 'שדה חובה';
+    if (!form.phone.trim()) newErrors.phone = 'שדה חובה';
+    else if (!/^\d{10}$/.test(form.phone)) newErrors.phone = 'מספר טלפון לא תקין';
+    if (!form.eventType.trim()) newErrors.eventType = 'שדה חובה';
 
-  // בדיקות בסיסיות
-  if (form.volunteerName !== undefined && !form.volunteerName.trim()) {
-    newErrors.volunteerName = 'שדה חובה';
-  }
-  if (!form.clientName.trim()) newErrors.clientName = 'שדה חובה';
-  if (!form.address.trim()) newErrors.address = 'שדה חובה';
-  if (!form.phone.trim()) newErrors.phone = 'שדה חובה';
-  else if (!/^\d{10}$/.test(form.phone)) newErrors.phone = 'מספר טלפון לא תקין';
-  if (!form.eventType.trim()) newErrors.eventType = 'שדה חובה';
+    if (!pickupDate) newErrors.pickupDate = 'שדה חובה';
+    if (!eventDate) newErrors.eventDate = 'שדה חובה';
+    if (!returnDate) newErrors.returnDate = 'שדה חובה';
 
-  if (!pickupDate) newErrors.pickupDate = 'שדה חובה';
-  if (!eventDate) newErrors.eventDate = 'שדה חובה';
-  if (!returnDate) newErrors.returnDate = 'שדה חובה';
+    // בדיקות תאריכים בסיסיות
+    if (pickupDate && pickupDate < today) {
+      newErrors.pickupDate = 'תאריך לא יכול להיות בעבר';
+    }
+    if (eventDate && pickupDate && eventDate < pickupDate) {
+      newErrors.eventDate = 'תאריך האירוע לא יכול להיות לפני לקיחה';
+    }
+    if (returnDate && pickupDate && returnDate <= pickupDate) {
+      newErrors.returnDate = 'החזרה אחרי לקיחה';
+    }
 
-  // בדיקות תאריכים בסיסיות
-  if (pickupDate && pickupDate < today) {
-    newErrors.pickupDate = 'תאריך לא יכול להיות בעבר';
-  }
-  if (eventDate && pickupDate && eventDate < pickupDate) {
-    newErrors.eventDate = 'תאריך האירוע לא יכול להיות לפני לקיחה';
-  }
-  if (returnDate && pickupDate && returnDate <= pickupDate) {
-    newErrors.returnDate = 'החזרה אחרי לקיחה';
-  }
+    // ✅ בדיקת ימים סגורים - רק לקיחה והחזרה (לא אירוע!)
+    const dateValidation = closedDatesService.validateOrderDates(pickupDate, returnDate, closedDates);
+    
+    if (!dateValidation.isValid) {
+      Object.assign(newErrors, dateValidation.errors);
+    }
 
-  // בדיקת ימים סגורים - רק לקיחה והחזרה (לא אירוע!)
-  const dateValidation = closedDatesService.validateOrderDates(pickupDate, returnDate, closedDates);
-  
-  if (!dateValidation.isValid) {
-    Object.assign(newErrors, dateValidation.errors);
-  }
+    console.log('🔍 בדיקת תאריכים:', {
+      pickupDate,
+      returnDate,
+      closedDatesCount: closedDates.length,
+      validation: dateValidation,
+      errors: newErrors
+    });
 
-  // לוג לצורך דיבוג
-  console.log('🔍 בדיקת תאריכים:', {
-    pickupDate,
-    returnDate,
-    closedDatesCount: closedDates.length,
-    validation: dateValidation,
-    errors: newErrors
-  });
-
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleClear = () => {
     if (window.confirm('האם אתה בטוח שברצונך לבטל את הבקשה?')) {
@@ -169,15 +158,14 @@ const validateForm = () => {
       return;
     }
 
-    // ✅ בדיקה נוספת לפני שמירה
-    const hasClosedDates = [form.pickupDate, form.eventDate, form.returnDate].some(date => 
-      closedDatesService.isDateClosed(date, closedDates)
-    );
-
-    if (hasClosedDates) {
-      alert('🔒 אחד או יותר מהתאריכים שנבחרו חלים בימים סגורים. אנא בדוק ותקן את התאריכים.');
-      return;
-    }
+    // ❌ הסרנו את הבדיקה הכפולה הרעה!
+    // const hasClosedDates = [form.pickupDate, form.eventDate, form.returnDate].some(date => 
+    //   closedDatesService.isDateClosed(date, closedDates)
+    // );
+    // if (hasClosedDates) {
+    //   alert('🔒 אחד או יותר מהתאריכים שנבחרו חלים בימים סגורים. אנא בדוק ותקן את התאריכים.');
+    //   return;
+    // }
 
     setSaving(true);
     try {
@@ -217,6 +205,9 @@ const validateForm = () => {
     setSaving(false);
   };
 
+  // ✅ תיקון הלולאה האינסופית - שמירת הבחירות הקודמות
+  const stableAvailableItemsRef = React.useRef([]);
+  
   // חישוב זמינות פריטים
   useEffect(() => {
     if (!showCatalogPopup) return;
@@ -258,8 +249,9 @@ const validateForm = () => {
           });
         });
 
+        // ✅ שמירת הבחירות הקודמות מהרפרנס הקודם
         const previousSelections = {};
-        availableItems.forEach(item => {
+        stableAvailableItemsRef.current.forEach(item => {
           if (item.selected && item.selectedQty > 0) {
             previousSelections[item.id] = {
               selected: item.selected,
@@ -280,6 +272,8 @@ const validateForm = () => {
           };
         }).filter(item => item.quantity > 0);
 
+        // ✅ עדכון הרפרנס היציב
+        stableAvailableItemsRef.current = result;
         setAvailableItems(result);
       } catch (err) {
         console.error('שגיאה בחישוב זמינות:', err);
@@ -289,18 +283,28 @@ const validateForm = () => {
     };
 
     fetchAvailable();
-  }, [showCatalogPopup, form.pickupDate, form.returnDate, availableItems]);
+  }, [showCatalogPopup, form.pickupDate, form.returnDate]); // ✅ הסרנו את availableItems מה-dependency
 
   const toggleSelectItem = id => {
-    setAvailableItems(av => av.map(it =>
-      it.id === id ? { ...it, selected: !it.selected, selectedQty: !it.selected ? 1 : 0 } : it
-    ));
+    setAvailableItems(av => {
+      const newItems = av.map(it =>
+        it.id === id ? { ...it, selected: !it.selected, selectedQty: !it.selected ? 1 : 0 } : it
+      );
+      // ✅ עדכון הרפרנס
+      stableAvailableItemsRef.current = newItems;
+      return newItems;
+    });
   };
 
   const changeQty = (id, qty) => {
-    setAvailableItems(av => av.map(it =>
-      it.id === id ? { ...it, selected: qty > 0, selectedQty: qty } : it
-    ));
+    setAvailableItems(av => {
+      const newItems = av.map(it =>
+        it.id === id ? { ...it, selected: qty > 0, selectedQty: qty } : it
+      );
+      // ✅ עדכון הרפרנס
+      stableAvailableItemsRef.current = newItems;
+      return newItems;
+    });
   };
 
   // רשימת השדות עם מספר פלאפון ראשון
@@ -330,7 +334,6 @@ const validateForm = () => {
               margin: '0 auto', textAlign: 'right'
             }}>
               {label}{required && ' *'}
-              {/* אינדיקטור טעינה עבור שדות שמתמלאים אוטומטית */}
               {isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') && (
                 <span style={{ marginRight: '0.5rem', color: '#4caf50' }}>
                   ⏳
@@ -375,7 +378,6 @@ const validateForm = () => {
                 }
               />
               
-              {/* אינדיקטור ספינר עבור שדה הטלפון */}
               {isLoadingClientData && name === 'phone' && (
                 <div style={{
                   position: 'absolute',
