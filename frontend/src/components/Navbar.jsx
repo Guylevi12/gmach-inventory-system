@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../UserContext';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '@/firebase/firebase-config';
@@ -9,6 +9,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 const Navbar = () => {
   const { user, setUser } = useUser();
   const navigate = useNavigate();
+  const location = useLocation(); // הוספנו useLocation לקבלת הנתיב הנוכחי
   const [menuOpen, setMenuOpen] = useState(false);
   const [onlineOrdering, setOnlineOrdering] = useState(null);
   const [isMobile, setIsMobile] = useState(null);
@@ -68,6 +69,21 @@ const Navbar = () => {
       default: return 'משתמש';
     }
   };
+
+  // פונקציה לבדיקה אם הקישור פעיל
+  const isActiveLink = (path) => {
+    return location.pathname === path;
+  };
+
+  // פונקציה ליצירת סגנון קישור עם הדגשה
+  const getLinkStyle = (path) => ({
+    ...linkStyle,
+    backgroundColor: isActiveLink(path) ? '#0056b3' : 'transparent',
+    color: isActiveLink(path) ? 'white' : '#0056b3',
+    borderRadius: isActiveLink(path) ? '6px' : '0',
+    fontWeight: isActiveLink(path) ? '600' : '500',
+    transition: 'all 0.3s ease'
+  });
 
   if (isMobile === null) return null; // חכה לחישוב ראשוני בטוח
 
@@ -212,37 +228,37 @@ const Navbar = () => {
         {/* תפריט בדסקטופ */}
         {!isMobile && (
           <div style={desktopMenuStyle}>
-            <Link to="/" style={linkStyle}>דף הבית</Link>
-            <Link to="/catalog" style={linkStyle}>קטלוג מוצרים</Link>
+            <Link to="/" style={getLinkStyle('/')}>דף הבית</Link>
+            <Link to="/catalog" style={getLinkStyle('/catalog')}>קטלוג מוצרים</Link>
             {user?.role === 'User' && (
               <>
                 {/* "ההזמנות שלי" תמיד זמין למשתמש רגיל */}
-                <Link to="/my-orders" style={linkStyle}>ההזמנות שלי</Link>
+                <Link to="/my-orders" style={getLinkStyle('/my-orders')}>ההזמנות שלי</Link>
                 {/* "בקשת השאלה" רק אם הזמנות דרך האתר מופעלות */}
                 {onlineOrdering && (
-                  <Link to="/request" style={linkStyle}>בקשת השאלה</Link>
+                  <Link to="/request" style={getLinkStyle('/request')}>בקשת השאלה</Link>
                 )}
               </>
             )}
             {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
               <>
-                <Link to="/new-loan" style={linkStyle}>הזמנה חדשה</Link>
+                <Link to="/new-loan" style={getLinkStyle('/new-loan')}>הזמנה חדשה</Link>
                 {/* רק אם הזמנות דרך האתר מופעלות */}
                 {onlineOrdering && (
-                  <Link to="/requests" style={linkStyle}>בקשות להזמנה</Link>
+                  <Link to="/requests" style={getLinkStyle('/requests')}>בקשות להזמנה</Link>
                 )}
-                <Link to="/Calendar" style={linkStyle}>השאלות פתוחות</Link>
-                <Link to="/history" style={linkStyle}>היסטוריית השאלות</Link>
-                <Link to="/manage-product" style={linkStyle}>ניהול מוצרים</Link>
+                <Link to="/Calendar" style={getLinkStyle('/Calendar')}>השאלות פתוחות</Link>
+                <Link to="/history" style={getLinkStyle('/history')}>היסטוריית השאלות</Link>
+                <Link to="/manage-product" style={getLinkStyle('/manage-product')}>ניהול מוצרים</Link>
               </>
             )}
             {user?.role === 'MainAdmin' && (
-              <Link to="/manage-users" style={linkStyle}>ניהול משתמשים</Link>
+              <Link to="/manage-users" style={getLinkStyle('/manage-users')}>ניהול משתמשים</Link>
             )}
             {!user && (
               <>
-                <Link to="/login" style={linkStyle}>התחברות</Link>
-                <Link to="/register" style={linkStyle}>הרשמה</Link>
+                <Link to="/login" style={getLinkStyle('/login')}>התחברות</Link>
+                <Link to="/register" style={getLinkStyle('/register')}>הרשמה</Link>
               </>
             )}
           </div>
@@ -253,38 +269,38 @@ const Navbar = () => {
           <>
             <div style={overlayStyle} onClick={handleCloseMenu}></div>
             <div style={sidebarStyle}>
-              <Link to="/" style={linkStyle} onClick={handleCloseMenu}>דף הבית</Link>
-              <Link to="/catalog" style={linkStyle} onClick={handleCloseMenu}>קטלוג מוצרים</Link>
+              <Link to="/" style={getLinkStyle('/')} onClick={handleCloseMenu}>דף הבית</Link>
+              <Link to="/catalog" style={getLinkStyle('/catalog')} onClick={handleCloseMenu}>קטלוג מוצרים</Link>
 
               {user?.role === 'User' && (
                 <>
                   {/* "ההזמנות שלי" תמיד זמין למשתמש רגיל */}
-                  <Link to="/my-orders" style={linkStyle} onClick={handleCloseMenu}>ההזמנות שלי</Link>
+                  <Link to="/my-orders" style={getLinkStyle('/my-orders')} onClick={handleCloseMenu}>ההזמנות שלי</Link>
                   {/* "בקשת השאלה" רק אם הזמנות דרך האתר מופעלות */}
                   {onlineOrdering && (
-                    <Link to="/request" style={linkStyle} onClick={handleCloseMenu}>בקשת השאלה</Link>
+                    <Link to="/request" style={getLinkStyle('/request')} onClick={handleCloseMenu}>בקשת השאלה</Link>
                   )}
                 </>
               )}
               {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
                 <>
-                  <Link to="/new-loan" style={linkStyle} onClick={handleCloseMenu}>הזמנה חדשה</Link>
+                  <Link to="/new-loan" style={getLinkStyle('/new-loan')} onClick={handleCloseMenu}>הזמנה חדשה</Link>
                   {/* רק אם הזמנות דרך האתר מופעלות */}
                   {onlineOrdering && (
-                    <Link to="/requests" style={linkStyle} onClick={handleCloseMenu}>בקשות להזמנה</Link>
+                    <Link to="/requests" style={getLinkStyle('/requests')} onClick={handleCloseMenu}>בקשות להזמנה</Link>
                   )}
-                  <Link to="/Calendar" style={linkStyle} onClick={handleCloseMenu}>השאלות פתוחות</Link>
-                  <Link to="/history" style={linkStyle} onClick={handleCloseMenu}>היסטוריית השאלות</Link>
-                  <Link to="/manage-product" style={linkStyle} onClick={handleCloseMenu}>ניהול מוצרים</Link>
+                  <Link to="/Calendar" style={getLinkStyle('/Calendar')} onClick={handleCloseMenu}>השאלות פתוחות</Link>
+                  <Link to="/history" style={getLinkStyle('/history')} onClick={handleCloseMenu}>היסטוריית השאלות</Link>
+                  <Link to="/manage-product" style={getLinkStyle('/manage-product')} onClick={handleCloseMenu}>ניהול מוצרים</Link>
                 </>
               )}
               {user?.role === 'MainAdmin' && (
-                <Link to="/manage-users" style={linkStyle} onClick={handleCloseMenu}>ניהול משתמשים</Link>
+                <Link to="/manage-users" style={getLinkStyle('/manage-users')} onClick={handleCloseMenu}>ניהול משתמשים</Link>
               )}
               {!user && (
                 <>
-                  <Link to="/login" style={linkStyle} onClick={handleCloseMenu}>התחברות</Link>
-                  <Link to="/register" style={linkStyle} onClick={handleCloseMenu}>הרשמה</Link>
+                  <Link to="/login" style={getLinkStyle('/login')} onClick={handleCloseMenu}>התחברות</Link>
+                  <Link to="/register" style={getLinkStyle('/register')} onClick={handleCloseMenu}>הרשמה</Link>
                 </>
               )}
             </div>
