@@ -85,6 +85,14 @@ const Navbar = () => {
     transition: 'all 0.3s ease'
   });
 
+  // פונקציה לבדיקה אם להציג כפתור תרומות
+  const shouldShowDonations = () => {
+    // הצג כפתור תרומות רק אם:
+    // 1. אין משתמש מחובר (guest) או
+    // 2. המשתמש הוא משתמש רגיל (User)
+    return !user || user.role === 'User';
+  };
+
   if (isMobile === null) return null; // חכה לחישוב ראשוני בטוח
 
   const navbarStyle = {
@@ -261,6 +269,10 @@ const Navbar = () => {
                 <Link to="/register" style={getLinkStyle('/register')}>הרשמה</Link>
               </>
             )}
+            {/* הכפתור "לתרומות" רק למשתמש רגיל או לא מחובר */}
+            {shouldShowDonations() && (
+              <Link to="/donations" style={getLinkStyle('/donations')}>לתרומות</Link>
+            )}
           </div>
         )}
 
@@ -302,6 +314,10 @@ const Navbar = () => {
                   <Link to="/login" style={getLinkStyle('/login')} onClick={handleCloseMenu}>התחברות</Link>
                   <Link to="/register" style={getLinkStyle('/register')} onClick={handleCloseMenu}>הרשמה</Link>
                 </>
+              )}
+              {/* הכפתור "לתרומות" רק למשתמש רגיל או לא מחובר */}
+              {shouldShowDonations() && (
+                <Link to="/donations" style={getLinkStyle('/donations')} onClick={handleCloseMenu}>לתרומות</Link>
               )}
             </div>
           </>

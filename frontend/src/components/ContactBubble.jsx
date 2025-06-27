@@ -1,16 +1,21 @@
 // src/components/ContactBubble.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Phone, X, MessageCircle } from 'lucide-react';
+import { useUser } from '../UserContext';
 
 const ContactBubble = () => {
+  const { user } = useUser();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [buttonContent, setButtonContent] = useState('phone');
   const [contentTransition, setContentTransition] = useState('fade-in');
   const bubbleRef = useRef(null);
 
-  const phoneNumber = "054-257-5886";
-  const phoneNumberForDialing = "0542575886"; // מספר ללא מקפים לחיוג
+  const phoneNumber1 = "054-257-5886"; // תיאום והגעה
+  const phoneNumber1ForDialing = "0542575886";
+  const phoneNumber2 = "054-4473-388"; // מנהלת הגמ"ח
+  const phoneNumber2ForDialing = "0544473388";
+  
   // תיקון פורמט מספר WhatsApp - הסרת רווחים ומקפים
   const whatsappNumber = "972542575886"; // פורמט נכון: קוד מדינה + מספר ללא 0 ברישה
 
@@ -31,23 +36,28 @@ const ContactBubble = () => {
     };
   }, [isExpanded]);
 
-  const handlePhoneClick = () => {
-    window.open(`tel:${phoneNumberForDialing}`, '_self');
+  // הצגת הרכיב רק למשתמשים רגילים או למי שלא מחובר
+  if (user && user.role !== 'User') {
+    return null;
+  }
+
+  const handlePhoneClick1 = () => {
+    window.open(`tel:${phoneNumber1ForDialing}`, '_self');
+  };
+
+  const handlePhoneClick2 = () => {
+    window.open(`tel:${phoneNumber2ForDialing}`, '_self');
   };
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("שלום, אני מעוניין לקבל מידע נוסף על השירות");
-    // תיקון URL של WhatsApp
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
-    console.log('WhatsApp URL:', whatsappUrl); // לבדיקה
     window.open(whatsappUrl, '_blank');
   };
 
   const handleClose = () => {
-    // התחל אנימציית סגירה
     setIsClosing(true);
 
-    // אנימציה לתוכן הכפתור
     setContentTransition('fade-out');
     setTimeout(() => {
       setButtonContent('phone');
@@ -66,7 +76,6 @@ const ContactBubble = () => {
     } else {
       setIsExpanded(true);
 
-      // אנימציה לתוכן הכפתור
       setContentTransition('fade-out');
       setTimeout(() => {
         setButtonContent('close');
@@ -119,7 +128,6 @@ const ContactBubble = () => {
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* אנימציה לתוכן הכפתור */
         .bubble-content {
           display: flex;
           align-items: center;
@@ -145,7 +153,7 @@ const ContactBubble = () => {
           border-radius: 12px;
           box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
           padding: 16px;
-          min-width: 240px;
+          min-width: 260px;
           border: 1px solid #e5e7eb;
           animation: slideUp 0.3s ease;
         }
@@ -190,6 +198,7 @@ const ContactBubble = () => {
           background: none;
           color: #374151;
           font-size: 14px;
+          margin-bottom: 4px;
         }
 
         .menu-item:hover {
@@ -198,6 +207,10 @@ const ContactBubble = () => {
 
         .menu-item.phone {
           color: #2563eb;
+        }
+
+        .menu-item.phone2 {
+          color: #7c3aed;
         }
 
         .menu-item.whatsapp {
@@ -235,8 +248,8 @@ const ContactBubble = () => {
           }
           
           .expanded-menu {
-            width: 220px;
-            right: 10px; /* הזז ימינה כדי שלא יחתוך */
+            width: 240px;
+            right: 10px;
             bottom: 65px;
             padding: 14px;
             border-radius: 10px;
@@ -274,13 +287,24 @@ const ContactBubble = () => {
             <div className="menu-header">צור קשר</div>
 
             <button
-              onClick={handlePhoneClick}
+              onClick={handlePhoneClick1}
               className="menu-item phone"
             >
               <Phone size={20} />
               <div>
-                <div style={{ fontWeight: '500' }}>התקשר אלינו</div>
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>{phoneNumber}</div>
+                <div style={{ fontWeight: '500' }}>לתיאום והגעה</div>
+                <div style={{ fontSize: '12px', color: '#6b7280' }}>{phoneNumber1}</div>
+              </div>
+            </button>
+
+            <button
+              onClick={handlePhoneClick2}
+              className="menu-item phone2"
+            >
+              <Phone size={20} />
+              <div>
+                <div style={{ fontWeight: '500' }}>למנהלת הגמ"ח</div>
+                <div style={{ fontSize: '12px', color: '#6b7280' }}>{phoneNumber2}</div>
               </div>
             </button>
 

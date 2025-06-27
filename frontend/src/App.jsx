@@ -16,6 +16,7 @@ import ManageUsers from './components/ManageUsers';
 import Catalog from './components/Catalog';
 import LoanHistory from './components/LoanHistory';
 import ContactBubble from './components/ContactBubble';
+import DonationsPage from './components/DonationsPage';
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/catalog" element={<Catalog />} />
+        <Route path="/donations" element={<DonationsPage />} />
 
         {/* רוט חדש לבקשת השאלה */}
         <Route path="/request" element={<RequestLoan />} />
