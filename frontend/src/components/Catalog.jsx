@@ -3,7 +3,149 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
 import { normalizeItemImages } from '../utils/imageUtils';
 import ImageGallery from './ImageGallery';
-import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MoreHorizontal, X } from 'lucide-react';
+
+// רכיב Modal להצגת מוצר בגדול
+const ProductModal = ({ item, isOpen, onClose }) => {
+  if (!isOpen || !item) return null;
+
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '1rem',
+        direction: 'rtl'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          position: 'relative',
+          padding: '1.5rem',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            left: '1rem',
+            background: '#f3f4f6',
+            border: 'none',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 1001,
+            transition: 'background 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.target.style.background = '#e5e7eb'}
+          onMouseLeave={(e) => e.target.style.background = '#f3f4f6'}
+        >
+          <X size={20} />
+        </button>
+
+        <div style={{
+          display: 'flex',
+          flexDirection: window.innerWidth <= 768 ? 'column' : 'row',
+          gap: '2rem',
+          alignItems: 'flex-start'
+        }}>
+          <div style={{
+            flex: window.innerWidth <= 768 ? 'none' : '1',
+            width: window.innerWidth <= 768 ? '100%' : '400px'
+          }}>
+            <ImageGallery 
+              item={item}
+              width="100%"
+              height={window.innerWidth <= 768 ? "300px" : "400px"}
+              showNavigation={true}
+              style={{
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            />
+          </div>
+
+          <div style={{
+            flex: '1',
+            minWidth: '300px'
+          }}>
+            <h2 style={{
+              fontSize: '1.8rem',
+              fontWeight: '700',
+              color: '#1f2937',
+              marginBottom: '1rem',
+              textAlign: 'center'
+            }}>
+              {item.name}
+            </h2>
+
+            <div style={{
+              backgroundColor: '#f8fafc',
+              padding: '1rem',
+              borderRadius: '8px',
+              marginBottom: '1rem'
+            }}>
+              <p style={{
+                fontSize: '1.1rem',
+                color: '#4b5563',
+                margin: 0,
+                textAlign: 'center'
+              }}>
+                <strong>מזהה מוצר:</strong> {item.ItemId}
+              </p>
+            </div>
+
+            {item.publicComment && (
+              <div style={{
+                backgroundColor: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1rem'
+              }}>
+                <h4 style={{
+                  margin: '0 0 0.5rem 0',
+                  color: '#1e40af',
+                  fontSize: '1rem'
+                }}>
+                  📝 הערות
+                </h4>
+                <p style={{
+                  margin: 0,
+                  color: '#1e3a8a',
+                  fontSize: '1rem'
+                }}>
+                  {item.publicComment}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // רכיב Pagination
 const Pagination = ({ 
@@ -171,21 +313,22 @@ const Catalog = () => {
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // ✅ הוספת state לפגינציה
+  // הוספת state לפגינציה
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  // ✅ הגדרת כמות פריטים בעמוד לפי גודל מסך
+  // הגדרת כמות פריטים בעמוד לפי גודל מסך
   const itemsPerPage = isMobile ? 12 : 20;
 
-  // ✅ מעקב אחר שינויי גודל מסך
+  // מעקב אחר שינויי גודל מסך
   useEffect(() => {
     const handleResize = () => {
       const newIsMobile = window.innerWidth <= 768;
       if (newIsMobile !== isMobile) {
         setIsMobile(newIsMobile);
-        // איפוס לעמוד ראשון כאשר מתחלף מצב המסך
         setCurrentPage(1);
       }
     };
@@ -194,7 +337,7 @@ const Catalog = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isMobile]);
 
-  // ✅ איפוס עמוד כאשר משתנה החיפוש
+  // איפוס עמוד כאשר משתנה החיפוש
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
@@ -218,6 +361,20 @@ const Catalog = () => {
 
     return () => unsubscribe();
   }, []);
+
+  const handleItemClick = (item, event) => {
+    // בדיקה אם הלחיצה הייתה על כפתור ניווט (חצים)
+    if (event.target.closest('button') || event.target.closest('[data-navigation]')) {
+      return; // לא פותחים את המודאל אם לחצו על חץ
+    }
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedItem(null);
+  };
 
   if (loading) {
     return (
@@ -250,12 +407,12 @@ const Catalog = () => {
     );
   }
 
-  // ✅ חישוב פריטים מסוננים
+  // חישוב פריטים מסוננים
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ✅ חישוב פריטים לתצוגה בעמוד הנוכחי
+  // חישוב פריטים לתצוגה בעמוד הנוכחי
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentItems = filteredItems.slice(startIndex, endIndex);
@@ -297,7 +454,7 @@ const Catalog = () => {
         onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
       />
 
-      {/* ✅ תצוגת סטטיסטיקות חיפוש */}
+      {/* תצוגת סטטיסטיקות חיפוש */}
       {searchTerm && (
         <div style={{
           background: '#f0f9ff',
@@ -348,29 +505,34 @@ const Catalog = () => {
           </div>
         ) : (
           currentItems.map(item => (
-            <div key={item.ItemId} style={{
-              border: '1px solid #e5e7eb',
-              padding: '0.8rem',
-              borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              backgroundColor: 'white',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              transition: 'all 0.2s ease-in-out',
-              minHeight: '250px',
-              maxWidth: '100%'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-            }}
+            <div 
+              key={item.ItemId} 
+              style={{
+                border: '1px solid #e5e7eb',
+                padding: '0.8rem',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                backgroundColor: 'white',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                transition: 'all 0.3s ease-in-out',
+                minHeight: '250px',
+                maxWidth: '100%',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05) translateY(-8px)';
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)';
+                e.currentTarget.style.borderColor = '#3b82f6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1) translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+              }}
+              onClick={(event) => handleItemClick(item, event)}
             >
-              {/* החלפת img ב-ImageGallery */}
               <ImageGallery 
                 item={item}
                 width="100%"
@@ -390,11 +552,11 @@ const Catalog = () => {
               }}>
                 <h3 style={{
                   marginBottom: '0.5rem',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.2',
+                  fontSize: '1.1rem', // הגדלתי מ-0.9rem
+                  lineHeight: '1.3',
                   textAlign: 'center',
                   color: '#1f2937',
-                  fontWeight: '600'
+                  fontWeight: '700' // חיזקתי מ-600
                 }}>
                   {item.name}
                 </h3>
@@ -402,7 +564,7 @@ const Catalog = () => {
                 {/* הערה לפרסום (אם קיימת) */}
                 {item.publicComment && (
                   <p style={{
-                    fontSize: '0.75rem',
+                    fontSize: '0.8rem', // הגדלתי מ-0.75rem
                     color: '#6b7280',
                     textAlign: 'center',
                     margin: '0.3rem 0',
@@ -417,7 +579,7 @@ const Catalog = () => {
 
                 {/* מזהה מוצר */}
                 <div style={{
-                  fontSize: '0.7rem',
+                  fontSize: '0.75rem', // הגדלתי מ-0.7rem
                   color: '#9ca3af',
                   textAlign: 'center',
                   marginTop: 'auto',
@@ -431,12 +593,19 @@ const Catalog = () => {
         )}
       </div>
 
-      {/* ✅ Pagination */}
+      {/* Pagination */}
       <Pagination
         currentPage={currentPage}
         totalItems={filteredItems.length}
         itemsPerPage={itemsPerPage}
         onPageChange={setCurrentPage}
+      />
+
+      {/* Modal להצגת מוצר */}
+      <ProductModal 
+        item={selectedItem}
+        isOpen={isModalOpen}
+        onClose={closeModal}
       />
 
       {/* CSS נוסף למובייל */}
