@@ -42,41 +42,43 @@ const NewLoanForm = ({
             )}
           </label>
           <div style={{ position: 'relative' }}>
-            <input
-              id={name}
-              type={type}
-              name={name}
-              value={form[name]}
-              onChange={handleChange}
-              disabled={isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email')} // ✅ השבתת שדות בזמן טעינה
-              min={
-                type === 'date'
-                  ? name === 'pickupDate'
-                    ? new Date().toISOString().split('T')[0]
-                    : name === 'eventDate' || name === 'returnDate'
-                      ? form.pickupDate || new Date().toISOString().split('T')[0]
-                      : undefined
-                  : undefined
-              }
-              style={{
-                display: 'block',
-                width: '100%',
-                maxWidth: '400px',
-                margin: '0 auto',
-                padding: '10px',
-                border: errors[name] ? '1px solid red' : '1px solid #ccc',
-                borderRadius: '6px',
-                fontSize: '1rem',
-                backgroundColor: isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') 
-                  ? '#f5f5f5' : 'white', // ✅ רקע אפור בזמן טעינה
-                opacity: isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') 
-                  ? 0.7 : 1 // ✅ שקיפות בזמן טעינה
-              }}
-              placeholder={
-                isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') 
-                  ? 'טוען...' : ''
-              }
-            />
+          <input
+            id={name}
+            type={type}
+            name={name}
+            value={form[name]}
+            onChange={handleChange}
+            disabled={isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email')}
+            inputMode={name === 'phone' ? 'numeric' : undefined} // ✅ הוספה חדשה
+            pattern={name === 'phone' ? '[0-9]*' : undefined}    // ✅ הוספה חדשה
+            min={
+              type === 'date'
+                ? name === 'pickupDate'
+                  ? new Date().toISOString().split('T')[0]
+                  : name === 'eventDate' || name === 'returnDate'
+                    ? form.pickupDate || new Date().toISOString().split('T')[0]
+                    : undefined
+                : undefined
+            }
+            style={{
+              display: 'block',
+              width: '100%',
+              maxWidth: '400px',
+              margin: '0 auto',
+              padding: '10px',
+              border: errors[name] ? '1px solid red' : '1px solid #ccc',
+              borderRadius: '6px',
+              fontSize: '1rem',
+              backgroundColor: isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') 
+                ? '#f5f5f5' : 'white',
+              opacity: isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') 
+                ? 0.7 : 1
+            }}
+            placeholder={
+              isLoadingClientData && (name === 'clientName' || name === 'address' || name === 'email') 
+                ? 'טוען...' : ''
+            }
+          />
             
             {/* ✅ אינדיקטור ספינר עבור שדה הטלפון */}
             {isLoadingClientData && name === 'phone' && (

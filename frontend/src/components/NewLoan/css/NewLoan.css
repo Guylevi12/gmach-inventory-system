@@ -374,3 +374,159 @@ input[type=number]::-moz-inner-spin-button {
   margin: 0 !important;
   display: none !important;
 }
+
+/* 🔧 תיקון ScanResultModal למובייל - תוספת חדשה */
+@media (max-width: 768px) {
+  /* וידוא שמודל תוצאת הסריקה יוצג נכון במובייל */
+  .modal-overlay {
+    padding: 1rem;
+    align-items: center; /* מרכז במקום flex-start */
+    justify-content: center;
+  }
+
+  /* מודל תוצאת סריקה - גודל מתאים למובייל */
+  .modal-box {
+    width: calc(100vw - 2rem) !important;
+    max-width: 400px !important;
+    max-height: 80vh !important;
+    padding: 1.5rem !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+    overflow-y: auto !important;
+    position: relative !important;
+    
+    /* וידוא שהמודל לא גדול מדי */
+    min-height: auto !important;
+    height: auto !important;
+  }
+
+  /* כותרת המודל */
+  .modal-box h3 {
+    font-size: 1.4rem !important;
+    margin-bottom: 1rem !important;
+    text-align: center !important;
+    word-wrap: break-word !important;
+  }
+
+  /* תמונה במודל תוצאת סריקה */
+  .modal-box img {
+    width: 100% !important;
+    max-height: 150px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* פסקאות מידע */
+  .modal-box p {
+    font-size: 1rem !important;
+    margin: 0.5rem 0 !important;
+    text-align: right !important;
+    word-wrap: break-word !important;
+  }
+
+  /* שדה בחירת כמות */
+  .modal-box label {
+    display: block !important;
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    text-align: right !important;
+    font-weight: 500 !important;
+  }
+
+  .modal-box input[type="number"] {
+    width: 100% !important;
+    padding: 12px !important;
+    font-size: 16px !important; /* מונע zoom במובייל */
+    border: 1px solid #ccc !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    margin-top: 0.5rem !important;
+    
+    /* הסרת חצים במספרים */
+    -webkit-appearance: none !important;
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+  }
+
+  /* הסרת חצים בשדה מספר */
+  .modal-box input[type="number"]::-webkit-outer-spin-button,
+  .modal-box input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+    display: none !important;
+  }
+
+  /* הודעת שגיאה */
+  .modal-box p[style*="color: red"] {
+    font-size: 0.9rem !important;
+    color: #d32f2f !important;
+    background: #ffebee !important;
+    padding: 0.5rem !important;
+    border-radius: 6px !important;
+    border: 1px solid #f8bbd9 !important;
+  }
+
+  /* כפתורים במודל תוצאת סריקה */
+  .modal-box > div:last-child {
+    display: flex !important;
+    flex-direction: row !important; /* שורה אחת במקום עמודה */
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    margin-top: 1.5rem !important;
+  }
+
+  .modal-box > div:last-child .btn {
+    flex: 1 !important;
+    padding: 14px 20px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    border-radius: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+
+  /* צבעי כפתורים */
+  .modal-box .btn-red {
+    background-color: #d32f2f !important;
+    color: white !important;
+  }
+
+  .modal-box .btn-green {
+    background-color: #28a745 !important;
+    color: white !important;
+  }
+
+  .modal-box .btn:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+  }
+
+  /* אפקט hover על כפתורים */
+  .modal-box .btn:not(:disabled):active {
+    transform: scale(0.98) !important;
+  }
+}
+
+/* תיקון נוסף - וידוא שהמודל לא חורג מגבולות המסך */
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0.5rem !important;
+  }
+
+  .modal-box {
+    width: calc(100vw - 1rem) !important;
+    max-width: none !important;
+    padding: 1rem !important;
+  }
+
+  .modal-box h3 {
+    font-size: 1.2rem !important;
+  }
+
+  .modal-box img {
+    max-height: 120px !important;
+  }
+}

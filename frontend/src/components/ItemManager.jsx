@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { addItem, moveToDeletedItem, restoreDeletedItem } from '../services/firebase/itemsService';
-import { collection, getDocs, query, where, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, updateDoc, serverTimestamp, addDoc } from 'firebase/firestore';
 import { db, storage } from '@/firebase/firebase-config';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -492,8 +492,11 @@ const ItemManager = () => {
     }
   };
 
+  // תחליפי את החלק הזה בפונקציה handleSubmit:
+
   const handleSubmit = async (e, formData = null) => {
     e.preventDefault();
+    
     try {
       // אם יש formData מהמודל החדש, השתמש בו
       const itemData = formData || {
@@ -508,15 +511,24 @@ const ItemManager = () => {
       const q = query(collection(db, 'items'), where('name', '==', itemData.name.trim()));
       const snap = await getDocs(q);
 
+      // 🔧 חישוב ItemId הבא - כמו שהיה לך קודם
+      const allItemsSnap = await getDocs(collection(db, 'items'));
+      const existingItemIds = allItemsSnap.docs
+        .map(doc => doc.data().ItemId)
+        .filter(id => typeof id === 'number')
+        .sort((a, b) => b - a); // מיון בסדר יורד
+      
+      const nextItemId = existingItemIds.length > 0 ? existingItemIds[0] + 1 : 1;
+
       if (editingItem) {
-        // עריכת מוצר קיים
+        // עריכת מוצר קיים - לא משנים את ה-ItemId
         await updateDoc(doc(db, 'items', editingItem.id), {
           name: itemData.name,
           quantity: parseInt(itemData.quantity),
           images: itemData.images || [],
           imageUrl: itemData.images?.[0] || null,
-          publicComment: itemData.publicComment,
-          internalComment: itemData.internalComment,
+          publicComment: itemData.publicComment || '',
+          internalComment: itemData.internalComment || '',
           updatedBy: userName,
           updatedAt: serverTimestamp()
         });
@@ -530,18 +542,20 @@ const ItemManager = () => {
             {
               label: 'כן',
               onClick: async () => {
-                await addItem({
+                await addDoc(collection(db, 'items'), {
                   name: itemData.name,
                   quantity: parseInt(itemData.quantity),
                   images: itemData.images || [],
                   imageUrl: itemData.images?.[0] || null,
-                  publicComment: itemData.publicComment,
-                  internalComment: itemData.internalComment,
+                  publicComment: itemData.publicComment || '',
+                  internalComment: itemData.internalComment || '',
                   createdBy: userName,
                   updatedBy: userName,
                   createdAt: serverTimestamp(),
-                  updatedAt: serverTimestamp()
+                  updatedAt: serverTimestamp(),
+                  ItemId: nextItemId // 🔧 מזהה פשוט ומספרי
                 });
+                
                 toast.success('הכמות עודכנה בהצלחה');
                 fetchItems();
                 fetchDeletedItems();
@@ -553,19 +567,21 @@ const ItemManager = () => {
         return;
       } else {
         // מוצר חדש
-        await addItem({
+        await addDoc(collection(db, 'items'), {
           name: itemData.name,
           quantity: parseInt(itemData.quantity),
           images: itemData.images || [],
           imageUrl: itemData.images?.[0] || null,
-          publicComment: itemData.publicComment,
-          internalComment: itemData.internalComment,
+          publicComment: itemData.publicComment || '',
+          internalComment: itemData.internalComment || '',
           createdBy: userName,
           updatedBy: userName,
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
+          ItemId: nextItemId // 🔧 מזהה פשוט ומספרי
         });
-        toast.success(`המוצר "${itemData.name}" נוסף בהצלחה`);
+        
+        toast.success(`המוצר "${itemData.name}" נוסף בהצלחה עם ${itemData.images?.length || 0} תמונות`);
       }
 
       // Reset
