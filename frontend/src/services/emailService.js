@@ -27,6 +27,58 @@ const formatDate = (dateString) => {
     });
 };
 
+// NEW FUNCTION: Send manual pickup email (triggered by admin button)
+export const sendManualPickupEmail = async (orderData, orderId) => {
+    try {
+        console.log(`📧 Sending manual pickup email for order ${orderId}`);
+
+        const templateParams = {
+            to_email: orderData.email,
+            to_name: orderData.clientName,
+            client_name: orderData.clientName,
+            pickup_date: formatDate(orderData.pickupDate),
+            return_date: formatDate(orderData.returnDate),
+            volunteer_name: 'צוות הארגון',
+            volunteer_phone: '054-2575886', // Your fixed phone number
+            organization_name: 'גמח שמחת זקנתי',
+            items_list: orderData.items?.map(item =>
+                `• ${item.name} - כמות: ${item.quantity}`
+            ).join('\n') || 'לא צוינו פריטים',
+            total_items: orderData.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
+            event_type: orderData.eventType || 'כללי',
+            order_id: orderId,
+            pickup_location: orderData.pickupLocation || 'מיקום לפי תיאום',
+            special_instructions: orderData.specialInstructions || 'אין הוראות מיוחדות'
+        };
+
+        const result = await emailjs.send(
+            EMAILJS_CONFIG.serviceId,
+            EMAILJS_CONFIG.confirmationTemplateId,
+            templateParams
+        );
+
+        console.log(`✅ Manual pickup email sent successfully:`, result);
+
+        // Mark manual email as sent in database
+        await updateDoc(doc(db, 'orders', orderId), {
+            manualEmailSent: true,
+            manualEmailSentAt: Timestamp.now(),
+            manualEmailResult: {
+                status: result.status,
+                text: result.text,
+                sentAt: new Date().toISOString(),
+                sentBy: 'admin' // Mark as admin-triggered
+            }
+        });
+
+        return { success: true, result };
+
+    } catch (error) {
+        console.error(`❌ Failed to send manual pickup email for order ${orderId}:`, error);
+        return { success: false, error: error.message };
+    }
+};
+
 // Send pickup confirmation email (automated - called by daily check)
 export const sendPickupConfirmationEmail = async (order, orderId) => {
     try {
