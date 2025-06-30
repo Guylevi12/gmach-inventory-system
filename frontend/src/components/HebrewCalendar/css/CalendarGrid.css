@@ -536,3 +536,233 @@
     text-align: center;
   }
 }
+/* תוספות לקובץ src/components/css/CalendarGrid.css */
+
+/* ✅ סטיילינג לימים עם בעיות זמינות */
+.day-cell.availability-conflict {
+  border: 2px solid #9333ea !important;
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #e9d5ff 100%) !important;
+  position: relative;
+  animation: conflictPulse 3s ease-in-out infinite;
+}
+
+/* ✅ אנימציית דופק לימים בעייתיים */
+@keyframes conflictPulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 0 8px rgba(147, 51, 234, 0.1);
+    transform: scale(1.02);
+  }
+}
+
+/* ✅ אינדיקטור בעיות זמינות */
+.conflict-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: #9333ea;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 2;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+/* ✅ עיצוב מיוחד לאירועים בעייתיים */
+.event-tag.conflict {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%) !important;
+  color: white !important;
+  border: 1px solid #6d28d9 !important;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3) !important;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* ✅ מונה הזמנות בעייתי */
+.event-count.conflict {
+  background: #dc2626 !important;
+  color: white !important;
+  border: 2px solid #991b1b !important;
+  font-weight: bold !important;
+  animation: conflictGlow 2s ease-in-out infinite;
+}
+
+@keyframes conflictGlow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(220, 38, 38, 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 15px rgba(220, 38, 38, 0.8);
+  }
+}
+
+/* ✅ רספונסיביות למובייל */
+@media (max-width: 768px) {
+  .conflict-indicator {
+    width: 16px;
+    height: 16px;
+    top: 2px;
+    left: 2px;
+  }
+  
+  /* =========================
+   עדכוני צבעים לסגול
+   ========================= */
+
+/* 1️⃣ CalendarGrid.css - החלף את הצבעים האדומים */
+
+/* ימים עם בעיות זמינות - במקום אדום */
+.day-cell.availability-conflict {
+  border: 2px solid #9333ea !important;
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #e9d5ff 100%) !important;
+  position: relative;
+  animation: conflictPulse 3s ease-in-out infinite;
+}
+
+/* אנימציית דופק לימים בעייתיים - במקום אדום */
+@keyframes conflictPulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 0 8px rgba(147, 51, 234, 0.1);
+    transform: scale(1.02);
+  }
+}
+
+/* אינדיקטור בעיות זמינות - במקום אדום */
+.conflict-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: #9333ea;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 2;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+/* עיצוב מיוחד לאירועים בעייתיים - במקום אדום */
+.event-tag.conflict {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%) !important;
+  color: white !important;
+  border: 1px solid #6d28d9 !important;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3) !important;
+  animation: shake 0.5s ease-in-out;
+}
+
+/* מונה הזמנות בעייתי - במקום אדום */
+.event-count.conflict {
+  background: #9333ea !important;
+  color: white !important;
+  border: 2px solid #6d28d9 !important;
+  font-weight: bold !important;
+  animation: conflictGlow 2s ease-in-out infinite;
+}
+
+@keyframes conflictGlow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(147, 51, 234, 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 15px rgba(147, 51, 234, 0.8);
+  }
+}
+
+/* עדכון למובייל */
+@media (max-width: 768px) {
+  .day-cell.availability-conflict {
+    border: 1px solid #9333ea !important;
+  }
+  
+  @keyframes conflictPulse {
+    0%, 100% { 
+      box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
+      transform: scale(1);
+    }
+    50% { 
+      box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1);
+      transform: scale(1.01);
+    }
+  }
+}
+
+/* עיצוב מיוחד כשיש גם יום סגור וגם בעיות זמינות */
+.day-cell.availability-conflict.closed-day {
+  background: repeating-linear-gradient(
+    45deg,
+    #faf5ff,
+    #faf5ff 10px,
+    #f3f4f6 10px,
+    #f3f4f6 20px
+  ) !important;
+  border: 2px solid #9333ea !important;
+}
+
+/* מצב hover מיוחד לימים בעייתיים */
+.day-cell.availability-conflict:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4) !important;
+  z-index: 5;
+  cursor: pointer !important;
+}
+
+/* הוסר חפיפות עם אלמנטים אחרים */
+.day-cell.availability-conflict .day-number {
+  color: #6d28d9 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* טקסט עזר בימים בעייתיים */
+.day-cell.availability-conflict::after {
+  content: "🔔";
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .day-cell.availability-conflict::after {
+    font-size: 10px;
+    bottom: 1px;
+    right: 1px;
+  }
+}
+}

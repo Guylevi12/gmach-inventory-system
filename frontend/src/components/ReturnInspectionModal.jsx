@@ -1,8 +1,9 @@
-// src/components/ReturnInspectionModal.jsx - עם מערכת אישור פריטים - תיקון מלא
+// src/components/ReturnInspectionModal.jsx - עם מערכת אישור פריטים ובדיקת זמינות
 import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
 import { CheckCircle, XCircle, Package, Save, AlertTriangle, Check } from 'lucide-react';
+import { AvailabilityChecker } from '@/services/availabilityChecker';
 
 const ReturnInspectionModal = ({
   show,
@@ -16,6 +17,8 @@ const ReturnInspectionModal = ({
   const [confirmedItems, setConfirmedItems] = useState(new Set());
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  // ✅ state חדש לניהול התראות זמינות
+  const [availabilityAlert, setAvailabilityAlert] = useState(null);
 
   // Initialize item inspections when modal opens
   useEffect(() => {
@@ -34,6 +37,7 @@ const ReturnInspectionModal = ({
       setItemInspections(initialInspections);
       setConfirmedItems(new Set());
       setNotes('');
+      setAvailabilityAlert(null); // ✅ איפוס התראות
     }
   }, [show, order]);
 
@@ -132,6 +136,7 @@ const ReturnInspectionModal = ({
         customerAgreedToCharges: false
       };
 
+      // ✅ שלב 1: עדכון כמויות המלאי (כמו שהיה)
       for (const inspection of itemInspections) {
         const stockItem = allItems.find(item =>
           item.id === inspection.itemId ||
@@ -156,12 +161,28 @@ const ReturnInspectionModal = ({
         }
       }
 
+      // ✅ שלב 2: סגירת ההזמנה הנוכחית
       await onCompleteInspection(order.id, itemInspections, summary);
 
+      // ✅ שלב 3: רענון נתוני המלאי
       if (updateItemQuantities) {
         await updateItemQuantities();
       }
 
+      // ✅ שלב 4: בדיקת זמינות עבור הזמנות עתידיות - החדש!
+      console.log('🔍 בודק זמינות להזמנות עתידיות אחרי סגירת ההזמנה...');
+      const availabilityResult = await AvailabilityChecker.runAfterOrderClosure(order.id);
+      
+      if (availabilityResult.shouldShowAlert) {
+        console.log('🚨 נמצאו בעיות זמינות:', availabilityResult);
+        setAvailabilityAlert(availabilityResult);
+        
+        // לא סוגרים את המודל מיד - נותנים למשתמש לראות את ההתראה
+        setSaving(false);
+        return;
+      }
+
+      // אם אין בעיות זמינות - סוגרים כרגיל
       onClose();
 
     } catch (error) {
@@ -170,6 +191,12 @@ const ReturnInspectionModal = ({
     } finally {
       setSaving(false);
     }
+  };
+
+  // ✅ פונקציה לטיפול בהתראת זמינות
+  const handleAvailabilityAlertClose = () => {
+    setAvailabilityAlert(null);
+    onClose(); // עכשיו סוגרים את המודל
   };
 
   const handleBackdropClick = (e) => {
@@ -213,12 +240,13 @@ const ReturnInspectionModal = ({
           flex-direction: column !important;
         }
 
-        .item-container {
-          border: 1px solid #e5e7eb;
-          borderRadius: 12px;
-          padding: 1rem;
-          background: #ffffff;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .availability-alert {
+          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+          border: 2px solid #f59e0b !important;
+          border-radius: 12px !important;
+          padding: 1.5rem !important;
+          margin: 1rem !important;
+          box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2) !important;
         }
 
         @media (max-width: 768px) {
@@ -247,7 +275,8 @@ const ReturnInspectionModal = ({
             margin-bottom: 0.5rem !important;
           }
 
-          .item-container {
+          .availability-alert {
+            margin: 0.5rem !important;
             padding: 1rem !important;
           }
         }
@@ -261,6 +290,11 @@ const ReturnInspectionModal = ({
           0% { transform: translateY(-10px); opacity: 0; }
           100% { transform: translateY(0); opacity: 1; }
         }
+
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
       `}</style>
 
       <div
@@ -272,6 +306,111 @@ const ReturnInspectionModal = ({
           dir="rtl"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* ✅ התראת זמינות - מוצגת בתחילת המודל */}
+          {availabilityAlert && (
+            <div className="availability-alert" style={{ animation: 'slideDown 0.3s ease-out' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                marginBottom: '1rem'
+              }}>
+                <AlertTriangle size={24} style={{ color: '#f59e0b', animation: 'pulse 2s infinite' }} />
+                <h3 style={{
+                  fontSize: '1.125rem',
+                  fontWeight: 'bold',
+                  margin: 0,
+                  color: '#92400e'
+                }}>
+                  ⚠️ נמצאו הזמנות עתידיות שדורשות עדכון!
+                </h3>
+              </div>
+              
+              <p style={{
+                color: '#92400e',
+                marginBottom: '1rem',
+                fontSize: '0.95rem',
+                lineHeight: '1.5'
+              }}>
+                {availabilityAlert.message}
+              </p>
+              
+              {/* רשימת בעיות */}
+              {availabilityAlert.conflicts && availabilityAlert.conflicts.length > 0 && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h4 style={{ 
+                    fontSize: '1rem', 
+                    fontWeight: '600', 
+                    color: '#92400e',
+                    marginBottom: '0.5rem' 
+                  }}>
+                    הזמנות שדורשות עדכון:
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {availabilityAlert.conflicts.slice(0, 3).map((conflict, index) => (
+                      <div key={index} style={{
+                        background: 'rgba(254, 243, 199, 0.5)',
+                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        border: '1px solid #fbbf24'
+                      }}>
+                        <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#92400e' }}>
+                          הזמנה #{conflict.order.simpleId || conflict.order.id}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#78350f', marginTop: '0.25rem' }}>
+                          {conflict.conflicts.length} פריטים עם בעיות זמינות
+                        </div>
+                      </div>
+                    ))}
+                    {availabilityAlert.conflicts.length > 3 && (
+                      <div style={{
+                        textAlign: 'center',
+                        fontSize: '0.85rem',
+                        color: '#92400e',
+                        fontStyle: 'italic'
+                      }}>
+                        ועוד {availabilityAlert.conflicts.length - 3} הזמנות נוספות...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <div style={{
+                background: 'rgba(254, 243, 199, 0.7)',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                color: '#78350f',
+                marginBottom: '1rem'
+              }}>
+                💡 <strong>מה לעשות:</strong> עבור ללוח השנה, מצא את האירועים הבעייתיים (יופיעו בצבע שונה), 
+                ולחץ על "ערוך הזמנה" כדי להתאים את הכמויות למלאי הזמין.
+              </div>
+              
+              <button
+                onClick={handleAvailabilityAlertClose}
+                style={{
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  width: '100%',
+                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
+                onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                הבנתי - סגור בדיקת החזרה ועבור ללוח השנה
+              </button>
+            </div>
+          )}
+
           {/* Header */}
           <div style={{
             background: 'linear-gradient(to right, #fb923c, #f97316)',
@@ -377,8 +516,6 @@ const ReturnInspectionModal = ({
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     transition: 'all 0.3s ease'
                   }}>
-                    {/* הסרתי את הכפתור הנפרד - עכשיו הוא חלק מהכמויות */}
-
                     {/* תוכן המוצר */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       {/* פרטי המוצר */}
@@ -501,7 +638,7 @@ const ReturnInspectionModal = ({
                             +
                           </button>
                           
-                          {/* ✅ כפתור "בוצע" ליד הכפתורים */}
+                          {/* כפתור "בוצע" ליד הכפתורים */}
                           <button
                             onClick={() => confirmItem(index)}
                             style={{

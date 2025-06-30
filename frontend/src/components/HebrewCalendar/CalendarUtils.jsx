@@ -87,7 +87,11 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
           returnDate: order.returnDate,
           dayNumber: i + 1,
           totalDays: daysDiff + 1,
-          isMultiDay: daysDiff > 0
+          isMultiDay: daysDiff > 0,
+          // ✅ הוספת מידע על בעיות זמינות
+          availabilityStatus: order.availabilityStatus || 'OK',
+          availabilityConflicts: order.availabilityConflicts || [],
+          needsAttention: order.needsAttention || false
         });
       }
     }

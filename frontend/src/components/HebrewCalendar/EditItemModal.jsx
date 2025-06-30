@@ -1,8 +1,8 @@
-// src/components/EditItemModal.jsx - DATE-AWARE AVAILABILITY - מותאם למובייל
+// src/components/EditItemModal.jsx - DATE-AWARE AVAILABILITY - מותאם למובייל עם צבעים סגולים
 import React, { useState, useEffect } from 'react';
-import { updateDoc, doc } from 'firebase/firestore';
+import { updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
-import { Edit, Search, Plus, Minus, Save, AlertTriangle } from 'lucide-react';
+import { Edit, Search, Plus, Minus, Save, Bell } from 'lucide-react';
 
 const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItemsAndOrders, allEvents }) => {
   const [formData, setFormData] = useState({
@@ -11,6 +11,8 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
   const [loading, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [orderDates, setOrderDates] = useState({ pickupDate: null, returnDate: null });
+  // ✅ הוספת state לזיהוי פריטים בעייתיים
+  const [problematicItems, setProblematicItems] = useState(new Set());
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -41,10 +43,20 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
           returnDate: new Date(firstEvent.returnDate)
         });
 
+        // ✅ זיהוי פריטים בעייתיים מההזמנה
+        const problematicItemNames = new Set();
+        if (firstEvent.availabilityConflicts && firstEvent.availabilityConflicts.length > 0) {
+          firstEvent.availabilityConflicts.forEach(conflict => {
+            problematicItemNames.add(conflict.itemName);
+          });
+        }
+        setProblematicItems(problematicItemNames);
+
         console.log('📅 Order dates:', {
           pickup: firstEvent.pickupDate,
           return: firstEvent.returnDate
         });
+        console.log('⚠️ Problematic items:', Array.from(problematicItemNames));
       }
 
       setFormData({
@@ -198,8 +210,14 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
         itemId: item.ItemId || item.itemId || item.id
       }));
 
+      // ✅ עדכון ההזמנה + ניקוי סטטוס בעיות זמינות
       await updateDoc(doc(db, 'orders', orderId), {
-        items: itemsToSave
+        items: itemsToSave,
+        // ✅ ניקוי סטטוס בעיות זמינות אחרי תיקון
+        availabilityStatus: 'OK',
+        availabilityConflicts: [],
+        needsAttention: false,
+        lastAvailabilityCheck: serverTimestamp()
       });
 
       await fetchItemsAndOrders();
@@ -262,6 +280,38 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
           flex-direction: column !important;
         }
 
+        .problematic-item {
+          border: 2px solid #9333ea !important;
+          background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%) !important;
+          animation: problemPulse 3s ease-in-out infinite !important;
+        }
+
+        @keyframes problemPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4); }
+          50% { box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1); }
+        }
+
+        .problematic-item-indicator {
+          background: #9333ea !important;
+          color: white !important;
+          padding: 0.25rem 0.5rem !important;
+          border-radius: 4px !important;
+          font-size: 0.75rem !important;
+          font-weight: bold !important;
+          margin-left: 0.5rem !important;
+        }
+
+        @keyframes warningPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4); }
+          50% { box-shadow: 0 0 0 8px rgba(147, 51, 234, 0.1); }
+        }
+
+        @keyframes bellRing {
+          0%, 100% { transform: rotate(0deg); }
+          10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+          20%, 40%, 60%, 80% { transform: rotate(10deg); }
+        }
+
         @media (max-width: 768px) {
           .edit-modal-overlay {
             padding: 0.25rem !important;
@@ -294,7 +344,9 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
 
           {/* Header */}
           <div style={{
-            background: 'linear-gradient(to right, #2563eb, #1d4ed8)',
+            background: problematicItems.size > 0 
+              ? 'linear-gradient(to right, #9333ea, #7c3aed)' 
+              : 'linear-gradient(to right, #2563eb, #1d4ed8)',
             color: 'white',
             padding: '1rem',
             flexShrink: 0
@@ -305,13 +357,17 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
               alignItems: 'center'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Edit size={24} />
+                {problematicItems.size > 0 ? (
+                  <Bell size={24} style={{ animation: 'bellRing 2s infinite' }} />
+                ) : (
+                  <Edit size={24} />
+                )}
                 <h3 style={{
                   fontSize: '1.25rem',
                   fontWeight: 'bold',
                   margin: 0
                 }}>
-                  עריכת הזמנה
+                  {problematicItems.size > 0 ? '🔔 עריכת הזמנה - יש בעיות זמינות' : 'עריכת הזמנה'}
                 </h3>
               </div>
               <button
@@ -334,9 +390,14 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
               <div style={{
                 marginTop: '0.5rem',
                 fontSize: '0.875rem',
-                color: '#bfdbfe'
+                color: problematicItems.size > 0 ? '#e9d5ff' : '#bfdbfe'
               }}>
                 📅 תאריכי ההזמנה: {orderDates.pickupDate.toLocaleDateString('he-IL')} - {orderDates.returnDate.toLocaleDateString('he-IL')}
+                {problematicItems.size > 0 && (
+                  <div style={{ marginTop: '0.25rem', fontWeight: 'bold' }}>
+                    🔔 {problematicItems.size} פריטים דורשים עדכון
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -346,6 +407,52 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
             overflowY: 'auto',
             flex: 1
           }}>
+
+            {/* ✅ התראה כללית אם יש פריטים בעייתיים */}
+            {problematicItems.size > 0 && (
+              <div style={{
+                background: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
+                border: '2px solid #9333ea',
+                borderRadius: '8px',
+                padding: '1rem',
+                marginBottom: '1.5rem',
+                animation: 'warningPulse 2s ease-in-out infinite'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem'
+                }}>
+                  <Bell size={20} style={{ color: '#9333ea' }} />
+                  <h4 style={{
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    margin: 0,
+                    color: '#581c87'
+                  }}>
+                    נמצאו {problematicItems.size} פריטים עם בעיות זמינות!
+                  </h4>
+                </div>
+                <p style={{
+                  fontSize: '0.875rem',
+                  color: '#4c1d95',
+                  margin: '0 0 0.5rem 0'
+                }}>
+                  הפריטים המסומנים בסגול למטה אינם זמינים בכמות המבוקשת. 
+                  התאם את הכמויות או הסר פריטים כדי לפתור את הבעיה.
+                </p>
+                <div style={{
+                  background: 'rgba(243, 232, 255, 0.7)',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  color: '#4c1d95'
+                }}>
+                  💡 פריטים בעייתיים: {Array.from(problematicItems).join(', ')}
+                </div>
+              </div>
+            )}
 
             {/* Current Items Section */}
             <div style={{ marginBottom: '1.5rem' }}>
@@ -364,17 +471,26 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                     const itemData = allItems.find(i => i.name === item.name);
                     const availableQuantity = getAvailableQuantityForDates(item.name);
                     const maxPossible = availableQuantity + item.quantity; // Current quantity + what's available
+                    const isProblematic = problematicItems.has(item.name); // ✅ בדיקה אם הפריט בעייתי
 
                     return (
                       <div key={index} style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        background: '#f9fafb',
+                        background: isProblematic ? '#faf5ff' : '#f9fafb',
                         padding: '0.75rem',
                         borderRadius: '8px',
-                        border: '1px solid #e5e7eb'
-                      }}>
+                        border: isProblematic ? '2px solid #9333ea' : '1px solid #e5e7eb'
+                      }} className={isProblematic ? 'problematic-item' : ''}>
+                        
+                        {/* ✅ אינדיקטור בעיה */}
+                        {isProblematic && (
+                          <div className="problematic-item-indicator">
+                            🔔 בעיה
+                          </div>
+                        )}
+
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -391,17 +507,18 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                                 height: '2.5rem',
                                 objectFit: 'cover',
                                 borderRadius: '6px',
-                                flexShrink: 0
+                                flexShrink: 0,
+                                border: isProblematic ? '2px solid #9333ea' : 'none'
                               }}
                             />
                           )}
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{
                               fontWeight: '500',
-                              color: '#1f2937',
+                              color: isProblematic ? '#581c87' : '#1f2937',
                               fontSize: '0.9rem'
                             }}>
-                              {item.name}
+                              {isProblematic && '🔔 '}{item.name}
                             </div>
                             <div style={{
                               fontSize: '0.75rem',
@@ -411,10 +528,11 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                             </div>
                             <div style={{
                               fontSize: '0.7rem',
-                              color: '#059669',
-                              fontWeight: '500'
+                              color: isProblematic ? '#9333ea' : '#059669',
+                              fontWeight: isProblematic ? 'bold' : '500'
                             }}>
                               מקסימום: {maxPossible}
+                              {isProblematic && ' (לא מספיק!)'}
                             </div>
                           </div>
                         </div>
@@ -448,7 +566,8 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                             width: '1.5rem',
                             textAlign: 'center',
                             fontWeight: '500',
-                            fontSize: '0.9rem'
+                            fontSize: '0.9rem',
+                            color: isProblematic ? '#9333ea' : '#1f2937'
                           }}>
                             {item.quantity}
                           </span>
@@ -475,18 +594,19 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                           <button
                             onClick={() => removeItem(item.name)}
                             style={{
-                              background: '#ef4444',
+                              background: isProblematic ? '#9333ea' : '#ef4444',
                               color: 'white',
                               padding: '0.2rem 0.5rem',
                               borderRadius: '6px',
                               border: 'none',
                               cursor: 'pointer',
                               marginRight: '0.3rem',
-                              fontSize: '0.75rem'
+                              fontSize: '0.75rem',
+                              fontWeight: isProblematic ? 'bold' : 'normal'
                             }}
                             disabled={loading}
                           >
-                            הסר
+                            {isProblematic ? 'הסר בעיה' : 'הסר'}
                           </button>
                         </div>
                       </div>
@@ -560,6 +680,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                   const quantityInOrder = isInOrder ? formData.items.find(i => i.name === item.name)?.quantity : 0;
                   const availableQuantity = getAvailableQuantityForDates(item.name);
                   const canAdd = quantityInOrder < (availableQuantity + quantityInOrder);
+                  const isProblematicAvailable = problematicItems.has(item.name); // ✅ בדיקה אם הפריט הזה בעייתי
 
                   return (
                     <div
@@ -568,8 +689,12 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                       style={{
                         padding: '0.6rem',
                         borderRadius: '8px',
-                        border: isInOrder ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                        background: isInOrder ? '#eff6ff' : 'white',
+                        border: isInOrder 
+                          ? (isProblematicAvailable ? '2px solid #9333ea' : '2px solid #3b82f6')
+                          : '1px solid #e5e7eb',
+                        background: isInOrder 
+                          ? (isProblematicAvailable ? '#faf5ff' : '#eff6ff') 
+                          : 'white',
                         cursor: loading || !canAdd ? 'not-allowed' : 'pointer',
                         transition: 'all 0.2s',
                         opacity: loading || !canAdd ? 0.6 : 1
@@ -585,7 +710,8 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                               height: '2rem',
                               objectFit: 'cover',
                               borderRadius: '6px',
-                              flexShrink: 0
+                              flexShrink: 0,
+                              border: isProblematicAvailable ? '1px solid #9333ea' : 'none'
                             }}
                           />
                         )}
@@ -593,12 +719,12 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                           <div style={{
                             fontWeight: '500',
                             fontSize: '0.8rem',
-                            color: '#1f2937',
+                            color: isProblematicAvailable ? '#581c87' : '#1f2937',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
                           }}>
-                            {item.name}
+                            {isProblematicAvailable && '🔔 '}{item.name}
                           </div>
                           <div style={{
                             fontSize: '0.7rem',
@@ -616,10 +742,11 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                           {isInOrder && (
                             <div style={{
                               fontSize: '0.65rem',
-                              color: '#2563eb',
+                              color: isProblematicAvailable ? '#9333ea' : '#2563eb',
                               fontWeight: '500'
                             }}>
                               בהזמנה: {quantityInOrder}
+                              {isProblematicAvailable && ' (בעיה!)'}
                             </div>
                           )}
 
@@ -634,9 +761,9 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
 
           {/* Footer */}
           <div style={{
-            background: '#f9fafb',
+            background: problematicItems.size > 0 ? '#faf5ff' : '#f9fafb',
             padding: '1rem',
-            borderTop: '1px solid #e5e7eb',
+            borderTop: problematicItems.size > 0 ? '1px solid #d8b4fe' : '1px solid #e5e7eb',
             flexShrink: 0
           }}>
             <div style={{
@@ -646,9 +773,10 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
             }} className="modal-footer-mobile">
               <div style={{
                 fontSize: '0.875rem',
-                color: '#4b5563'
+                color: problematicItems.size > 0 ? '#581c87' : '#4b5563'
               }}>
                 סה"כ פריטים: {formData.items.reduce((sum, item) => sum + item.quantity, 0)}
+                {problematicItems.size > 0 && ` • 🔔 ${problematicItems.size} בעיות`}
               </div>
               <div style={{
                 display: 'flex',
@@ -674,7 +802,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                   onClick={saveChanges}
                   disabled={loading || formData.items.length === 0}
                   style={{
-                    background: formData.items.length === 0 ? '#9ca3af' : '#2563eb',
+                    background: formData.items.length === 0 ? '#9ca3af' : (problematicItems.size > 0 ? '#9333ea' : '#2563eb'),
                     color: 'white',
                     padding: '0.5rem 1.5rem',
                     borderRadius: '8px',
@@ -683,7 +811,8 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                     fontSize: '0.875rem',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem'
+                    gap: '0.5rem',
+                    fontWeight: problematicItems.size > 0 ? 'bold' : 'normal'
                   }}
                 >
                   {loading ? (
@@ -701,7 +830,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                   ) : (
                     <>
                       <Save size={16} />
-                      שמור שינויים
+                      {problematicItems.size > 0 ? 'שמור ותקן בעיות' : 'שמור שינויים'}
                     </>
                   )}
                 </button>

@@ -1,17 +1,19 @@
-// src/components/CalendarGrid.jsx - תיקון כפתור שמור במצב עריכה
+// src/components/CalendarGrid.jsx - תיקון ימי השבוע
 import React, { useState, useEffect } from 'react';
 import './css/CalendarGrid.css';
-import { ChevronRight, ChevronLeft, Calendar, Ban, Save, X } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, Ban, Save, X, Bell } from 'lucide-react';
 import { closedDatesService } from '@/services/closedDatesService';
 import { useUser } from '../../UserContext';
 
 const monthNames = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
-const dayNames = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+// ✅ תיקון סדר ימי השבוע - התחלה ביום ראשון
+const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
 const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+
+// ✅ תיקון פונקציית ימי השבוע - התחלה ביום ראשון (0) עד שבת (6)
 const getFirstDayOfMonth = (date) => {
-  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  return firstDay === 0 ? 6 : firstDay - 1;
+  return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 };
 
 const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEvents, setSelectedDate, setShowReport, fetchItemsAndOrders }) => {
@@ -20,8 +22,6 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   const [editMode, setEditMode] = useState(false);
   const [selectedDatesForClosure, setSelectedDatesForClosure] = useState(new Set());
   const [saving, setSaving] = useState(false);
-  
-  // ✅ מעקב אחר המצב המקורי של ימים סגורים
   const [originalClosedDates, setOriginalClosedDates] = useState(new Set());
 
   // טעינת ימים סגורים
@@ -69,6 +69,21 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
       if (!event.date) return false;
       const eventDateStr = closedDatesService.formatDateToString(event.date);
       return eventDateStr === targetDateStr;
+    });
+  };
+
+  // ✅ בדיקה האם יש בעיות זמינות לתאריך זה
+  const hasAvailabilityConflicts = (day) => {
+    const dayEvents = getEventsForDate(day);
+    
+    // בדיקה האם יש אירועים עם בעיות זמינות
+    return dayEvents.some(event => {
+      // חיפוש הזמנה בעייתית לפי orderId
+      const hasConflicts = events.some(e => 
+        e.orderId === event.orderId && 
+        e.availabilityStatus === 'CONFLICT'
+      );
+      return hasConflicts;
     });
   };
 
@@ -327,6 +342,10 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = getFirstDayOfMonth(currentDate);
   const days = [];
+
+  // ✅ הדפסת debug לוודא שהחודש נכון
+  console.log('📅 CalendarGrid - בונה לוח לחודש:', currentDate.getMonth() + 1, 'שנה:', currentDate.getFullYear());
+  console.log('📅 ימים בחודש:', daysInMonth, 'יום ראשון:', firstDay);
   
   // ימים ריקים בתחילת החודש
   for (let i = 0; i < firstDay; i++) {
@@ -346,6 +365,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     const canClose = canCloseDate(day);
     const isPast = isPastDate(day);
     const isCurrentDay = isToday(day);
+    const hasConflicts = hasAvailabilityConflicts(day); // ✅ בדיקת בעיות זמינות
     
     const dateStr = createLocalDate(currentDate.getFullYear(), currentDate.getMonth(), day);
     const isSelectedForClosure = selectedDatesForClosure.has(dateStr);
@@ -359,12 +379,28 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     if (isCurrentDay) dayClasses += ' today';
     if (editMode && (canClose || isClosed)) dayClasses += ' can-manage';
     if (isSelectedForClosure) dayClasses += ' selected-for-closure';
+    if (hasConflicts) dayClasses += ' availability-conflict'; // ✅ CSS class חדש
+
+    // ✅ debug ליום 4 ליולי
+    if (day === 4 && currentDate.getMonth() === 6) { // יולי = חודש 6
+      console.log('🎯 יום 4 ביולי - נוצר עם:', {
+        day,
+        month: currentDate.getMonth() + 1,
+        year: currentDate.getFullYear(),
+        dateStr,
+        hasEvents: hasAnyEvent,
+        hasConflicts,
+        dayClasses
+      });
+    }
 
     days.push(
       <div
         key={day}
         className={dayClasses}
         onClick={() => handleDateClick(day)}
+        data-day={day} // ✅ הוספת data-day לזיהוי הדגשה
+        data-month={currentDate.getMonth() + 1} // ✅ הוספת החודש לזיהוי
         style={{
           cursor: editMode ? 
             (canClose || isClosed ? 'pointer' : 'not-allowed') : 
@@ -387,6 +423,13 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
           </div>
         )}
 
+        {/* ✅ אינדיקטור בעיות זמינות - עם פעמון */}
+        {hasConflicts && !isClosed && (
+          <div className="conflict-indicator" title="בעיות זמינות - לחץ לפרטים">
+            <Bell size={16} style={{ color: '#9333ea' }} />
+          </div>
+        )}
+
         {/* סימון לבחירה לסגירה */}
         {editMode && (canClose || isClosed) && (
           <div className="closure-selector" title={
@@ -400,12 +443,12 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
         {!isClosed && (
           <div className="event-icons">
             {pickupEvents.length > 0 && (
-              <div className="event-tag pickup-tag" title="איסוף מוצרים">
+              <div className={`event-tag pickup-tag ${hasConflicts ? 'conflict' : ''}`} title="איסוף מוצרים">
                 📦 {pickupEvents.length > 1 && pickupEvents.length}
               </div>
             )}
             {returnEvents.length > 0 && (
-              <div className="event-tag return-tag" title="החזרת מוצרים">
+              <div className={`event-tag return-tag ${hasConflicts ? 'conflict' : ''}`} title="החזרת מוצרים">
                 🔄 {returnEvents.length > 1 && returnEvents.length}
               </div>
             )}
@@ -414,7 +457,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
 
         {/* מספר הזמנות */}
         {!isClosed && uniqueOrderCount > 0 && (
-          <div className="event-count" title={`${uniqueOrderCount} הזמנות`}>
+          <div className={`event-count ${hasConflicts ? 'conflict' : ''}`} title={`${uniqueOrderCount} הזמנות`}>
             {uniqueOrderCount}
           </div>
         )}
@@ -480,6 +523,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
         </div>
       )}
 
+      {/* ✅ תיקון ימי השבוע - התחלה ביום ראשון */}
       <div className="day-names">
         {dayNames.map(day => (
           <div key={day} className="day-name">{day}</div>
@@ -495,6 +539,8 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
           <span className="legend-item">📦 איסוף מוצרים</span>
           <span className="legend-item">🔄 החזרת מוצרים</span>
           {closedDates.length > 0 && <span className="legend-item">🔒 ימים סגורים ({closedDates.length})</span>}
+          {/* ✅ הוספת מקרא לבעיות זמינות */}
+          <span className="legend-item">🔔 בעיות זמינות</span>
           {editMode && <span className="legend-item">⭕ זמין לסגירה • 🔓 זמין לביטול</span>}
           <span className="legend-item">📅 היום</span>
         </div>
