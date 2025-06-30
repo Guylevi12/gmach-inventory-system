@@ -1,8 +1,9 @@
-// src/components/EventModal.jsx - עם התראות בעיות זמינות בצבעים סגולים
-import React, { useEffect } from 'react';
+// src/components/EventModal.jsx - עם התראות בעיות זמינות + מערכת אימיילים
+import React, { useState, useEffect } from 'react';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
-import { Edit, Eye, Trash2, Calendar, Phone, Package, ClipboardCheck, Bell } from 'lucide-react';
+import { Edit, Eye, Trash2, Calendar, Phone, Package, ClipboardCheck, Bell, Mail } from 'lucide-react';
+import { sendManualPickupEmail } from '@/services/emailService';
 
 const EventModal = ({
   show,
@@ -15,6 +16,9 @@ const EventModal = ({
   fetchItemsAndOrders,
   onStartReturnInspection
 }) => {
+  const [sendingEmail, setSendingEmail] = useState(null);
+  const [sentEmails, setSentEmails] = useState(new Set());
+
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (show) {
@@ -40,6 +44,47 @@ const EventModal = ({
     }
   };
 
+  // ✅ פונקציות מערכת האימיילים
+  const canSendEmail = (orderGroup) => {
+    const pickupDate = new Date(orderGroup.pickupDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    pickupDate.setHours(0, 0, 0, 0);
+    return pickupDate.getTime() === today.getTime();
+  };
+
+  const isEmailAlreadySent = (orderGroup) => {
+    return sentEmails.has(orderGroup.orderId);
+  };
+
+  const handleSendEmail = async (orderGroup) => {
+    if (!orderGroup.email || !canSendEmail(orderGroup) || isEmailAlreadySent(orderGroup)) {
+      return;
+    }
+
+    setSendingEmail(orderGroup.orderId);
+
+    try {
+      await sendManualPickupEmail({
+        email: orderGroup.email,
+        clientName: orderGroup.clientName,
+        phone: orderGroup.phone,
+        items: orderGroup.items || [],
+        pickupDate: orderGroup.pickupDate,
+        returnDate: orderGroup.returnDate
+      });
+
+      setSentEmails(prev => new Set([...prev, orderGroup.orderId]));
+      alert('✅ אימייל נשלח בהצלחה!');
+
+    } catch (error) {
+      console.error('❌ שגיאה בשליחת אימייל:', error);
+      alert('❌ שגיאה בשליחת האימייל. נסה שוב.');
+    } finally {
+      setSendingEmail(null);
+    }
+  };
+
   const groupEventsByOrder = (events) => {
     const grouped = new Map();
 
@@ -49,6 +94,7 @@ const EventModal = ({
           orderId: event.orderId,
           clientName: event.clientName,
           phone: event.phone,
+          email: event.email,
           items: event.items,
           pickupDate: event.pickupDate,
           returnDate: event.returnDate,
@@ -139,6 +185,11 @@ const EventModal = ({
           0%, 100% { transform: rotate(0deg); }
           10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
           20%, 40%, 60%, 80% { transform: rotate(10deg); }
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
         
         @media (min-width: 768px) {
@@ -466,6 +517,71 @@ const EventModal = ({
                         gap: '0.75rem',
                         flexWrap: 'wrap'
                       }}>
+                        {/* ✅ כפתור שליחת אימייל - חדש מהחבר צוות */}
+                        {orderGroup.email && (
+                          <button
+                            onClick={() => handleSendEmail(orderGroup)}
+                            disabled={
+                              sendingEmail === orderGroup.orderId ||
+                              !canSendEmail(orderGroup) ||
+                              isEmailAlreadySent(orderGroup)
+                            }
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              background:
+                                sendingEmail === orderGroup.orderId ? '#9ca3af' :
+                                  !canSendEmail(orderGroup) ? '#9ca3af' :
+                                    isEmailAlreadySent(orderGroup) ? '#9ca3af' :
+                                      '#7c3aed',
+                              color: 'white',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '8px',
+                              border: 'none',
+                              cursor:
+                                sendingEmail === orderGroup.orderId ||
+                                  !canSendEmail(orderGroup) ||
+                                  isEmailAlreadySent(orderGroup) ? 'not-allowed' : 'pointer',
+                              fontSize: '0.875rem',
+                              opacity:
+                                !canSendEmail(orderGroup) ||
+                                  isEmailAlreadySent(orderGroup) ? 0.6 : 1
+                            }}
+                            title={
+                              !canSendEmail(orderGroup) ?
+                                `אימייל יהיה זמין ביום האיסוף (${new Date(orderGroup.pickupDate).toLocaleDateString('he-IL')})` :
+                                isEmailAlreadySent(orderGroup) ?
+                                  'אימייל כבר נשלח עבור הזמנה זו' :
+                                  'שלח אימייל איסוף ללקוח'
+                            }
+                          >
+                            {sendingEmail === orderGroup.orderId ? (
+                              <>
+                                <div style={{
+                                  width: '1rem',
+                                  height: '1rem',
+                                  border: '2px solid #ffffff',
+                                  borderTop: '2px solid transparent',
+                                  borderRadius: '50%',
+                                  animation: 'spin 1s linear infinite'
+                                }}></div>
+                                שולח...
+                              </>
+                            ) : isEmailAlreadySent(orderGroup) ? (
+                              <>
+                                <Mail size={16} />
+                                נשלח ✓
+                              </>
+                            ) : (
+                              <>
+                                <Mail size={16} />
+                                שלח אימייל
+                              </>
+                            )}
+                          </button>
+                        )}
+
                         {orderGroup.events.some(e => e.icon === '📦') && (
                           <button
                             onClick={() => setEditItemModal({

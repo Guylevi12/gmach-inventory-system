@@ -79,6 +79,8 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
           date: new Date(currentDate),
           clientName: order.clientName,
           phone: order.phone,
+          email: order.email, // ADDED: Include email field
+          manualEmailSent: order.manualEmailSent || false, // ADDED: Track if manual email was sent
           type: eventType,
           icon: eventIcon,
           description: eventDescription,

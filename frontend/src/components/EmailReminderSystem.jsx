@@ -1,30 +1,19 @@
-// EmailJS Solution - React Component
-// No Firebase Functions needed - runs client-side
+// Updated EmailReminderSystem.jsx - Now handles both reminders AND pickup confirmations
+// Replace your existing EmailReminderSystem.jsx with this
 
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
-import { db } from '@/firebase/firebase-config';
-import emailjs from '@emailjs/browser';
+import { checkAndSendAllEmails } from '@/services/emailService';
 
-// Replace these with your actual EmailJS IDs
-const EMAILJS_CONFIG = {
-    serviceId: 'service_zbzqfa3',
-    templateId: 'template_02cqfdn',
-    publicKey: 'gJHtAe_l22dY8tKju'
-};
-
-// Email reminder system component
+// Email reminder + pickup confirmation system component
 const EmailReminderSystem = () => {
     const [isChecking, setIsChecking] = useState(false);
     const [lastCheck, setLastCheck] = useState(null);
     const [results, setResults] = useState(null);
 
-    // Initialize EmailJS
+    // Initialize and set up daily checks
     useEffect(() => {
-        emailjs.init(EMAILJS_CONFIG.publicKey);
-
         // Auto-check on component mount
-        checkAndSendReminders();
+        checkAllEmails();
 
         // Set up daily check (run every hour, but only send once per day)
         const interval = setInterval(() => {
@@ -33,139 +22,33 @@ const EmailReminderSystem = () => {
 
             // Run at 9 AM Israeli time
             if (hour === 9) {
-                checkAndSendReminders();
+                checkAllEmails();
             }
         }, 60 * 60 * 1000); // Check every hour
 
         return () => clearInterval(interval);
     }, []);
 
-    // Helper function to format date
-    const formatDate = (dateString) => {
-        if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('he-IL', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            weekday: 'long'
-        });
-    };
-
-    // Check for orders needing reminders and send emails
-    const checkAndSendReminders = async () => {
+    // Check for all email types (pickup confirmations + reminders)
+    const checkAllEmails = async () => {
         setIsChecking(true);
         setResults(null);
 
         try {
-            const today = new Date();
-            const twoDaysFromNow = new Date(today);
-            twoDaysFromNow.setDate(today.getDate() + 2);
-
-            // Format date for comparison (YYYY-MM-DD)
-            const targetDate = twoDaysFromNow.toISOString().split('T')[0];
-
-            console.log(`📅 Checking for orders returning on: ${targetDate}`);
-
-            // Query active orders with return date = target date
-            const ordersQuery = query(
-                collection(db, 'orders'),
-                where('status', 'in', ['active', 'confirmed', 'picked_up', 'open']),
-                where('returnDate', '==', targetDate)
-            );
-
-            const ordersSnapshot = await getDocs(ordersQuery);
-
-            const checkResults = {
-                totalFound: ordersSnapshot.size,
-                emailsSent: 0,
-                alreadySent: 0,
-                errors: []
-            };
-
-            if (ordersSnapshot.empty) {
-                setResults({
-                    ...checkResults,
-                    message: 'לא נמצאו הזמנות הדורשות תזכורת היום'
-                });
-                setLastCheck(new Date());
-                return;
-            }
-
-            // Process each order
-            for (const orderDoc of ordersSnapshot.docs) {
-                const order = orderDoc.data();
-                const orderId = orderDoc.id;
-
-                // Skip if reminder already sent
-                if (order.reminderSent) {
-                    checkResults.alreadySent++;
-                    continue;
-                }
-
-                try {
-                    // Prepare email template parameters
-                    const templateParams = {
-                        to_email: order.email,
-                        to_name: order.clientName,
-                        client_name: order.clientName,
-                        return_date: formatDate(order.returnDate),
-                        volunteer_name: order.volunteerName || 'צוות הארגון',
-                        volunteer_phone: order.phone || 'לא צוין',
-                        organization_name: 'גמח שמחת זקנתי',
-                        items_list: order.items?.map(item =>
-                            `• ${item.name} - כמות: ${item.quantity}`
-                        ).join('\n') || 'לא צוינו פריטים',
-                        total_items: order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
-                        event_type: order.eventType || 'כללי',
-                        pickup_date: formatDate(order.pickupDate),
-                        order_id: orderId
-                    };
-
-                    // Send email using EmailJS
-                    const result = await emailjs.send(
-                        EMAILJS_CONFIG.serviceId,
-                        EMAILJS_CONFIG.templateId,
-                        templateParams
-                    );
-
-                    console.log(`✅ Email sent successfully:`, result);
-
-                    // Mark reminder as sent in database
-                    await updateDoc(doc(db, 'orders', orderId), {
-                        reminderSent: true,
-                        reminderSentAt: Timestamp.now(),
-                        emailSentResult: {
-                            status: result.status,
-                            text: result.text,
-                            sentAt: new Date().toISOString()
-                        }
-                    });
-
-                    checkResults.emailsSent++;
-
-                } catch (error) {
-                    console.error(`❌ Failed to send reminder for order ${orderId}:`, error);
-                    checkResults.errors.push({
-                        orderId,
-                        email: order.email,
-                        clientName: order.clientName,
-                        error: error.message
-                    });
-                }
-            }
-
-            setResults({
-                ...checkResults,
-                message: `בדיקה הושלמה: ${checkResults.emailsSent} תזכורות נשלחו`
-            });
+            console.log('📧 Starting email check for pickup confirmations and reminders...');
+            const emailResults = await checkAndSendAllEmails();
+            setResults(emailResults);
 
         } catch (error) {
-            console.error('❌ Error in reminder check:', error);
+            console.error('❌ Error in email check:', error);
             setResults({
+                pickupConfirmations: { sent: 0, alreadySent: 0, errors: [] },
+                reminders: { sent: 0, alreadySent: 0, errors: [] },
                 totalFound: 0,
-                emailsSent: 0,
+                totalSent: 0,
+                totalErrors: 1,
                 errors: [{ error: error.message }],
-                message: 'שגיאה בבדיקת תזכורות'
+                message: 'שגיאה בבדיקת אימיילים'
             });
         } finally {
             setIsChecking(false);
@@ -175,13 +58,13 @@ const EmailReminderSystem = () => {
 
     // Manual trigger for testing
     const handleManualCheck = () => {
-        checkAndSendReminders();
+        checkAllEmails();
     };
 
     return (
         <div style={{
             padding: '2rem',
-            maxWidth: '800px',
+            maxWidth: '900px',
             margin: '0 auto',
             fontFamily: 'Arial, sans-serif'
         }} dir="rtl">
@@ -196,10 +79,10 @@ const EmailReminderSystem = () => {
                 textAlign: 'center'
             }}>
                 <h1 style={{ margin: 0, fontSize: '1.8rem' }}>
-                    📧 מערכת תזכורות אוטומטית
+                    📧 מערכת אימיילים אוטומטית
                 </h1>
                 <p style={{ margin: '0.5rem 0 0 0', opacity: 0.9 }}>
-                    תזכורות להחזרת פריטים - 2 ימים לפני תאריך החזרה
+                    אישורי איסוף (יום האיסוף) • תזכורות החזרה (2 ימים לפני)
                 </p>
             </div>
 
@@ -233,7 +116,7 @@ const EmailReminderSystem = () => {
                             fontWeight: 'bold'
                         }}
                     >
-                        {isChecking ? '🔄 בודק...' : '🔍 בדוק תזכורות'}
+                        {isChecking ? '🔄 בודק...' : '🔍 בדוק אימיילים'}
                     </button>
                 </div>
 
@@ -254,52 +137,119 @@ const EmailReminderSystem = () => {
                 {/* Results */}
                 {results && (
                     <div style={{
-                        background: results.errors.length > 0 ? '#fef2f2' : '#f0fdf4',
-                        border: `1px solid ${results.errors.length > 0 ? '#fecaca' : '#bbf7d0'}`,
+                        background: results.totalErrors > 0 ? '#fef2f2' :
+                            results.weekend ? '#f0f9ff' : '#f0fdf4',
+                        border: `1px solid ${results.totalErrors > 0 ? '#fecaca' :
+                            results.weekend ? '#7dd3fc' : '#bbf7d0'}`,
                         borderRadius: '8px',
                         padding: '1.5rem'
                     }}>
                         <h3 style={{
                             margin: '0 0 1rem 0',
-                            color: results.errors.length > 0 ? '#dc2626' : '#059669'
+                            color: results.totalErrors > 0 ? '#dc2626' :
+                                results.weekend ? '#0369a1' : '#059669'
                         }}>
                             {results.message}
                         </h3>
 
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                            gap: '1rem',
-                            marginBottom: '1rem'
-                        }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>
-                                    {results.totalFound}
-                                </div>
-                                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>נמצאו</div>
+                        {/* Weekend Notice */}
+                        {results.weekend && (
+                            <div style={{
+                                background: '#e0f2fe',
+                                border: '1px solid #0284c7',
+                                borderRadius: '8px',
+                                padding: '1rem',
+                                marginBottom: '1rem',
+                                textAlign: 'center'
+                            }}>
+                                <p style={{ margin: 0, color: '#0369a1', fontWeight: 'bold' }}>
+                                    🕊️ המערכת לא שולחת אימיילים בימי שישי ושבת מטעמים דתיים
+                                </p>
+                                <p style={{ margin: '0.5rem 0 0 0', color: '#0369a1', fontSize: '0.9rem' }}>
+                                    אימיילים שאמורים להישלח היום יישלחו ביום ראשון
+                                </p>
                             </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
-                                    {results.emailsSent}
-                                </div>
-                                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>נשלחו</div>
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>
-                                    {results.alreadySent}
-                                </div>
-                                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>כבר נשלחו</div>
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>
-                                    {results.errors.length}
-                                </div>
-                                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>שגיאות</div>
-                            </div>
-                        </div>
+                        )}
 
-                        {/* Error Details */}
-                        {results.errors.length > 0 && (
+                        {/* Email Type Stats - only show if not weekend */}
+                        {!results.weekend && (
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                                gap: '1rem',
+                                marginBottom: '1rem'
+                            }}>
+                                {/* Pickup Confirmation Emails */}
+                                <div style={{
+                                    background: 'white',
+                                    padding: '1rem',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e5e7eb'
+                                }}>
+                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#059669' }}>
+                                        📦 אישורי איסוף (יום האיסוף)
+                                    </h4>
+                                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                        נשלחו: <strong>{results.pickupConfirmations?.sent || 0}</strong><br />
+                                        כבר נשלחו: <strong>{results.pickupConfirmations?.alreadySent || 0}</strong><br />
+                                        שגיאות: <strong style={{ color: results.pickupConfirmations?.errors?.length > 0 ? '#dc2626' : 'inherit' }}>
+                                            {results.pickupConfirmations?.errors?.length || 0}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                {/* Reminder Emails */}
+                                <div style={{
+                                    background: 'white',
+                                    padding: '1rem',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e5e7eb'
+                                }}>
+                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#f59e0b' }}>
+                                        ⏰ תזכורות החזרה (2 ימים לפני)
+                                    </h4>
+                                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                        נשלחו: <strong>{results.reminders?.sent || 0}</strong><br />
+                                        כבר נשלחו: <strong>{results.reminders?.alreadySent || 0}</strong><br />
+                                        שגיאות: <strong style={{ color: results.reminders?.errors?.length > 0 ? '#dc2626' : 'inherit' }}>
+                                            {results.reminders?.errors?.length || 0}
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Overall Stats - only show if not weekend */}
+                        {!results.weekend && (
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                                gap: '1rem',
+                                marginBottom: '1rem'
+                            }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>
+                                        {results.totalFound || 0}
+                                    </div>
+                                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>נמצאו</div>
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
+                                        {results.totalSent || 0}
+                                    </div>
+                                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>נשלחו</div>
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>
+                                        {results.totalErrors || 0}
+                                    </div>
+                                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>שגיאות</div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Error Details - only show if not weekend and there are errors */}
+                        {!results.weekend && results.totalErrors > 0 && (
                             <div style={{
                                 background: 'white',
                                 border: '1px solid #fecaca',
@@ -307,13 +257,16 @@ const EmailReminderSystem = () => {
                                 padding: '1rem'
                             }}>
                                 <h4 style={{ margin: '0 0 0.5rem 0', color: '#dc2626' }}>שגיאות:</h4>
-                                {results.errors.map((error, index) => (
+                                {[
+                                    ...(results.pickupConfirmations?.errors || []).map(e => ({ ...e, type: 'אישור איסוף' })),
+                                    ...(results.reminders?.errors || []).map(e => ({ ...e, type: 'תזכורת' }))
+                                ].map((error, index) => (
                                     <div key={index} style={{
                                         fontSize: '0.875rem',
                                         color: '#7f1d1d',
                                         marginBottom: '0.25rem'
                                     }}>
-                                        {error.clientName ? `${error.clientName} (${error.email})` : 'שגיאה כללית'}: {error.error}
+                                        <strong>[{error.type}]</strong> {error.clientName ? `${error.clientName} (${error.email})` : 'שגיאה כללית'}: {error.error}
                                     </div>
                                 ))}
                             </div>
@@ -330,14 +283,16 @@ const EmailReminderSystem = () => {
                 padding: '2rem'
             }}>
                 <h3 style={{ margin: '0 0 1rem 0', color: '#92400e' }}>
-                    🔧 הוראות למנהלי המערכת
+                    🔧 איך המערכת עובדת
                 </h3>
                 <ul style={{ color: '#92400e', paddingRight: '1.5rem' }}>
-                    <li>המערכת בודקת אוטומטית כל יום ב-9:00 בבוקר</li>
-                    <li>ניתן להפעיל בדיקה ידנית בכל עת באמצעות הכפתור למעלה</li>
-                    <li>תזכורות נשלחות רק פעם אחת לכל הזמנה</li>
-                    <li>המערכת שולחת תזכורות 2 ימים לפני תאריך ההחזרה</li>
-                    <li>כל התזכורות נרשמות במסד הנתונים למעקב</li>
+                    <li><strong>אישורי איסוף:</strong> נשלחים אוטומטית ביום האיסוף (היום הירוק בלוח השנה)</li>
+                    <li><strong>תזכורות החזרה:</strong> נשלחים אוטומטית 2 ימים לפני תאריך ההחזרה</li>
+                    <li><strong>בדיקה יומית:</strong> המערכת בודקת אוטומטית כל יום ב-9:00 בבוקר (מלבד שישי ושבת)</li>
+                    <li><strong>מטעמים דתיים:</strong> לא נשלחים אימיילים בימי שישי ושבת</li>
+                    <li><strong>מניעת כפילויות:</strong> כל אימייל נשלח רק פעם אחת לכל הזמנה</li>
+                    <li><strong>בדיקה ידנית:</strong> ניתן להפעיל בדיקה ידנית בכל עת באמצעות הכפתור למעלה</li>
+                    <li><strong>מעקב מלא:</strong> כל האימיילים נרשמים במסד הנתונים למעקב</li>
                 </ul>
             </div>
         </div>
