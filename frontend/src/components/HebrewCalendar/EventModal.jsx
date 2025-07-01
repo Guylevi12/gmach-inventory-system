@@ -1,4 +1,4 @@
-// src/components/EventModal.jsx - עם התראות בעיות זמינות + מערכת אימיילים
+// src/components/EventModal.jsx - עם הגבלות על כפתור האימייל
 import React, { useState, useEffect } from 'react';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
@@ -44,45 +44,129 @@ const EventModal = ({
     }
   };
 
-  // ✅ פונקציות מערכת האימיילים
-  const canSendEmail = (orderGroup) => {
+  // ✅ פונקציות מערכת האימיילים - מעודכנות עם הגבלות
+
+  // בדיקה האם היום הוא יום האיסוף (הכפתור יופיע רק ביום האיסוף)
+  const isPickupDateToday = (orderGroup) => {
     const pickupDate = new Date(orderGroup.pickupDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+
+    // אפס שעות לשני התאריכים לבדיקה מדויקת
     pickupDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
     return pickupDate.getTime() === today.getTime();
   };
 
-  const isEmailAlreadySent = (orderGroup) => {
-    return sentEmails.has(orderGroup.orderId);
+  // בדיקה האם הקבוצה הזו מכילה אירוע איסוף (ולא רק החזרה)
+  const hasPickupEvent = (orderGroup) => {
+    return orderGroup.events.some(event => event.type === 'השאלה');
   };
 
+  // בדיקה האם האימייל כבר נשלח (מהמסד נתונים או מהסשן הנוכחי)
+  const isEmailAlreadySent = (orderGroup) => {
+    // בדיקה אם נשלח במסד הנתונים
+    const alreadySentInDB = orderGroup.manualEmailSent === true;
+    // בדיקה אם נשלח בסשן הנוכחי
+    const sentInCurrentSession = sentEmails.has(orderGroup.orderId);
+
+    return alreadySentInDB || sentInCurrentSession;
+  };
+
+  // בדיקה האם ניתן לשלוח אימייל (יום האיסוף + לא נשלח עדיין + יש אימייל + יש אירוע איסוף)
+  const canSendEmail = (orderGroup) => {
+    return orderGroup.email &&
+      isPickupDateToday(orderGroup) &&
+      hasPickupEvent(orderGroup) &&
+      !isEmailAlreadySent(orderGroup);
+  };
+
+  // פונקציה לשליחת אימייל עם עדכון מסד הנתונים
   const handleSendEmail = async (orderGroup) => {
-    if (!orderGroup.email || !canSendEmail(orderGroup) || isEmailAlreadySent(orderGroup)) {
+    if (!canSendEmail(orderGroup)) {
       return;
     }
 
     setSendingEmail(orderGroup.orderId);
 
     try {
-      await sendManualPickupEmail({
+      console.log('🚀 Sending manual pickup email for order:', orderGroup.orderId);
+
+      const result = await sendManualPickupEmail({
         email: orderGroup.email,
         clientName: orderGroup.clientName,
         phone: orderGroup.phone,
         items: orderGroup.items || [],
         pickupDate: orderGroup.pickupDate,
-        returnDate: orderGroup.returnDate
-      });
+        returnDate: orderGroup.returnDate,
+        eventType: orderGroup.eventType || 'כללי',
+        pickupLocation: orderGroup.pickupLocation || 'מיקום לפי תיאום',
+        specialInstructions: orderGroup.specialInstructions || 'אין הוראות מיוחדות'
+      }, orderGroup.orderId);
 
-      setSentEmails(prev => new Set([...prev, orderGroup.orderId]));
-      alert('✅ אימייל נשלח בהצלחה!');
+      console.log('📧 Email send result:', result);
+
+      if (result.success) {
+        // סמן כנשלח בסשן הנוכחי מיידית
+        setSentEmails(prev => new Set([...prev, orderGroup.orderId]));
+
+        console.log('✅ Email sent successfully, refreshing data...');
+
+        // רענן את הנתונים כדי לקבל את העדכון ממסד הנתונים
+        if (fetchItemsAndOrders) {
+          await fetchItemsAndOrders();
+        }
+
+        alert('✅ אימייל נשלח בהצלחה!');
+      } else {
+        throw new Error(result.error || 'Unknown error');
+      }
 
     } catch (error) {
       console.error('❌ שגיאה בשליחת אימייל:', error);
-      alert('❌ שגיאה בשליחת האימייל. נסה שוב.');
+      alert(`❌ שגיאה בשליחת האימייל: ${error.message}`);
     } finally {
       setSendingEmail(null);
     }
+  };
+
+  // קבלת טקסט הכפתור בהתאם למצב
+  const getEmailButtonText = (orderGroup) => {
+    if (sendingEmail === orderGroup.orderId) {
+      return 'שולח...';
+    }
+
+    if (isEmailAlreadySent(orderGroup)) {
+      return 'נשלח ✓';
+    }
+
+    if (!isPickupDateToday(orderGroup)) {
+      return 'זמין ביום האיסוף';
+    }
+
+    return 'שלח אימייל איסוף';
+  };
+
+  // קבלת טקסט הטולטיפ בהתאם למצב
+  const getEmailButtonTooltip = (orderGroup) => {
+    if (!orderGroup.email) {
+      return 'אין כתובת אימייל עבור הזמנה זו';
+    }
+
+    if (!hasPickupEvent(orderGroup)) {
+      return 'כפתור האימייל זמין רק בימי איסוף (לא החזרה)';
+    }
+
+    if (isEmailAlreadySent(orderGroup)) {
+      return 'אימייל כבר נשלח עבור הזמנה זו';
+    }
+
+    if (!isPickupDateToday(orderGroup)) {
+      const pickupDate = new Date(orderGroup.pickupDate).toLocaleDateString('he-IL');
+      return `הכפתור יהיה זמין ביום האיסוף: ${pickupDate}`;
+    }
+
+    return 'שלח אימייל אישור איסוף ללקוח';
   };
 
   const groupEventsByOrder = (events) => {
@@ -98,6 +182,7 @@ const EventModal = ({
           items: event.items,
           pickupDate: event.pickupDate,
           returnDate: event.returnDate,
+          manualEmailSent: event.manualEmailSent || false, // ✅ הוספת מעקב אחר אימיילים שנשלחו
           // ✅ הוספת מידע על בעיות זמינות
           availabilityStatus: event.availabilityStatus,
           availabilityConflicts: event.availabilityConflicts || [],
@@ -114,7 +199,7 @@ const EventModal = ({
   const groupedEvents = groupEventsByOrder(selectedEvents);
 
   // ✅ בדיקה האם יש הזמנות עם בעיות זמינות
-  const hasAvailabilityIssues = groupedEvents.some(orderGroup => 
+  const hasAvailabilityIssues = groupedEvents.some(orderGroup =>
     orderGroup.availabilityStatus === 'CONFLICT' && orderGroup.availabilityConflicts.length > 0
   );
 
@@ -210,8 +295,8 @@ const EventModal = ({
         >
           {/* Header */}
           <div style={{
-            background: hasAvailabilityIssues 
-              ? 'linear-gradient(to right, #9333ea, #7c3aed)' 
+            background: hasAvailabilityIssues
+              ? 'linear-gradient(to right, #9333ea, #7c3aed)'
               : 'linear-gradient(to right, #2563eb, #1d4ed8)',
             color: 'white',
             padding: '1.5rem'
@@ -283,7 +368,7 @@ const EventModal = ({
                 margin: '0 0 0.75rem 0',
                 lineHeight: '1.4'
               }}>
-                חלק מההזמנות בתאריך זה דורשות עדכון בגלל שינויים במלאי. 
+                חלק מההזמנות בתאריך זה דורשות עדכון בגלל שינויים במלאי.
                 לחץ על "ערוך הזמנה" להתאמת הכמויות.
               </p>
               <div style={{
@@ -307,14 +392,14 @@ const EventModal = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {groupedEvents.map((orderGroup, index) => {
                 const hasConflicts = orderGroup.availabilityStatus === 'CONFLICT' && orderGroup.availabilityConflicts.length > 0;
-                
+
                 return (
                   <div key={orderGroup.orderId} style={{
                     border: hasConflicts ? '2px solid #9333ea' : '1px solid #e5e7eb',
                     borderRadius: '8px',
                     background: hasConflicts ? '#faf5ff' : 'white',
-                    boxShadow: hasConflicts 
-                      ? '0 4px 12px rgba(147, 51, 234, 0.15)' 
+                    boxShadow: hasConflicts
+                      ? '0 4px 12px rgba(147, 51, 234, 0.15)'
                       : '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
                   }}>
                     {/* ✅ התראת בעיות זמינות ספציפית להזמנה */}
@@ -425,8 +510,8 @@ const EventModal = ({
                                 borderRadius: '12px',
                                 fontSize: '0.75rem',
                                 fontWeight: '500',
-                                background: hasConflicts 
-                                  ? '#9333ea' 
+                                background: hasConflicts
+                                  ? '#9333ea'
                                   : event.type === 'השאלה' ? '#10b981' :
                                     event.type === 'החזרה' ? '#f59e0b' : '#3b82f6',
                                 color: 'white',
@@ -473,7 +558,7 @@ const EventModal = ({
                               const isProblematic = hasConflicts && orderGroup.availabilityConflicts.some(
                                 conflict => conflict.itemName === item.name
                               );
-                              
+
                               return (
                                 <div key={idx} style={{
                                   background: isProblematic ? '#f3e8ff' : '#f9fafb',
@@ -517,13 +602,12 @@ const EventModal = ({
                         gap: '0.75rem',
                         flexWrap: 'wrap'
                       }}>
-                        {/* ✅ כפתור שליחת אימייל - חדש מהחבר צוות */}
-                        {orderGroup.email && (
+                        {/* ✅ כפתור שליחת אימייל - עם הגבלות חדשות */}
+                        {orderGroup.email && isPickupDateToday(orderGroup) && hasPickupEvent(orderGroup) && (
                           <button
                             onClick={() => handleSendEmail(orderGroup)}
                             disabled={
                               sendingEmail === orderGroup.orderId ||
-                              !canSendEmail(orderGroup) ||
                               isEmailAlreadySent(orderGroup)
                             }
                             style={{
@@ -531,30 +615,21 @@ const EventModal = ({
                               alignItems: 'center',
                               gap: '0.5rem',
                               background:
-                                sendingEmail === orderGroup.orderId ? '#9ca3af' :
-                                  !canSendEmail(orderGroup) ? '#9ca3af' :
-                                    isEmailAlreadySent(orderGroup) ? '#9ca3af' :
-                                      '#7c3aed',
+                                sendingEmail === orderGroup.orderId ? '#f59e0b' :
+                                  isEmailAlreadySent(orderGroup) ? '#22c55e' :
+                                    '#7c3aed',
                               color: 'white',
                               padding: '0.5rem 1rem',
                               borderRadius: '8px',
                               border: 'none',
                               cursor:
                                 sendingEmail === orderGroup.orderId ||
-                                  !canSendEmail(orderGroup) ||
                                   isEmailAlreadySent(orderGroup) ? 'not-allowed' : 'pointer',
                               fontSize: '0.875rem',
-                              opacity:
-                                !canSendEmail(orderGroup) ||
-                                  isEmailAlreadySent(orderGroup) ? 0.6 : 1
+                              opacity: isEmailAlreadySent(orderGroup) ? 0.8 : 1,
+                              fontWeight: isEmailAlreadySent(orderGroup) ? 'bold' : 'normal'
                             }}
-                            title={
-                              !canSendEmail(orderGroup) ?
-                                `אימייל יהיה זמין ביום האיסוף (${new Date(orderGroup.pickupDate).toLocaleDateString('he-IL')})` :
-                                isEmailAlreadySent(orderGroup) ?
-                                  'אימייל כבר נשלח עבור הזמנה זו' :
-                                  'שלח אימייל איסוף ללקוח'
-                            }
+                            title={getEmailButtonTooltip(orderGroup)}
                           >
                             {sendingEmail === orderGroup.orderId ? (
                               <>
@@ -568,15 +643,10 @@ const EventModal = ({
                                 }}></div>
                                 שולח...
                               </>
-                            ) : isEmailAlreadySent(orderGroup) ? (
-                              <>
-                                <Mail size={16} />
-                                נשלח ✓
-                              </>
                             ) : (
                               <>
                                 <Mail size={16} />
-                                שלח אימייל
+                                {getEmailButtonText(orderGroup)}
                               </>
                             )}
                           </button>

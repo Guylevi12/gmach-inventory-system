@@ -80,7 +80,8 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
           clientName: order.clientName,
           phone: order.phone,
           email: order.email, // ADDED: Include email field
-          manualEmailSent: order.manualEmailSent || false, // ADDED: Track if manual email was sent
+          manualEmailSent: order.manualEmailSent || false, // ✅ ENHANCED: Track if manual email was sent
+          manualEmailSentAt: order.manualEmailSentAt || null, // ✅ ADDED: Track when email was sent
           type: eventType,
           icon: eventIcon,
           description: eventDescription,
@@ -93,7 +94,11 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
           // ✅ הוספת מידע על בעיות זמינות
           availabilityStatus: order.availabilityStatus || 'OK',
           availabilityConflicts: order.availabilityConflicts || [],
-          needsAttention: order.needsAttention || false
+          needsAttention: order.needsAttention || false,
+          // ✅ ADDED: Additional order fields that might be useful
+          eventType: order.eventType || 'כללי',
+          pickupLocation: order.pickupLocation || 'מיקום לפי תיאום',
+          specialInstructions: order.specialInstructions || 'אין הוראות מיוחדות'
         });
       }
     }
@@ -104,6 +109,8 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
 
 export const fetchItemsAndOrders = async (db, setAllItems, setItemsMap, setEvents) => {
   try {
+    console.log('🔄 Fetching items and orders...');
+
     const itemSnap = await getDocs(collection(db, 'items'));
     const itemsData = itemSnap.docs.map(doc => {
       const data = doc.data();
@@ -128,12 +135,17 @@ export const fetchItemsAndOrders = async (db, setAllItems, setItemsMap, setEvent
     setItemsMap(itemsMapObj);
 
     const orderSnap = await getDocs(collection(db, 'orders'));
+    console.log('📋 Orders loaded:', orderSnap.docs.length);
 
     await updateStockIfNeeded(orderSnap, db);
 
     const events = buildCalendarEvents(orderSnap, itemsData);
+    console.log('📅 Events built:', events.length);
+
     setEvents(events);
+
+    console.log('✅ Data refresh completed');
   } catch (error) {
-    console.error('שגיאה בטעינת ההזמנות והפריטים:', error);
+    console.error('❌ שגיאה בטעינת ההזמנות והפריטים:', error);
   }
 };
