@@ -2,6 +2,9 @@
 import React from 'react';
 import { useUser } from '../UserContext';
 import gemachImage from '../assets/images/GmachPic.jpeg';
+import ContactBubble from './ContactBubble';
+import HoursBubble from './HoursBubble';
+import NavigationBubble from './NavigationBubble';
 
 // ייבוא כל התמונות שלך
 import image1 from '../assets/images/1.jpg';
@@ -229,135 +232,6 @@ const Home = () => {
             </div>
           </div>
 
-          {/* מיקום והגעה - פרופורציות מקצועיות */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-            gap: '2rem',
-            marginBottom: '3rem',
-            maxWidth: '1000px',
-            margin: '0 auto 3rem auto',
-            padding: '0 1rem'
-          }} className="fade-in">
-            
-            {/* כרטיס מיקום מקצועי */}
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85))',
-              backdropFilter: 'blur(15px)',
-              borderRadius: '20px',
-              boxShadow: '0 15px 40px rgba(0,0,0,0.1)',
-              padding: '2.5rem',
-              border: '1px solid rgba(255,255,255,0.6)',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              height: 'fit-content'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 25px 60px rgba(0,0,0,0.15)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.1)';
-            }}>
-              
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '15px',
-                marginBottom: '2rem'
-              }}>
-                <span style={{ fontSize: '2.5rem' }}>📍</span>
-                <h3 style={{
-                  fontFamily: '"Assistant", "Heebo", system-ui, sans-serif',
-                  fontSize: 'clamp(24px, 3vw, 28px)',
-                  fontWeight: '700',
-                  color: '#1f2937',
-                  margin: 0
-                }}>
-                  מיקום והגעה
-                </h3>
-              </div>
-              
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  fontSize: 'clamp(20px, 2.5vw, 24px)',
-                  fontWeight: '600',
-                  color: '#059669',
-                  marginBottom: '2rem',
-                  fontFamily: '"Assistant", "Heebo", system-ui, sans-serif'
-                }}>
-                  קיבוץ חפץ חיים
-                </div>
-                
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '1rem',
-                  alignItems: 'center'
-                }}>
-                  <a 
-                    href="https://maps.app.goo.gl/zHkUGZDnGVsUrBCB6" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{
-                      background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                      color: 'white',
-                      padding: '15px 30px',
-                      borderRadius: '12px',
-                      fontWeight: '600',
-                      textDecoration: 'none',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 8px 25px rgba(59,130,246,0.3)',
-                      display: 'inline-block',
-                      minWidth: '140px',
-                      fontSize: '16px'
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.transform = 'scale(1.05)';
-                      e.target.style.boxShadow = '0 12px 35px rgba(59,130,246,0.4)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.transform = 'scale(1)';
-                      e.target.style.boxShadow = '0 8px 25px rgba(59,130,246,0.3)';
-                    }}
-                  >
-                    Google Maps
-                  </a>
-                  
-                  <a 
-                    href="https://waze.com/ul?ll=31.775887,34.703164" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{
-                      background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                      color: 'white',
-                      padding: '15px 30px',
-                      borderRadius: '12px',
-                      fontWeight: '600',
-                      textDecoration: 'none',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 8px 25px rgba(139,92,246,0.3)',
-                      display: 'inline-block',
-                      minWidth: '140px',
-                      fontSize: '16px'
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.transform = 'scale(1.05)';
-                      e.target.style.boxShadow = '0 12px 35px rgba(139,92,246,0.4)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.transform = 'scale(1)';
-                      e.target.style.boxShadow = '0 8px 25px rgba(139,92,246,0.3)';
-                    }}
-                  >
-                    Waze
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* מפה - גודל מותאם ומקצועי */}
           <div className="fade-in">
             <div style={{
@@ -367,13 +241,13 @@ const Home = () => {
               boxShadow: '0 15px 40px rgba(0,0,0,0.1)',
               padding: '1.5rem',
               border: '1px solid rgba(255,255,255,0.6)',
-              maxWidth: '900px', // הגבלת רוחב מקסימלי
+              maxWidth: '900px',
               margin: '0 auto'
             }}>
               <iframe
                 src="https://www.google.com/maps?q=31.7889462,34.79986&output=embed"
                 width="100%"
-                height="350" // הקטנה של הגובה
+                height="350"
                 style={{
                   borderRadius: '15px',
                   border: 'none'
@@ -387,82 +261,10 @@ const Home = () => {
         </div>
       </div>
 
-      {/* תיבת שעות פתיחה קבועה - בדיוק כמו שהיה במקור */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '20px',
-        backgroundColor: 'white',
-        color: '#1f2937',
-        padding: '24px',
-        borderRadius: '16px',
-        fontWeight: '600',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
-        border: '3px solid #e5e7eb',
-        zIndex: 1000,
-        fontSize: '16px',
-        maxWidth: 'calc(50% - 40px)',
-        minWidth: '300px',
-        fontFamily: '"Assistant", "Heebo", system-ui, sans-serif',
-      }}>
-        <div style={{ 
-          fontSize: '18px', 
-          fontWeight: '800', 
-          marginBottom: '14px',
-          color: '#1f2937',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '10px'
-        }}>
-          🕐 שעות פתיחה
-        </div>
-        
-        <div style={{ lineHeight: '1.7' }}>
-          <div style={{ 
-            marginBottom: '12px',
-            paddingBottom: '12px',
-            borderBottom: '2px solid #e5e7eb'
-          }}>
-            <div style={{ fontWeight: '700', color: '#374151', marginBottom: '6px', fontSize: '16px' }}>
-              ימים רגילים
-            </div>
-            <div style={{ color: '#6b7280', fontSize: '15px', marginBottom: '4px' }}>
-              ראשון, רביעי, חמישי
-            </div>
-            <div style={{ fontWeight: '700', color: '#059669', fontSize: '16px' }}>
-              20:30 - 21:00
-            </div>
-          </div>
-          
-          <div>
-            <div style={{ fontWeight: '700', color: '#374151', marginBottom: '6px', fontSize: '16px' }}>
-              מוצאי שבת
-            </div>
-            <div style={{ fontSize: '15px', marginBottom: '4px' }}>
-              <span style={{fontWeight: '700' }}>קיץ:</span>
-              <span style={{ color: '#059669', fontWeight: '700', marginRight: '10px' }}>21:00 - 21:30</span>
-            </div>
-            <div style={{ fontSize: '15px' }}>
-              <span style={{fontWeight: '700' }}>חורף:</span>
-              <span style={{ color: '#059669', fontWeight: '700', marginRight: '10px' }}>20:00 - 20:30</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CSS נוסף למובייל */}
-      <style>{`
-        @media (max-width: 768px) {
-          [style*="position: fixed"][style*="bottom: 20px"] {
-            position: static !important;
-            margin: 1rem auto !important;
-            maxWidth: 100% !important;
-            minWidth: auto !important;
-            display: block !important;
-          }
-        }
-      `}</style>
+      {/* הקומפוננטות החכמות */}
+      <HoursBubble />
+      <NavigationBubble />
+      <ContactBubble />
     </>
   );
 };

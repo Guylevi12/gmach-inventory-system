@@ -103,9 +103,9 @@ body::before {
   }
 }
 
-/* עדכון navbar עם רקע שקוף */
+/* עדכון navbar עם רקע אטום */
 nav, .navbar {
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: white !important;
   backdrop-filter: blur(10px) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
 }
@@ -113,4 +113,16 @@ nav, .navbar {
 /* וודא שכל הקונטיינרים משתמשים ברקע שקוף */
 .container, .main-content {
   background: transparent;
+}
+
+/* תיקון ספציפי לתפריט מובייל */
+div[style*="position: fixed"][style*="right: 0"][style*="height: 100%"] {
+  background: white !important;
+  backdrop-filter: none !important;
+}
+
+/* או באלטרנטיבה - הוסף קלאס ספציפי */
+.mobile-menu-sidebar {
+  background: white !important;
+  backdrop-filter: none !important;
 }

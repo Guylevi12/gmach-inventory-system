@@ -36,7 +36,25 @@ const ContactBubble = () => {
     };
   }, [isExpanded]);
 
-  // הצגת הרכיב רק למשתמשים רגילים או למי שלא מחובר
+  // האזנה לפתיחת בועות אחרות כדי לסגור את הזו
+  useEffect(() => {
+    const handleOtherBubbleOpen = () => {
+      if (isExpanded) {
+        handleClose();
+      }
+    };
+
+    // האזנה לאירועים מבועות אחרות
+    window.addEventListener('hoursBubbleOpened', handleOtherBubbleOpen);
+    window.addEventListener('navigationBubbleOpened', handleOtherBubbleOpen);
+
+    return () => {
+      window.removeEventListener('hoursBubbleOpened', handleOtherBubbleOpen);
+      window.removeEventListener('navigationBubbleOpened', handleOtherBubbleOpen);
+    };
+  }, [isExpanded]);
+
+  // הצגת הרכיב רק למשתמשים רגילים או למי שלא מחובר - AFTER all hooks
   if (user && user.role !== 'User') {
     return null;
   }
@@ -74,6 +92,9 @@ const ContactBubble = () => {
     if (isExpanded) {
       handleClose();
     } else {
+      // שידור אירוע שבועת הקשר נפתחת
+      window.dispatchEvent(new CustomEvent('contactBubbleOpened'));
+      
       setIsExpanded(true);
 
       setContentTransition('fade-out');
@@ -84,211 +105,185 @@ const ContactBubble = () => {
     }
   };
 
+  // CSS Styles כאובייקטים
+  const styles = {
+    contactBubble: {
+      position: 'fixed',
+      bottom: '160px', // הכי למעלה
+      right: '20px', // צד ימין
+      zIndex: 900, // נמוך מה-NavBar
+      fontFamily: 'Assistant, Heebo, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
+    },
+    contactBubbleMobile: {
+      position: 'fixed',
+      bottom: '160px', // הכי למעלה גם במובייל
+      right: '20px',
+      left: 'auto',
+      zIndex: 900, // נמוך מה-NavBar
+      fontFamily: 'Assistant, Heebo, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
+    },
+    bubbleMain: {
+      background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+      color: 'white',
+      borderRadius: '50px',
+      boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3)',
+      cursor: 'pointer',
+      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      border: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '12px 20px',
+      fontWeight: '500',
+      fontSize: '14px',
+      overflow: 'hidden',
+      position: 'relative',
+      minWidth: '56px', // רוחב מינימלי
+      minHeight: '56px', // גובה מינימלי
+    },
+    bubbleMainCollapsed: {
+      width: '56px',
+      height: '56px',
+      padding: '0',
+      justifyContent: 'center',
+      borderRadius: '50%',
+    },
+    bubbleContent: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+    bubbleContentFadeOut: {
+      opacity: 0,
+      transform: 'scale(0.8)',
+    },
+    expandedMenu: {
+      position: 'absolute',
+      bottom: '70px',
+      right: '70px', // רחוק מהכפתור
+      background: 'white',
+      borderRadius: '12px',
+      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
+      padding: '16px',
+      minWidth: '260px',
+      border: '1px solid #e5e7eb',
+      animation: 'slideUp 0.3s ease',
+    },
+    expandedMenuClosing: {
+      animation: 'slideDown 0.25s ease forwards',
+    },
+    menuItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: '12px',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      transition: 'background-color 0.2s',
+      border: 'none',
+      width: '100%',
+      textAlign: 'right',
+      background: 'none',
+      color: '#374151',
+      fontSize: '14px',
+      marginBottom: '4px',
+    },
+    menuItemPhone: {
+      color: '#2563eb',
+    },
+    menuItemPhone2: {
+      color: '#7c3aed',
+    },
+    menuItemWhatsapp: {
+      color: '#10b981',
+    },
+    menuHeader: {
+      textAlign: 'center',
+      marginBottom: '12px',
+      color: '#1f2937',
+      fontWeight: '600',
+      fontSize: '16px',
+    }
+  };
+
+  // בדיקה אם זה מובייל
+  const isMobile = window.innerWidth <= 768;
+
   return (
     <>
-      <style jsx>{`
-        .contact-bubble {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          z-index: 9999;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .bubble-main {
-          background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-          color: white;
-          border-radius: 50px;
-          box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
-          cursor: pointer;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          border: none;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 20px;
-          font-weight: 500;
-          font-size: 14px;
-          overflow: hidden;
-          position: relative;
-        }
-
-        .bubble-main:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 35px rgba(37, 99, 235, 0.4);
-          background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-        }
-
-        .bubble-main.collapsed {
-          width: 56px;
-          height: 56px;
-          padding: 0;
-          justify-content: center;
-          border-radius: 50%;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .bubble-content {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .bubble-content.fade-out {
-          opacity: 0;
-          transform: scale(0.8);
-        }
-
-        .bubble-content.fade-in {
-          opacity: 1;
-          transform: scale(1);
-        }
-
-        .expanded-menu {
-          position: absolute;
-          bottom: 70px;
-          right: 0;
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-          padding: 16px;
-          min-width: 260px;
-          border: 1px solid #e5e7eb;
-          animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(10px) scale(0.95);
+      {/* CSS Animations */}
+      <style>
+        {`
+          @keyframes slideUp {
+            from {
+              opacity: 0;
+              transform: translateY(10px) scale(0.95);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
           }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
 
-        @keyframes slideDown {
-          from {
-            opacity: 1;
-            transform: translateY(0) scale(1);
+          @keyframes slideDown {
+            from {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+            to {
+              opacity: 0;
+              transform: translateY(10px) scale(0.95);
+            }
           }
-          to {
-            opacity: 0;
-            transform: translateY(10px) scale(0.95);
+
+          @keyframes pulse {
+            0% {
+              box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+            }
+            50% {
+              box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+            }
+            100% {
+              box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+            }
           }
-        }
 
-        .expanded-menu.closing {
-          animation: slideDown 0.25s ease forwards;
-        }
-
-        .menu-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background-color 0.2s;
-          border: none;
-          width: 100%;
-          text-align: right;
-          background: none;
-          color: #374151;
-          font-size: 14px;
-          margin-bottom: 4px;
-        }
-
-        .menu-item:hover {
-          background-color: #f3f4f6;
-        }
-
-        .menu-item.phone {
-          color: #2563eb;
-        }
-
-        .menu-item.phone2 {
-          color: #7c3aed;
-        }
-
-        .menu-item.whatsapp {
-          color: #10b981;
-        }
-
-        .menu-header {
-          text-align: center;
-          margin-bottom: 12px;
-          color: #1f2937;
-          font-weight: 600;
-          font-size: 16px;
-        }
-
-        .pulse {
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+          .contact-bubble-pulse {
+            animation: pulse 2s infinite;
           }
-          50% {
-            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
-          }
-          100% {
-            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
-          }
-        }
 
-        @media (max-width: 768px) {
-          .contact-bubble {
-            bottom: 80px;
-            right: 15px;
+          .contact-bubble-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(37, 99, 235, 0.4);
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
           }
-          
-          .expanded-menu {
-            width: 240px;
-            right: 10px;
-            bottom: 65px;
-            padding: 14px;
-            border-radius: 10px;
-          }
-          
-          .bubble-main {
-            padding: 12px 18px;
-            font-size: 14px;
-            min-height: 48px;
-          }
-          
-          .bubble-main.collapsed {
-            width: 56px;
-            height: 56px;
-            padding: 0;
-          }
-          
-          .menu-item {
-            padding: 12px;
-            font-size: 14px;
-            min-height: 50px;
-          }
-          
-          .menu-header {
-            font-size: 16px;
-            margin-bottom: 12px;
-          }
-        }
-      `}</style>
 
-      <div className="contact-bubble" ref={bubbleRef}>
+          .menu-item-hover:hover {
+            background-color: #f3f4f6;
+          }
+        `}
+      </style>
+
+      <div 
+        ref={bubbleRef}
+        style={isMobile ? styles.contactBubbleMobile : styles.contactBubble}
+      >
         {/* Expanded Menu */}
         {(isExpanded || isClosing) && (
-          <div className={`expanded-menu ${isClosing ? 'closing' : ''}`} dir="rtl">
-            <div className="menu-header">צור קשר</div>
+          <div 
+            style={{
+              ...styles.expandedMenu,
+              ...(isClosing ? styles.expandedMenuClosing : {})
+            }}
+            dir="rtl"
+          >
+            <div style={styles.menuHeader}>צור קשר</div>
 
             <button
               onClick={handlePhoneClick1}
-              className="menu-item phone"
+              style={{...styles.menuItem, ...styles.menuItemPhone}}
+              className="menu-item-hover"
             >
               <Phone size={20} />
               <div>
@@ -299,7 +294,8 @@ const ContactBubble = () => {
 
             <button
               onClick={handlePhoneClick2}
-              className="menu-item phone2"
+              style={{...styles.menuItem, ...styles.menuItemPhone2}}
+              className="menu-item-hover"
             >
               <Phone size={20} />
               <div>
@@ -310,7 +306,8 @@ const ContactBubble = () => {
 
             <button
               onClick={handleWhatsAppClick}
-              className="menu-item whatsapp"
+              style={{...styles.menuItem, ...styles.menuItemWhatsapp}}
+              className="menu-item-hover"
             >
               <MessageCircle size={20} />
               <div>
@@ -324,14 +321,23 @@ const ContactBubble = () => {
         {/* Main Bubble Button */}
         <button
           onClick={handleToggle}
-          className={`bubble-main ${!isExpanded ? 'collapsed pulse' : ''}`}
+          style={{
+            ...styles.bubbleMain,
+            ...(!isExpanded ? styles.bubbleMainCollapsed : {})
+          }}
+          className={`contact-bubble-hover ${!isExpanded ? 'contact-bubble-pulse' : ''}`}
           aria-label="צור קשר"
         >
-          <div className={`bubble-content ${contentTransition}`}>
+          <div 
+            style={{
+              ...styles.bubbleContent,
+              ...(contentTransition === 'fade-out' ? styles.bubbleContentFadeOut : {})
+            }}
+          >
             {buttonContent === 'close' ? (
               <>
                 <X size={20} />
-                <span>סגור</span>
+                <span>סגור</span> {/* תמיד יציג "סגור" כשבמצב close */}
               </>
             ) : (
               <Phone size={24} />

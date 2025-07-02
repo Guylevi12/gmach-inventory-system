@@ -99,8 +99,8 @@ const Navbar = () => {
   if (isMobile === null) return null;
 
   const navbarStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(10px)',
+    backgroundColor: 'white', // תמיד לבן אטום
+    // הסר את backdropFilter גם מכאן
     padding: '10px 0',
     direction: 'rtl',
     borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
@@ -156,8 +156,10 @@ const Navbar = () => {
     right: menuOpen ? 0 : '-70%',
     height: '100%',
     width: '70%',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(10px)',
+    backgroundColor: '#ffffff', // לבן מלא ללא שקיפות
+    background: '#ffffff', // גם את זה
+    backgroundImage: 'none', // בטל תמונות רקע
+    // הסר את backdropFilter לגמרי - זה הגורם לשקיפות!
     boxShadow: '0 0 12px rgba(0,0,0,0.25)',
     padding: '20px',
     display: 'flex',
@@ -222,6 +224,17 @@ const Navbar = () => {
 
   return (
     <>
+      {/* CSS חזק לתיקון התפריט המובייל */}
+      <style>
+        {`
+          .mobile-sidebar-force-white {
+            background: white !important;
+            background-color: white !important;
+            background-image: none !important;
+            backdrop-filter: none !important;
+          }
+        `}
+      </style>
       <div style={navbarStyle}>
         {/* ☰ כפתור המבורגר – רק במובייל */}
         {isMobile && (
@@ -317,7 +330,7 @@ const Navbar = () => {
         {menuOpen && isMobile && (
           <>
             <div style={overlayStyle} onClick={handleCloseMenu}></div>
-            <div style={sidebarStyle}>
+            <div style={sidebarStyle} className="mobile-sidebar-force-white">
               <Link to="/" style={getLinkStyle('/')} onClick={handleCloseMenu}>דף הבית</Link>
               {/* הוספת "אודות" רק למשתמשים רגילים/לא מחוברים */}
               {shouldShowAbout() && (
