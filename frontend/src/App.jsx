@@ -1,9 +1,10 @@
-// src/App.jsx - מתוקן עם מערכת אימיילים אוטומטית
+// src/App.jsx - מתוקן עם מערכת אימיילים אוטומטית ודף אודות
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { UserProvider } from './UserContext';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
+import About from './components/About'; // ✅ הוספה חדשה
 import Login from './components/Login';
 import Register from './components/Register';
 import NewLoan from './components/NewLoan/NewLoan';
@@ -20,6 +21,7 @@ import DonationsPage from './components/DonationsPage';
 import BorrowingGuidelines from './components/BorrowingGuidelines';
 import AvailabilityNotification from './components/AvailabilityNotification';
 import { checkAndSendAllEmails } from './services/emailService';
+import './styles/global-background.css'; // ✅ הוספת הרקע הגלובלי החדש
 
 const App = () => {
   // ✅ Auto-checking refs for email service
@@ -133,6 +135,8 @@ const App = () => {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        {/* ✅ נתיב חדש לדף אודות */}
+        <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/catalog" element={<Catalog />} />

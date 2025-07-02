@@ -9,7 +9,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 const Navbar = () => {
   const { user, setUser } = useUser();
   const navigate = useNavigate();
-  const location = useLocation(); // הוספנו useLocation לקבלת הנתיב הנוכחי
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [onlineOrdering, setOnlineOrdering] = useState(null);
   const [isMobile, setIsMobile] = useState(null);
@@ -27,7 +27,7 @@ const Navbar = () => {
       console.error("שגיאה בקבלת עדכונים בזמן אמת:", err);
     });
 
-    return () => unsubscribe(); // ניקוי ה-listener כשהקומפוננט נמחק
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -87,21 +87,26 @@ const Navbar = () => {
 
   // פונקציה לבדיקה אם להציג כפתור תרומות
   const shouldShowDonations = () => {
-    // הצג כפתור תרומות רק אם:
-    // 1. אין משתמש מחובר (guest) או
-    // 2. המשתמש הוא משתמש רגיל (User)
     return !user || user.role === 'User';
   };
 
-  if (isMobile === null) return null; // חכה לחישוב ראשוני בטוח
+  // פונקציה לבדיקה אם להציג דף אודות
+  const shouldShowAbout = () => {
+    // הצג "אודות" רק למשתמשים רגילים או לא מחוברים
+    return !user || user.role === 'User';
+  };
+
+  if (isMobile === null) return null;
 
   const navbarStyle = {
-    backgroundColor: '#f2f2f2',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(10px)',
     padding: '10px 0',
     direction: 'rtl',
-    borderBottom: '1px solid #ccc',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
     position: 'relative',
-    zIndex: 1000
+    zIndex: 1000,
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
   };
 
   const linkStyle = {
@@ -151,7 +156,8 @@ const Navbar = () => {
     right: menuOpen ? 0 : '-70%',
     height: '100%',
     width: '70%',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(10px)',
     boxShadow: '0 0 12px rgba(0,0,0,0.25)',
     padding: '20px',
     display: 'flex',
@@ -237,6 +243,10 @@ const Navbar = () => {
         {!isMobile && (
           <div style={desktopMenuStyle}>
             <Link to="/" style={getLinkStyle('/')}>דף הבית</Link>
+            {/* הוספת "אודות" רק למשתמשים רגילים/לא מחוברים */}
+            {shouldShowAbout() && (
+              <Link to="/about" style={getLinkStyle('/about')}>אודות</Link>
+            )}
             <Link to="/catalog" style={getLinkStyle('/catalog')}>קטלוג מוצרים</Link>
             {/* נוהל השאלה רק אם לא מחובר */}
             {!user && (
@@ -309,6 +319,10 @@ const Navbar = () => {
             <div style={overlayStyle} onClick={handleCloseMenu}></div>
             <div style={sidebarStyle}>
               <Link to="/" style={getLinkStyle('/')} onClick={handleCloseMenu}>דף הבית</Link>
+              {/* הוספת "אודות" רק למשתמשים רגילים/לא מחוברים */}
+              {shouldShowAbout() && (
+                <Link to="/about" style={getLinkStyle('/about')} onClick={handleCloseMenu}>אודות</Link>
+              )}
               <Link to="/catalog" style={getLinkStyle('/catalog')} onClick={handleCloseMenu}>קטלוג מוצרים</Link>
               {/* נוהל השאלה רק אם לא מחובר */}
               {!user && (
