@@ -43,71 +43,71 @@ const Home = () => {
     <>
       {/* רקע כללי לכל האתר + גופנים */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Heebo:wght@400;500;600;700;800&display=swap');
-        
-        body {
-          background: linear-gradient(135deg, #fef7f7 0%, #fdf4f4 50%, #fcf1f1 100%);
-          background-attachment: fixed;
-          min-height: 100vh;
-          position: relative;
-        }
-        
-        body::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-image: 
-            radial-gradient(circle at 15% 25%, rgba(34, 197, 94, 0.03) 2px, transparent 2px),
-            radial-gradient(circle at 65% 75%, rgba(20, 184, 166, 0.04) 1.5px, transparent 1.5px),
-            radial-gradient(circle at 85% 15%, rgba(34, 197, 94, 0.025) 1px, transparent 1px),
-            radial-gradient(circle at 25% 85%, rgba(20, 184, 166, 0.03) 1.5px, transparent 1.5px),
-            radial-gradient(circle at 45% 35%, rgba(34, 197, 94, 0.02) 1px, transparent 1px),
-            radial-gradient(circle at 75% 45%, rgba(20, 184, 166, 0.025) 1px, transparent 1px);
-          background-size: 80px 80px, 60px 60px, 45px 45px, 70px 70px, 35px 35px, 55px 55px;
-          background-position: 0 0, 30px 40px, 15px 25px, 40px 50px, 20px 10px, 50px 30px;
-          z-index: -1;
-          pointer-events: none;
-        }
+  @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Heebo:wght@400;500;600;700;800&display=swap');
+  
+  body {
+    background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbddf4 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      radial-gradient(circle at 15% 25%, rgba(20, 184, 166, 0.08) 2px, transparent 2px),
+      radial-gradient(circle at 65% 75%, rgba(14, 116, 144, 0.06) 1.5px, transparent 1.5px),
+      radial-gradient(circle at 85% 15%, rgba(20, 184, 166, 0.05) 1px, transparent 1px),
+      radial-gradient(circle at 25% 85%, rgba(14, 116, 144, 0.07) 1.5px, transparent 1.5px),
+      radial-gradient(circle at 45% 35%, rgba(20, 184, 166, 0.04) 1px, transparent 1px),
+      radial-gradient(circle at 75% 45%, rgba(14, 116, 144, 0.05) 1px, transparent 1px);
+    background-size: 80px 80px, 60px 60px, 45px 45px, 70px 70px, 35px 35px, 55px 55px;
+    background-position: 0 0, 30px 40px, 15px 25px, 40px 50px, 20px 10px, 50px 30px;
+    z-index: -1;
+    pointer-events: none;
+  }
 
-        .fade-in {
-          animation: fadeIn 1s ease-in;
-        }
+  .fade-in {
+    animation: fadeIn 1s ease-in;
+  }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-        .slide-in-left {
-          animation: slideInLeft 0.8s ease-out;
-        }
+  .slide-in-left {
+    animation: slideInLeft 0.8s ease-out;
+  }
 
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-30px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
 
-        .slide-in-right {
-          animation: slideInRight 0.8s ease-out;
-        }
+  .slide-in-right {
+    animation: slideInRight 0.8s ease-out;
+  }
 
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(30px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+`}</style>
 
       <div style={{ minHeight: '100vh', background: 'transparent' }}>
         {/* קונטיינר ראשי */}
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
-          
+
           {/* לוגו ומשפט הסבר - מידות מקצועיות על פי Golden Ratio */}
           <div style={{ textAlign: 'center', marginBottom: '4rem' }} className="fade-in">
             <div style={{ marginBottom: '2.5rem' }}>
-              <img 
+              <img
                 src={gemachImage}
                 alt="לוגו שמחת זקנתי"
                 style={{
@@ -120,19 +120,19 @@ const Home = () => {
                 }}
               />
             </div>
-            
+
             <h1 style={{
               fontFamily: '"Assistant", "Heebo", system-ui, sans-serif',
-              fontSize: 'clamp(32px, 6vw, 52px)', // גדל יותר
+              fontSize: 'clamp(32px, 6vw, 52px)',
               fontWeight: '700',
-              color: '#059669',
+              color: '#14b8a6', // ✅ Changed from '#059669' to turquoise
               marginBottom: '1.5rem',
               textShadow: '0 3px 6px rgba(0,0,0,0.12)',
               letterSpacing: '0.5px'
             }}>
               גמ"ח לעיצוב ארועים
             </h1>
-            
+
             <p style={{
               fontFamily: '"Assistant", "Heebo", system-ui, sans-serif',
               fontSize: 'clamp(20px, 3.5vw, 28px)', // גדל יותר
@@ -160,9 +160,9 @@ const Home = () => {
                 height: 'clamp(250px, 35vw, 400px)', // יותר נמוך ופחות גבוה
                 maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)'
               }}>
-                
+
                 {/* קונטיינר התמונות הנעות */}
-                <div 
+                <div
                   style={{
                     display: 'flex',
                     height: '100%',
@@ -172,9 +172,9 @@ const Home = () => {
                 >
                   {/* התמונות המקוריות */}
                   {galleryImages.concat(galleryImages).map((image, index) => (
-                    <div 
-                      key={`img-${index}`} 
-                      style={{ 
+                    <div
+                      key={`img-${index}`}
+                      style={{
                         flexShrink: 0,
                         width: 'clamp(200px, 18vw, 300px)', // רוחב של כל תמונה
                         height: '100%',
@@ -215,7 +215,7 @@ const Home = () => {
                   }
                 `}</style>
               </div>
-              
+
               {/* אינדיקטור "גלילה אוטומטית" */}
               <div style={{
                 position: 'absolute',

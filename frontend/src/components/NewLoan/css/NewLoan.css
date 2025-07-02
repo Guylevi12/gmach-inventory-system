@@ -3,7 +3,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f8f8f8;
+  background: transparent;
+  /* ✅ Changed from #f8f8f8 to transparent */
   padding: 1rem;
   /* הוסף padding למובייל */
 }
@@ -15,7 +16,10 @@
   padding: 2rem;
   border: 1px solid #ccc;
   border-radius: 10px;
-  background-color: #fff;
+  background-color: rgba(255, 255, 255, 0.9);
+  /* ✅ Made slightly transparent */
+  backdrop-filter: blur(10px);
+  /* ✅ Added glass effect */
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 
   /* 🔧 תיקון למובייל */
@@ -229,7 +233,10 @@
 }
 
 .modal-box {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  /* ✅ Made slightly transparent */
+  backdrop-filter: blur(15px);
+  /* ✅ Added glass effect */
   padding: 2rem;
   border-radius: 8px;
   max-width: 90%;
@@ -238,6 +245,8 @@
   direction: rtl;
   width: 700px;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  /* ✅ Added subtle border */
 }
 
 /* 📱 מודל במובייל */
@@ -284,13 +293,17 @@
   justify-content: space-between;
   height: 100%;
   box-sizing: border-box;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0.9);
+  /* ✅ Made slightly transparent */
+  backdrop-filter: blur(5px);
+  /* ✅ Added subtle glass effect */
   transition: all 0.2s ease-in-out;
 }
 
 .item-card.selected {
   border: 2px solid #1976d2;
-  background-color: #e3f2fd;
+  background-color: rgba(227, 242, 253, 0.9);
+  /* ✅ Made transparent */
 }
 
 .item-image {
@@ -377,10 +390,12 @@ input[type=number]::-moz-inner-spin-button {
 
 /* 🔧 תיקון ScanResultModal למובייל - תוספת חדשה */
 @media (max-width: 768px) {
+
   /* וידוא שמודל תוצאת הסריקה יוצג נכון במובייל */
   .modal-overlay {
     padding: 1rem;
-    align-items: center; /* מרכז במקום flex-start */
+    align-items: center;
+    /* מרכז במקום flex-start */
     justify-content: center;
   }
 
@@ -394,7 +409,7 @@ input[type=number]::-moz-inner-spin-button {
     border-radius: 12px !important;
     overflow-y: auto !important;
     position: relative !important;
-    
+
     /* וידוא שהמודל לא גדול מדי */
     min-height: auto !important;
     height: auto !important;
@@ -437,13 +452,14 @@ input[type=number]::-moz-inner-spin-button {
   .modal-box input[type="number"] {
     width: 100% !important;
     padding: 12px !important;
-    font-size: 16px !important; /* מונע zoom במובייל */
+    font-size: 16px !important;
+    /* מונע zoom במובייל */
     border: 1px solid #ccc !important;
     border-radius: 8px !important;
     text-align: center !important;
     box-sizing: border-box !important;
     margin-top: 0.5rem !important;
-    
+
     /* הסרת חצים במספרים */
     -webkit-appearance: none !important;
     -moz-appearance: textfield !important;
@@ -469,15 +485,16 @@ input[type=number]::-moz-inner-spin-button {
   }
 
   /* כפתורים במודל תוצאת סריקה */
-  .modal-box > div:last-child {
+  .modal-box>div:last-child {
     display: flex !important;
-    flex-direction: row !important; /* שורה אחת במקום עמודה */
+    flex-direction: row !important;
+    /* שורה אחת במקום עמודה */
     justify-content: space-between !important;
     gap: 1rem !important;
     margin-top: 1.5rem !important;
   }
 
-  .modal-box > div:last-child .btn {
+  .modal-box>div:last-child .btn {
     flex: 1 !important;
     padding: 14px 20px !important;
     font-size: 16px !important;
