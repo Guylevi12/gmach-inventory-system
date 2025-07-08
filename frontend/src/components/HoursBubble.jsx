@@ -284,18 +284,18 @@ const HoursBubble = () => {
               <div style={{...styles.hoursSection}}>
                 <div style={styles.hoursTitle}>ימים רגילים</div>
                 <div style={styles.hoursDays}>ראשון, רביעי, חמישי</div>
-                <div style={styles.hoursTime}>20:30 - 21:00</div>
+                <div style={styles.hoursTime}>21:00 - 20:30</div>
               </div>
               
               <div style={{...styles.hoursSection, ...styles.hoursSectionLast}}>
                 <div style={styles.hoursTitle}>מוצאי שבת</div>
                 <div style={styles.hoursTimeDetail}>
                   <span style={{fontWeight: '700' }}>קיץ:</span>
-                  <span style={{ color: '#059669', fontWeight: '700', marginRight: '10px' }}>21:00 - 21:30</span>
+                  <span style={{ color: '#059669', fontWeight: '700', marginRight: '10px' }}>21:30 - 21:00</span>
                 </div>
                 <div style={styles.hoursTimeDetail}>
                   <span style={{fontWeight: '700' }}>חורף:</span>
-                  <span style={{ color: '#059669', fontWeight: '700', marginRight: '10px' }}>20:00 - 20:30</span>
+                  <span style={{ color: '#059669', fontWeight: '700', marginRight: '10px' }}>20:30 - 20:00</span>
                 </div>
               </div>
             </div>

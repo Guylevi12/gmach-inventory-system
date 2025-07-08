@@ -46,12 +46,15 @@ const NavigationBubble = () => {
     };
   }, [isExpanded]);
 
+  // פונקציות עם המיקום הנכון
   const handleGoogleMapsClick = () => {
-    window.open('https://maps.app.goo.gl/zHkUGZDnGVsUrBCB6', '_blank');
+    // השימוש בקישור הנכון שנתת
+    window.open('https://www.google.com/maps/place/31%C2%B047\'20.2%22N+34%C2%B047\'59.5%22E/@31.7876206,34.8006596,16.5z/data=!4m4!3m3!8m2!3d31.7889462!4d34.79986?hl=en-US&entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D', '_blank');
   };
 
   const handleWazeClick = () => {
-    window.open('https://waze.com/ul?ll=31.775887,34.703164', '_blank');
+    // השימוש בקישור מתוקן עם הקואורדינטות הנכונות
+    window.open('https://waze.com/ul?ll=31.7889462,34.79986', '_blank');
   };
 
   const handleClose = () => {
