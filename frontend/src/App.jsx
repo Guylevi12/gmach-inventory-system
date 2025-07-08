@@ -1,4 +1,4 @@
-// src/App.jsx - מתוקן עם מחלקות CSS לכל דף
+// src/App.jsx - מתוקן עם מחלקות CSS לכל דף (ללא ContactBubble)
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { UserProvider } from './UserContext';
@@ -16,7 +16,6 @@ import ItemManager from './components/ItemManager';
 import ManageUsers from './components/ManageUsers';
 import Catalog from './components/Catalog';
 import LoanHistory from './components/LoanHistory';
-import ContactBubble from './components/ContactBubble';
 import DonationsPage from './components/DonationsPage';
 import BorrowingGuidelines from './components/BorrowingGuidelines';
 import AvailabilityNotification from './components/AvailabilityNotification';
@@ -224,7 +223,7 @@ const App = () => {
       </Routes>
 
       <AvailabilityNotification />
-      <ContactBubble />
+      {/* ContactBubble הוסר מכאן - עכשיו הוא רק בדף הבית */}
     </UserProvider>
   );
 };

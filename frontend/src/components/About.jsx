@@ -49,7 +49,7 @@ const About = () => {
                 </p>
 
                 <p style={{ marginBottom: '1.5rem' }}>
-                  הגמ"ח הוקם <strong style={{ color: '#8b5cf6' }}>לעילוי נשמת סבה וסבתה של ענבר, יוזמת ומנהלת הגמ"ח, אברהם ואסתר ליבן ז"ל</strong>, ממקימי קיבוץ חפץ חיים.
+                  הגמ"ח הוקם <strong style={{ color: '#c2185b' }}>לעילוי נשמת סבה וסבתה של ענבר, יוזמת ומנהלת הגמ"ח, אברהם ואסתר ליבן ז"ל</strong>, ממקימי קיבוץ חפץ חיים.
                 </p>
 
                 <p style={{ marginBottom: '1.5rem' }}>
@@ -65,7 +65,7 @@ const About = () => {
                 </p>
 
                 <p style={{ marginBottom: '1.5rem' }}>
-                  הגמ"ח משרת <strong style={{ color: '#8b5cf6' }}>עשרות ארועים מידי חודש</strong>, ונשען על תרומות המשתמשים בלבד. נשמח אם תהיו שותפים.
+                  הגמ"ח משרת <strong style={{ color: '#c2185b' }}>עשרות ארועים מידי חודש</strong>, ונשען על תרומות המשתמשים בלבד. נשמח אם תהיו שותפים.
                 </p>
 
                 <p style={{ marginBottom: '1.5rem' }}>
@@ -94,135 +94,6 @@ const About = () => {
             </div>
           </div>
 
-          {/* כרטיסיות מידע נוסף - ממורכזות ומותאמות מובייל */}
-          <div className="fade-in">
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: 'clamp(1rem, 3vw, 2rem)',
-              maxWidth: '900px',
-              margin: '0 auto'
-            }}>
-              
-              <div style={{
-                background: 'rgba(255,255,255,0.85)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '16px',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                padding: '2rem',
-                textAlign: 'center',
-                border: '1px solid rgba(255,255,255,0.5)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px)';
-                e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.15)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
-              }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎊</div>
-                <h3 style={{
-                  fontSize: '1.3rem',
-                  fontWeight: '700',
-                  color: '#1f2937',
-                  marginBottom: '0.8rem',
-                  fontFamily: '"Assistant", "Heebo", system-ui, sans-serif'
-                }}>
-                  מגוון רחב
-                </h3>
-                <p style={{
-                  color: '#6b7280',
-                  fontSize: '1rem',
-                  lineHeight: '1.5',
-                  margin: 0,
-                  fontFamily: '"Assistant", "Heebo", system-ui, sans-serif'
-                }}>
-                  מפות, עיצובים ואביזרים לכל סוג אירוע
-                </p>
-              </div>
-
-              <div style={{
-                background: 'rgba(255,255,255,0.85)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '16px',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                padding: '2rem',
-                textAlign: 'center',
-                border: '1px solid rgba(255,255,255,0.5)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px)';
-                e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.15)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
-              }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❤️</div>
-                <h3 style={{
-                  fontSize: '1.3rem',
-                  fontWeight: '700',
-                  color: '#1f2937',
-                  marginBottom: '0.8rem',
-                  fontFamily: '"Assistant", "Heebo", system-ui, sans-serif'
-                }}>
-                  מתנדבות
-                </h3>
-                <p style={{
-                  color: '#6b7280',
-                  fontSize: '1rem',
-                  lineHeight: '1.5',
-                  margin: 0,
-                  fontFamily: '"Assistant", "Heebo", system-ui, sans-serif'
-                }}>
-                  צוות מסור ואוהב העוסק בגמ"ח בהתנדבות
-                </p>
-              </div>
-
-              <div style={{
-                background: 'rgba(255,255,255,0.85)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '16px',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                padding: '2rem',
-                textAlign: 'center',
-                border: '1px solid rgba(255,255,255,0.5)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px)';
-                e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.15)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
-              }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏡</div>
-                <h3 style={{
-                  fontSize: '1.3rem',
-                  fontWeight: '700',
-                  color: '#1f2937',
-                  marginBottom: '0.8rem',
-                  fontFamily: '"Assistant", "Heebo", system-ui, sans-serif'
-                }}>
-                  קהילתי
-                </h3>
-                <p style={{
-                  color: '#6b7280',
-                  fontSize: '1rem',
-                  lineHeight: '1.5',
-                  margin: 0,
-                  fontFamily: '"Assistant", "Heebo", system-ui, sans-serif'
-                }}>
-                  משרת קהילות רבות באזור ומחוצה לו
-                </p>
-              </div>
-
-            </div>
-          </div>
         </div>
       </div>
     </>

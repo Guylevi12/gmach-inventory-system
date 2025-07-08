@@ -37,7 +37,11 @@ const DonationsPage = () => {
     copyToClipboard(cleanNumber, 'paybox-app');
     
     setTimeout(() => {
-      alert('המספר הועתק! 📋\n\n📱 הנחיות לתרומה בפייבוקס:\n1. פתח את אפליקציית פייבוקס\n2. לחץ על "שלח כסף"\n3. בחר "למספר טלפון"\n4. הדבק את המספר (או הקלד: ' + bitNumber + ')\n5. הכנס סכום לתרומה\n6. אשר את התרומה 💜\n\nהמספר כבר הועתק ומוכן להדבקה!');
+      try {
+        window.location.href = 'https://payboxapp.page.link/rcKWijyydRQpxEfb9';
+      } catch (error) {
+        window.open('https://payboxapp.page.link/rcKWijyydRQpxEfb9', '_blank');
+      }
     }, 500);
   };
 
@@ -104,7 +108,7 @@ const DonationsPage = () => {
               marginBottom: '1rem',
               textAlign: 'center'
             }}>
-              🏠 הגמ"ח נשען על תרומות בלבד
+               הגמ"ח נשען על תרומות בלבד
             </h2>
             <p style={{
               fontSize: '1.1rem',
@@ -137,26 +141,26 @@ const DonationsPage = () => {
             {/* Bit/PayBox Payment */}
             <div style={{
               backgroundColor: '#fff',
-              border: '3px solid #1d4ed8',
+              border: '3px solid #c2185b',
               borderRadius: '15px',
               padding: '2rem',
               textAlign: 'center',
               transition: 'all 0.3s ease',
               cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(29, 78, 216, 0.2)'
+              boxShadow: '0 4px 15px rgba(194, 24, 91, 0.2)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(29, 78, 216, 0.3)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(194, 24, 91, 0.3)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(29, 78, 216, 0.2)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(194, 24, 91, 0.2)';
             }}>
-              <Smartphone size={48} color="#1d4ed8" style={{ marginBottom: '1rem' }} />
+              <Smartphone size={48} color="#c2185b" style={{ marginBottom: '1rem' }} />
               <h4 style={{
                 fontSize: '1.3rem',
-                color: '#1d4ed8',
+                color: '#c2185b',
                 marginBottom: '1rem',
                 fontWeight: '700'
               }}>
@@ -170,7 +174,7 @@ const DonationsPage = () => {
                 <p style={{
                   fontSize: '1.2rem',
                   fontWeight: '800',
-                  color: '#1d4ed8',
+                  color: '#c2185b',
                   margin: '0 0 0.5rem 0'
                 }}>
                   {bitNumber}
@@ -178,8 +182,8 @@ const DonationsPage = () => {
                 <button
                   onClick={() => copyToClipboard(bitNumber, 'bit')}
                   style={{
-                    background: '#1d4ed8',
-                    border: '2px solid #1d4ed8',
+                    background: '#c2185b',
+                    border: '2px solid #c2185b',
                     color: 'white',
                     padding: '8px 15px',
                     borderRadius: '20px',
@@ -202,7 +206,7 @@ const DonationsPage = () => {
                 justifyContent: 'center'
               }}>
                 <button style={{
-                  background: 'linear-gradient(135deg, #4a90e2 0%, #357abd 100%)',
+                  background: 'linear-gradient(135deg, #c2185b 0%, #ad1457 100%)',
                   color: 'white',
                   border: 'none',
                   padding: '12px 20px',
@@ -219,7 +223,7 @@ const DonationsPage = () => {
                   🤍 ביט
                 </button>
                 <button style={{
-                  background: 'linear-gradient(135deg, #0a84ff 0%, #005cbf 100%)',
+                  background: 'linear-gradient(135deg, #c2185b 0%, #ad1457 100%)',
                   color: 'white',
                   border: 'none',
                   padding: '12px 20px',
@@ -241,26 +245,26 @@ const DonationsPage = () => {
             {/* Cash Donation */}
             <div style={{
               backgroundColor: '#fff',
-              border: '2px solid #27ae60',
+              border: '2px solid #c2185b',
               borderRadius: '15px',
               padding: '2rem',
               textAlign: 'center',
               transition: 'all 0.3s ease',
               cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(39, 174, 96, 0.1)'
+              boxShadow: '0 4px 15px rgba(194, 24, 91, 0.1)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(39, 174, 96, 0.2)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(194, 24, 91, 0.2)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(39, 174, 96, 0.1)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(194, 24, 91, 0.1)';
             }}>
-              <Banknote size={48} color="#27ae60" style={{ marginBottom: '1rem' }} />
+              <Banknote size={48} color="#c2185b" style={{ marginBottom: '1rem' }} />
               <h4 style={{
                 fontSize: '1.3rem',
-                color: '#27ae60',
+                color: '#c2185b',
                 marginBottom: '1rem',
                 fontWeight: '600'
               }}>
@@ -280,7 +284,7 @@ const DonationsPage = () => {
                 justifyContent: 'center'
               }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)',
+                  background: 'linear-gradient(135deg, #c2185b 0%, #ad1457 100%)',
                   color: 'white',
                   padding: '12px 24px',
                   borderRadius: '25px',

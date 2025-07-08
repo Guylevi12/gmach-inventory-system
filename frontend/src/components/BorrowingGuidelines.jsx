@@ -108,9 +108,9 @@ const BorrowingGuidelines = () => {
     boxShadow: isMobile ? 'none' : '0 3px 8px rgba(0, 0, 0, 0.1)'
   };
 
-  const warningBoxStyle = {
-    backgroundColor: '#fffaf0',
-    border: isMobile ? '2px solid #b7791f' : '3px solid #b7791f',
+const warningBoxStyle = {
+    backgroundColor: '#f7fafc',
+    border: isMobile ? '2px solid #718096' : '3px solid #718096',
     borderRadius: '8px',
     padding: isMobile ? '15px' : '24px',
     marginBottom: isMobile ? '15px' : '20px',
@@ -150,7 +150,7 @@ const BorrowingGuidelines = () => {
       {/* כותרת ראשית */}
       <div style={headerStyle}>
         <h1 style={titleStyle}>
-          <span style={iconStyle}>📋</span>
+          <span style={iconStyle}></span>
           נוהל השאלה
         </h1>
         <p style={subtitleStyle}>שואלים יקרים - אנא קראו בעיון את נוהל הגמ"ח</p>
@@ -173,7 +173,7 @@ const BorrowingGuidelines = () => {
           <div style={stepContentStyle}>
             <strong style={{ color: '#2d3748', fontSize: 'clamp(15px, 3.5vw, 17px)' }}>הזמנה ורישום בלוח:</strong><br/>
             מתקשרים/מגיעים לגמ"ח בזמני הפתיחה ומשריינים תאריך לארוע. רושמים אתכם ביומן השמחות לפי סדר הרישום.
-            <br/><strong>הזמנת רשימת ציוד:</strong> משריינים עם המתנדבות רשימה של הציוד הנדרש ומסכמים מתי לקחת.
+            <br/><strong>הזמנת רשימת ציוד:</strong> משריינים עם המתנדבות רשימה של הציוד המבוקש ומסכמים מועד לאיסוף.
           </div>
         </div>
 
@@ -182,7 +182,7 @@ const BorrowingGuidelines = () => {
           <div style={stepContentStyle}>
             <strong style={{ color: '#2d3748', fontSize: 'clamp(15px, 3.5vw, 17px)' }}>איסוף הציוד:</strong><br/>
             מגיעים לקחת את הציוד שהוזמן מראש. 
-            <strong style={{ color: '#e53e3e' }}> חשוב להיצמד לרשימה</strong> - זה מקל על המתנדבות לתת שירות לכולם.
+            <strong style={{ color: '#2d3748' }}> חשוב להיצמד לרשימה</strong> - זה מקל על המתנדבות לתת שירות טוב יותר לכולם.
           </div>
         </div>
 
@@ -190,13 +190,13 @@ const BorrowingGuidelines = () => {
           <div style={stepNumberStyle}>3</div>
           <div style={stepContentStyle}>
             <strong style={{ color: '#2d3748', fontSize: 'clamp(15px, 3.5vw, 17px)' }}>החזרת הציוד:</strong><br/>
-            לאחר הארוע מחזירים את הציוד. המתנדבות יבדקו את ההחזרה וידריכו איך להחזיר הכל למקומו.
+            לאחר הארוע מחזירים את הציוד. המתנדבות יבדקו את הפריטים המוחזרים וידריכו איך להחזיר אותם למקומם.
           </div>
         </div>
 
         <div style={highlightBoxStyle}>
           <p style={{ fontSize: 'clamp(14px, 3.5vw, 16px)', margin: 0, fontWeight: '500', color: '#2d3748' }}>
-            🏆 <strong>עדיפויות:</strong> ההשאלה היא לפי סדר הרישום - מי שנרשם ראשון לתאריך מסוים, משאיל ראשון!
+            🏆 <strong>עדיפויות:</strong> ההשאלה היא לפי סדר הרישום - מי שנרשם ראשון, משאיל ראשון!
           </p>
         </div>
       </div>
@@ -222,14 +222,10 @@ const BorrowingGuidelines = () => {
             הקפידו להחזיר את הציוד ביום שנקבע מראש.
           </div>
 
-          <div style={cardStyle}>
-            <strong style={{ color: '#e53e3e', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>🚗 איסור חמור:</strong><br/>
-            אין לשמור חפצים ברכב לפני ואחרי האירוע!
-          </div>
 
           <div style={cardStyle}>
             <strong style={{ color: '#2d3748', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>📸 המלצה:</strong><br/>
-            צלמו את החפצים שלוקחים כדי לזכור מה להחזיר.<br/>
+            צלמו את הפריטים שלקחתם זה יקל עליכם בשעת ההחזרה.<br/>
             <span style={{ color: '#4a5568', fontSize: 'clamp(12px, 3vw, 14px)', fontStyle: 'italic' }}>
               החפצים יקרים ומאוד עדינים - אנא שימרו עליהם כשלכם.
             </span>
@@ -256,8 +252,7 @@ const BorrowingGuidelines = () => {
             במקרה של נזק
           </h3>
           <p style={{ fontSize: 'clamp(13px, 3vw, 15px)', margin: 0, color: '#4a5568' }}>
-            אם נגרם נזק בטעות - הפנו את תשומת ליבנו ונאמר כמה לשלם 
-            בכדי שנוכל לקנות חדש.
+            אם נגרם נזק בטעות - הפנו את תשומת לבנו על מנת להעריך את עלותו.   
           </p>
         </div>
       </div>
@@ -278,9 +273,9 @@ const BorrowingGuidelines = () => {
             <div style={{ fontSize: 'clamp(28px, 8vw, 36px)', marginBottom: '8px' }}>🧺</div>
             <strong style={{ color: '#2d3748', fontSize: 'clamp(14px, 3.5vw, 16px)' }}>מפות</strong><br/>
             <span style={{ color: '#4a5568', fontSize: 'clamp(12px, 3vw, 14px)' }}>
-              נקיות, מקופלות ויבשות<br/>
+              יש להחזיר נקיות, יבשות ומקופלות<br/>
               (מסיר כתמים לפני כביסה)<br/>
-              <em>עדיף לייבש בשמש, אם לא - במייבש</em>
+              <em>(להקפיד על הסרת כתמים)</em>
             </span>
           </div>
 
@@ -312,7 +307,7 @@ const BorrowingGuidelines = () => {
         marginTop: isMobile ? '30px' : '40px'
       }}>
         <h3 style={{ color: '#2d3748', fontSize: 'clamp(18px, 4vw, 20px)', marginBottom: '8px', fontWeight: '600' }}>
-          מזל טוב, שפע ברכה ושמחה
+          שפע ברכות ושמחה
         </h3>
         <p style={{ fontSize: 'clamp(14px, 3.5vw, 16px)', fontStyle: 'italic', margin: 0, color: '#4a5568' }}>
           תודה על שיתוף הפעולה ועל שמירת הכללים

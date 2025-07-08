@@ -39,21 +39,34 @@ const Home = () => {
 
   return (
     <>
-      {/* רקע כללי לכל האתר + גופנים */}
-<></>
-      <div style={{ minHeight: '100vh', background: 'transparent' }}>
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'transparent',
+        width: '100%',
+        overflowX: 'hidden' // מונע גלילה אופקית
+      }}>
         {/* קונטיינר ראשי */}
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
+        <div style={{ 
+          maxWidth: '1200px', 
+          margin: '0 auto', 
+          padding: '1rem',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
           
-          {/* לוגו ומשפט הסבר - מידות מקצועיות על פי Golden Ratio */}
-          <div style={{ textAlign: 'center', marginBottom: '4rem' }} className="fade-in">
-            <div style={{ marginBottom: '2.5rem' }}>
+          {/* לוגו ומשפט הסבר - מותאם למובייל */}
+          <div style={{ 
+            textAlign: 'center', 
+            marginBottom: '2rem',
+            padding: '0 0.5rem'
+          }} className="fade-in">
+            <div style={{ marginBottom: '1.5rem' }}>
               <img 
                 src={gemachImage}
                 alt="לוגו שמחת זקנתי"
                 style={{
                   margin: '0 auto',
-                  height: 'clamp(280px, 35vw, 450px)', // גדל באופן משמעותי
+                  height: 'clamp(250px, 35vw, 450px)', // חזרה לגודל המקורי במחשב
                   width: 'auto',
                   objectFit: 'contain',
                   filter: 'drop-shadow(0 15px 35px rgba(0,0,0,0.15))',
@@ -64,42 +77,55 @@ const Home = () => {
             
             <h1 style={{
               fontFamily: '"Assistant", "Heebo", system-ui, sans-serif',
-              fontSize: 'clamp(32px, 6vw, 52px)', // גדל יותר
+              fontSize: 'clamp(28px, 6vw, 52px)', // חזרה לגודל המקורי במחשב
               fontWeight: '700',
               color: '#059669',
-              marginBottom: '1.5rem',
+              marginBottom: '1.5rem', // חזרה למרווח המקורי
               textShadow: '0 3px 6px rgba(0,0,0,0.12)',
-              letterSpacing: '0.5px'
+              letterSpacing: '0.5px',
+              lineHeight: '1.2',
+              padding: '0 0.5rem'
             }}>
               גמ"ח לעיצוב ארועים
             </h1>
             
             <p style={{
               fontFamily: '"Assistant", "Heebo", system-ui, sans-serif',
-              fontSize: 'clamp(20px, 3.5vw, 28px)', // גדל יותר
+              fontSize: 'clamp(18px, 3.5vw, 28px)', // חזרה לגודל המקורי במחשב
               color: '#374151',
-              maxWidth: '900px',
+              maxWidth: '900px', // חזרה לרוחב המקורי
               margin: '0 auto',
-              lineHeight: '1.7',
-              fontWeight: '500'
+              lineHeight: '1.7', // חזרה לגודל המקורי
+              fontWeight: '500',
+              padding: '0 1rem'
             }}>
               מפות, אביזרים לקישוט שולחנות, מזנונים, פינות צילום ואווירה
             </p>
           </div>
 
-          {/* גלריית תמונות פנורמה - 5-6 תמונות נראות בו זמנית */}
-          <div style={{ marginBottom: '4rem' }} className="slide-in-left">
-            <div style={{ position: 'relative', width: '100%', margin: '0 auto' }}>
+          {/* גלריית תמונות מותאמת למובייל */}
+          <div style={{ 
+            marginBottom: '4rem', // חזרה למרווח המקורי במחשב
+            width: '100%',
+            overflowX: 'hidden'
+          }} className="slide-in-left">
+            <div style={{ 
+              position: 'relative', 
+              width: '100%', 
+              margin: '0 auto',
+              padding: '0 0.5rem'
+            }}>
               <div style={{
                 position: 'relative',
                 overflow: 'hidden',
-                borderRadius: '20px',
-                boxShadow: '0 25px 80px rgba(0,0,0,0.15)',
+                borderRadius: '15px',
+                boxShadow: '0 15px 40px rgba(0,0,0,0.12)',
                 background: 'rgba(255,255,255,0.9)',
-                backdropFilter: 'blur(15px)',
+                backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255,255,255,0.8)',
-                height: 'clamp(250px, 35vw, 400px)', // יותר נמוך ופחות גבוה
-                maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)'
+                height: 'clamp(250px, 35vw, 400px)', // חזרה לגודל המקורי במחשב
+                width: '100%',
+                maskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)'
               }}>
                 
                 {/* קונטיינר התמונות הנעות */}
@@ -107,8 +133,9 @@ const Home = () => {
                   style={{
                     display: 'flex',
                     height: '100%',
-                    animation: 'panoramaSlide 40s linear infinite',
-                    gap: '1rem'
+                    animation: 'panoramaSlide 45s linear infinite',
+                    gap: 'clamp(8px, 2vw, 16px)',
+                    willChange: 'transform'
                   }}
                 >
                   {/* התמונות המקוריות */}
@@ -117,11 +144,11 @@ const Home = () => {
                       key={`img-${index}`} 
                       style={{ 
                         flexShrink: 0,
-                        width: 'clamp(200px, 18vw, 300px)', // רוחב של כל תמונה
+                        width: 'clamp(180px, 18vw, 300px)', // חזרה לגודל המקורי במחשב
                         height: '100%',
-                        borderRadius: '16px',
+                        borderRadius: '12px',
                         overflow: 'hidden',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
                         transition: 'transform 0.3s ease'
                       }}
                     >
@@ -138,60 +165,37 @@ const Home = () => {
                     </div>
                   ))}
                 </div>
-
-                {/* אנימציית CSS */}
-                <style>{`
-                  @keyframes panoramaSlide {
-                    0% {
-                      transform: translateX(0);
-                    }
-                    100% {
-                      transform: translateX(calc(-${galleryImages.length} * (clamp(200px, 18vw, 300px) + 1rem)));
-                    }
-                  }
-                  
-                  /* השהיה באנימציה בעת hover */
-                  .panorama-container:hover .panorama-track {
-                    animation-play-state: paused;
-                  }
-                `}</style>
-              </div>
-              
-              {/* אינדיקטור "גלילה אוטומטית" */}
-              <div style={{
-                position: 'absolute',
-                bottom: '-2rem',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                fontSize: '0.9rem',
-                color: '#6b7280',
-                fontFamily: '"Assistant", "Heebo", system-ui, sans-serif',
-                textAlign: 'center',
-                opacity: 0.7
-              }}>
               </div>
             </div>
           </div>
 
-          {/* מפה - גודל מותאם ומקצועי */}
-          <div className="fade-in">
+          {/* מפה מותאמת למובייל */}
+          <div className="fade-in" style={{ 
+            padding: '0 0.5rem',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}>
             <div style={{
               background: 'linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85))',
-              backdropFilter: 'blur(15px)',
-              borderRadius: '20px',
-              boxShadow: '0 15px 40px rgba(0,0,0,0.1)',
-              padding: '1.5rem',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '15px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              padding: 'clamp(1rem, 3vw, 1.5rem)',
               border: '1px solid rgba(255,255,255,0.6)',
-              maxWidth: '900px',
-              margin: '0 auto'
+              width: '100%',
+              maxWidth: '900px', // חזרה לרוחב המקורי במחשב
+              margin: '0 auto',
+              boxSizing: 'border-box'
             }}>
               <iframe
                 src="https://www.google.com/maps?q=31.7889462,34.79986&output=embed"
                 width="100%"
-                height="350"
+                height="350" // חזרה לגובה המקורי במחשב
                 style={{
-                  borderRadius: '15px',
-                  border: 'none'
+                  borderRadius: '15px', // חזרה לעיגול המקורי
+                  border: 'none',
+                  width: '100%',
+                  display: 'block'
                 }}
                 allowFullScreen=""
                 loading="lazy"
@@ -201,6 +205,84 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      {/* CSS מותאם למובייל */}
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
+        
+        body {
+          overflow-x: hidden;
+        }
+        
+        @keyframes panoramaSlide {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(calc(-${galleryImages.length} * (clamp(180px, 18vw, 300px) + clamp(8px, 2vw, 16px)))); // עדכון האנימציה
+          }
+        }
+        
+        /* אנימציות כניסה מותאמות למובייל */
+        .fade-in {
+          animation: fadeIn 1s ease-out;
+        }
+        
+        .slide-in-left {
+          animation: slideInLeft 1.2s ease-out;
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-30px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* מיטוב למכשירים קטנים */
+        @media (max-width: 480px) {
+          .panorama-container {
+            height: 180px !important;
+          }
+          
+          iframe {
+            height: 220px !important;
+          }
+        }
+        
+        /* מיטוב למכשירים בינוניים */
+        @media (min-width: 481px) and (max-width: 768px) {
+          .panorama-container {
+            height: 250px !important;
+          }
+          
+          iframe {
+            height: 280px !important;
+          }
+        }
+        
+        /* מיטוב לטאבלטים */
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .panorama-container {
+            height: 300px !important;
+          }
+          
+          iframe {
+            height: 320px !important;
+          }
+        }
+        
+        /* הסתרת גלילה אופקית */
+        html, body {
+          overflow-x: hidden;
+          max-width: 100vw;
+        }
+      `}</style>
 
       {/* הקומפוננטות החכמות */}
       <HoursBubble />
