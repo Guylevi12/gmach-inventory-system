@@ -55,7 +55,7 @@ const EmailReminderSystem = () => {
 
             {/* Header */}
             <div style={{
-                background: 'linear-gradient(to right, #f59e0b, #d97706)',
+                background: 'linear-gradient(to right, #20b2aa, #48d1cc)',
                 color: 'white',
                 padding: '2rem',
                 borderRadius: '12px',
@@ -90,7 +90,7 @@ const EmailReminderSystem = () => {
                         onClick={handleManualCheck}
                         disabled={isChecking}
                         style={{
-                            background: isChecking ? '#9ca3af' : '#f59e0b',
+                            background: isChecking ? '#9ca3af' : 'linear-gradient(45deg, #20b2aa, #48d1cc)',
                             color: 'white',
                             border: 'none',
                             padding: '0.75rem 1.5rem',
@@ -106,8 +106,8 @@ const EmailReminderSystem = () => {
 
                 {/* Global Auto-Check Status */}
                 <div style={{
-                    background: '#f0f9ff',
-                    border: '1px solid #7dd3fc',
+                    background: 'linear-gradient(135deg, #f0fdfa, #ecfeff)',
+                    border: '1px solid #5eead4',
                     borderRadius: '8px',
                     padding: '1rem',
                     marginBottom: '1rem'
@@ -119,18 +119,18 @@ const EmailReminderSystem = () => {
                         marginBottom: '0.5rem'
                     }}>
                         <span style={{ fontSize: '1.5rem' }}>🌐</span>
-                        <h3 style={{ margin: 0, color: '#0369a1' }}>בדיקה אוטומטית גלובלית</h3>
+                        <h3 style={{ margin: 0, color: '#0f766e' }}>בדיקה אוטומטית גלובלית</h3>
                     </div>
                     <p style={{
                         margin: 0,
-                        color: '#0369a1',
+                        color: '#0f766e',
                         fontSize: '0.9rem'
                     }}>
                         ✅ המערכת פועלת אוטומטית ברקע בכל דפי האתר (8:00-20:00, פעם ביום)
                     </p>
                     <p style={{
                         margin: '0.5rem 0 0 0',
-                        color: '#0369a1',
+                        color: '#0f766e',
                         fontSize: '0.8rem',
                         fontStyle: 'italic'
                     }}>
@@ -156,16 +156,16 @@ const EmailReminderSystem = () => {
                 {results && (
                     <div style={{
                         background: results.totalErrors > 0 ? '#fef2f2' :
-                            results.weekend ? '#f0f9ff' : '#fffbeb',
+                            results.weekend ? '#f0f9ff' : 'linear-gradient(135deg, #f0fdfa, #ecfeff)',
                         border: `1px solid ${results.totalErrors > 0 ? '#fecaca' :
-                            results.weekend ? '#7dd3fc' : '#fed7aa'}`,
+                            results.weekend ? '#7dd3fc' : '#5eead4'}`,
                         borderRadius: '8px',
                         padding: '1.5rem'
                     }}>
                         <h3 style={{
                             margin: '0 0 1rem 0',
                             color: results.totalErrors > 0 ? '#dc2626' :
-                                results.weekend ? '#0369a1' : '#d97706'
+                                results.weekend ? '#0369a1' : '#0f766e'
                         }}>
                             {results.message}
                         </h3>
@@ -192,13 +192,13 @@ const EmailReminderSystem = () => {
                         {/* Reminder Stats - only show if not weekend */}
                         {!results.weekend && (
                             <div style={{
-                                background: 'white',
+                                background: 'linear-gradient(135deg, #f0fdfa, #ecfeff)',
                                 padding: '1.5rem',
                                 borderRadius: '8px',
-                                border: '1px solid #e5e7eb',
+                                border: '1px solid #5eead4',
                                 marginBottom: '1rem'
                             }}>
-                                <h4 style={{ margin: '0 0 1rem 0', color: '#f59e0b' }}>
+                                <h4 style={{ margin: '0 0 1rem 0', color: '#0f766e' }}>
                                     ⏰ תזכורות החזרה (2 ימים לפני)
                                 </h4>
                                 <div style={{
@@ -267,15 +267,15 @@ const EmailReminderSystem = () => {
 
             {/* Instructions */}
             <div style={{
-                background: '#fffbeb',
-                border: '1px solid #fed7aa',
+                background: '#fdf2f8',
+                border: '1px solid #f8b2dd',
                 borderRadius: '12px',
                 padding: '2rem'
             }}>
-                <h3 style={{ margin: '0 0 1rem 0', color: '#92400e' }}>
+                <h3 style={{ margin: '0 0 1rem 0', color: '#be185d' }}>
                     🔧 איך המערכת החכמה עובדת
                 </h3>
-                <ul style={{ color: '#92400e', paddingRight: '1.5rem' }}>
+                <ul style={{ color: '#be185d', paddingRight: '1.5rem' }}>
                     <li><strong>🌐 בדיקה אוטומטית גלובלית:</strong> המערכת פועלת ברקע בכל דפי האתר (8:00-20:00)</li>
                     <li><strong>📧 תזכורות החזרה:</strong> נשלחים אוטומטית 2 ימים לפני תאריך ההחזרה</li>
                     <li><strong>📦 אישורי איסוף:</strong> נשלחים רק ידנית על ידי לחיצה על הכפתור במערכת הזמנות</li>
@@ -286,16 +286,16 @@ const EmailReminderSystem = () => {
                 </ul>
 
                 <div style={{
-                    background: '#dcfce7',
-                    border: '1px solid #86efac',
+                    background: 'linear-gradient(135deg, #fdf2f8, #fce7f3)',
+                    border: '1px solid #f8b2dd',
                     borderRadius: '8px',
                     padding: '1rem',
                     marginTop: '1rem'
                 }}>
-                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#15803d' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#be185d' }}>
                         🎯 המערכת החדשה - פועלת בכל מקום!
                     </h4>
-                    <p style={{ margin: 0, color: '#15803d', fontSize: '0.9rem' }}>
+                    <p style={{ margin: 0, color: '#be185d', fontSize: '0.9rem' }}>
                         ✅ <strong>אוטומטית באמת</strong> - עובדת בכל דף באתר<br />
                         ✅ <strong>אין צורך לבקר כאן</strong> - תזכורות נשלחות בכל מקרה<br />
                         ✅ <strong>פעם ביום בלבד</strong> - מונעת כפילויות<br />

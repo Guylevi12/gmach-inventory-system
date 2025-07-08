@@ -44,7 +44,7 @@ const Register = () => {
       justifyContent: 'center',
       alignItems: 'center',
       height: '80vh',
-      backgroundColor: '#f2f2f2',
+      background: 'transparent',
     },
     form: {
       backgroundColor: '#fff',

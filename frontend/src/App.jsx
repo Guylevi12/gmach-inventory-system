@@ -1,10 +1,10 @@
-// src/App.jsx - מתוקן עם מערכת אימיילים אוטומטית ודף אודות
+// src/App.jsx - מתוקן עם מחלקות CSS לכל דף
 import React, { useState, useEffect, useRef } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { UserProvider } from './UserContext';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
-import About from './components/About'; // ✅ הוספה חדשה
+import About from './components/About';
 import Login from './components/Login';
 import Register from './components/Register';
 import NewLoan from './components/NewLoan/NewLoan';
@@ -21,13 +21,85 @@ import DonationsPage from './components/DonationsPage';
 import BorrowingGuidelines from './components/BorrowingGuidelines';
 import AvailabilityNotification from './components/AvailabilityNotification';
 import { checkAndSendAllEmails } from './services/emailService';
-import './styles/global-background.css'; // ✅ הוספת הרקע הגלובלי החדש
+import './styles/global-background.css';
 
 const App = () => {
   // ✅ Auto-checking refs for email service
   const hasRunTodayRef = useRef(false);
   const intervalRef = useRef(null);
   const lastAutoCheckDateRef = useRef(null);
+  
+  // 🔵 ניהול מחלקות CSS לפי דף
+  const location = useLocation();
+
+  // 🔵 useEffect לניהול מחלקות CSS לפי עמוד
+  useEffect(() => {
+    // הסרת כל המחלקות הקיימות
+    document.body.classList.remove(
+      'home-page', 'about-page', 'catalog-page', 'login-page', 
+      'register-page', 'donations-page', 'guidelines-page', 
+      'new-loan-page', 'calendar-page', 'orders-page', 
+      'history-page', 'manage-page'
+    );
+    
+    // הוספת מחלקה בהתאם לדף הנוכחי
+    switch(location.pathname) {
+      case '/':
+        document.body.classList.add('home-page');
+        break;
+      case '/about':
+        document.body.classList.add('about-page');
+        break;
+      case '/catalog':
+        document.body.classList.add('catalog-page');
+        break;
+      case '/login':
+        document.body.classList.add('login-page');
+        break;
+      case '/register':
+        document.body.classList.add('register-page');
+        break;
+      case '/donations':
+        document.body.classList.add('donations-page');
+        break;
+      case '/borrowing-guidelines':
+        document.body.classList.add('guidelines-page');
+        break;
+      case '/new-loan':
+        document.body.classList.add('new-loan-page');
+        break;
+      case '/calendar':
+        document.body.classList.add('calendar-page');
+        break;
+      case '/my-orders':
+      case '/requests':
+        document.body.classList.add('orders-page');
+        break;
+      case '/history':
+        document.body.classList.add('history-page');
+        break;
+      case '/manage-product':
+      case '/manage-users':
+        document.body.classList.add('manage-page');
+        break;
+      default:
+        // עבור דפים אחרים (כמו request), נוסיף נקודות
+        document.body.classList.add('other-page');
+        break;
+    }
+    
+    console.log('🎨 דף נוכחי:', location.pathname, '- מחלקת CSS:', document.body.className);
+    
+    // ניקוי כשהקומפוננט נמחק
+    return () => {
+      document.body.classList.remove(
+        'home-page', 'about-page', 'catalog-page', 'login-page', 
+        'register-page', 'donations-page', 'guidelines-page', 
+        'new-loan-page', 'calendar-page', 'orders-page', 
+        'history-page', 'manage-page', 'other-page'
+      );
+    };
+  }, [location.pathname]);
 
   // ✅ Set up automatic email checking on app startup
   useEffect(() => {
@@ -135,25 +207,15 @@ const App = () => {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        {/* ✅ נתיב חדש לדף אודות */}
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/donations" element={<DonationsPage />} />
-
-        {/* נתיב נוהל השאלה - זמין לכל המשתמשים */}
         <Route path="/borrowing-guidelines" element={<BorrowingGuidelines />} />
-
-        {/* רוט בקשת השאלה */}
         <Route path="/request" element={<RequestLoan />} />
-
-        {/* רוט ההזמנות שלי */}
         <Route path="/my-orders" element={<MyOrders />} />
-
-        {/* רוט בקשות להזמנה למנהלים */}
         <Route path="/requests" element={<PendingRequests />} />
-
         <Route path="/new-loan" element={<NewLoan />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/manage-product" element={<ItemManager />} />
@@ -161,9 +223,7 @@ const App = () => {
         <Route path="/history" element={<LoanHistory />} />
       </Routes>
 
-      {/* ✅ התראת זמינות פשוטה - ללא ניווט מסובך */}
       <AvailabilityNotification />
-
       <ContactBubble />
     </UserProvider>
   );

@@ -431,7 +431,7 @@ const Catalog = () => {
         fontSize: '2rem',
         color: '#1f2937'
       }}>
-        📋 קטלוג מוצרים
+       קטלוג מוצרים
       </h2>
 
       <input

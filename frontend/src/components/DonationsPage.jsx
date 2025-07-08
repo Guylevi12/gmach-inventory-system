@@ -44,7 +44,7 @@ const DonationsPage = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+      background: 'transparent',
       padding: '2rem 1rem',
       direction: 'rtl'
     }}>
@@ -59,7 +59,7 @@ const DonationsPage = () => {
         
         {/* Header Section */}
         <div style={{
-          background: 'linear-gradient(135deg, #d97706 0%, #c2410c 100%)',
+          background: 'linear-gradient(135deg, #20b2aa 0%, #48d1cc 100%)',
           padding: '3rem 2rem',
           textAlign: 'center',
           color: 'white'
@@ -67,7 +67,7 @@ const DonationsPage = () => {
           <div style={{
             fontSize: '4rem',
           }}>
-            ❤️
+          
           </div>
           <h1 style={{
             fontSize: '2.5rem',
@@ -295,19 +295,19 @@ const DonationsPage = () => {
 
           {/* Thank You Section */}
           <div style={{
-            background: 'linear-gradient(135deg, #d97706 0%, #c2410c 100%)',
+            background: 'linear-gradient(135deg, #20b2aa 0%, #48d1cc 100%)',
             padding: '2.5rem',
             borderRadius: '20px',
             textAlign: 'center',
             color: 'white',
-            boxShadow: '0 10px 30px rgba(217, 119, 6, 0.3)'
+            boxShadow: '0 10px 30px rgba(32, 178, 170, 0.3)'
           }}>
             <h3 style={{
               fontSize: '1.8rem',
               marginBottom: '1rem',
               fontWeight: '600'
             }}>
-              🙏 תודה מראש
+             תודה מראש
             </h3>
             <p style={{
               fontSize: '1.2rem',

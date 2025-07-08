@@ -14,7 +14,6 @@ import image4 from '../assets/images/4.jpg';
 import image5 from '../assets/images/5.jpg';
 import image6 from '../assets/images/6.jpg';
 import image7 from '../assets/images/7.jpg';
-import image8 from '../assets/images/8.jpg';
 import image9 from '../assets/images/9.jpg';
 import image10 from '../assets/images/10.jpg';
 import image11 from '../assets/images/11.jpg';
@@ -32,7 +31,6 @@ const Home = () => {
     image5,
     image6,
     image7,
-    image8,
     image9,
     image10,
     image11,
@@ -42,64 +40,7 @@ const Home = () => {
   return (
     <>
       {/* רקע כללי לכל האתר + גופנים */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Heebo:wght@400;500;600;700;800&display=swap');
-        
-        body {
-          background: linear-gradient(135deg, #fef7f7 0%, #fdf4f4 50%, #fcf1f1 100%);
-          background-attachment: fixed;
-          min-height: 100vh;
-          position: relative;
-        }
-        
-        body::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-image: 
-            radial-gradient(circle at 15% 25%, rgba(34, 197, 94, 0.03) 2px, transparent 2px),
-            radial-gradient(circle at 65% 75%, rgba(20, 184, 166, 0.04) 1.5px, transparent 1.5px),
-            radial-gradient(circle at 85% 15%, rgba(34, 197, 94, 0.025) 1px, transparent 1px),
-            radial-gradient(circle at 25% 85%, rgba(20, 184, 166, 0.03) 1.5px, transparent 1.5px),
-            radial-gradient(circle at 45% 35%, rgba(34, 197, 94, 0.02) 1px, transparent 1px),
-            radial-gradient(circle at 75% 45%, rgba(20, 184, 166, 0.025) 1px, transparent 1px);
-          background-size: 80px 80px, 60px 60px, 45px 45px, 70px 70px, 35px 35px, 55px 55px;
-          background-position: 0 0, 30px 40px, 15px 25px, 40px 50px, 20px 10px, 50px 30px;
-          z-index: -1;
-          pointer-events: none;
-        }
-
-        .fade-in {
-          animation: fadeIn 1s ease-in;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .slide-in-left {
-          animation: slideInLeft 0.8s ease-out;
-        }
-
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-30px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-
-        .slide-in-right {
-          animation: slideInRight 0.8s ease-out;
-        }
-
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(30px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
-
+<></>
       <div style={{ minHeight: '100vh', background: 'transparent' }}>
         {/* קונטיינר ראשי */}
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>

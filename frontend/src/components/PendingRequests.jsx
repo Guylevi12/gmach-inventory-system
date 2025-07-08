@@ -265,7 +265,7 @@ const PendingRequests = () => {
     }}>
       {/* כותרת */}
       <div style={{
-        background: 'linear-gradient(to right, #f59e0b, #d97706)',
+        background: 'linear-gradient(to right, #20b2aa, #48d1cc)',
         color: 'white',
         padding: '2rem',
         borderRadius: '12px',

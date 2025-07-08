@@ -347,7 +347,7 @@ const LoanHistory = () => {
                   position: fixed;
                   bottom: 20px;
                   right: 20px;
-                  background: linear-gradient(45deg, #2196F3, #21CBF3);
+                  background: linear-gradient(45deg, #20b2aa, #48d1cc);
                   color: white;
                   border: none;
                   padding: 15px 25px;
@@ -355,7 +355,7 @@ const LoanHistory = () => {
                   cursor: pointer;
                   font-size: 16px;
                   font-weight: bold;
-                  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+                  box-shadow: 0 4px 15px rgba(32, 178, 170, 0.3);
                   transition: all 0.3s ease;
                   z-index: 1000;
                   display: flex;
@@ -365,7 +365,7 @@ const LoanHistory = () => {
               
               .download-btn:hover {
                   transform: translateY(-2px);
-                  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+                  box-shadow: 0 6px 20px rgba(32, 178, 170, 0.4);
               }
               
               .download-btn:active {
@@ -553,7 +553,7 @@ const LoanHistory = () => {
       `}</style>
       
       <div style={{
-        background: 'linear-gradient(to right, #3b82f6, #1e40af)',
+        background: 'linear-gradient(to right, #20b2aa, #48d1cc)',
         color: 'white',
         padding: '1.5rem',
         borderRadius: '12px',
