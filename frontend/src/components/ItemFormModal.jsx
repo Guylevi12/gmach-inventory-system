@@ -7,16 +7,16 @@ import ImageGallery from './ImageGallery';
 import { getAllImages } from '../utils/imageUtils';
 
 const uploadToCloudinary = async (file) => {
-  const url = `https://api.cloudinary.com/v1_1/dpegnxew7/image/upload`;
+  const url = `https://api.cloudinary.com/v1_1/dcydl9rz8/image/upload`;
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', 'GmachSystem');
-
+  formData.append('upload_preset', 'GmachMedia'); // preset החדש שלך
+ 
   const response = await fetch(url, {
     method: 'POST',
     body: formData
   });
-
+ 
   const data = await response.json();
   return data.secure_url;
 };
