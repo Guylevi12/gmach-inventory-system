@@ -1,10 +1,11 @@
-// src/components/Home.jsx
+// src/components/Home.jsx - Updated with AlertBanner
 import React from 'react';
 import { useUser } from '../UserContext';
 import gemachImage from '../assets/images/GmachPic.jpeg';
 import ContactBubble from './ContactBubble';
 import HoursBubble from './HoursBubble';
 import NavigationBubble from './NavigationBubble';
+import AlertBanner from './AlertBanner'; // ✅ Add this import
 
 // ייבוא כל התמונות שלך
 import image1 from '../assets/images/1.jpg';
@@ -24,49 +25,43 @@ const Home = () => {
 
   // מערך התמונות עם כל 12 התמונות שלך
   const galleryImages = [
-    image1,
-    image2,
-    image3,
-    image4,
-    image5,
-    image6,
-    image7,
-    image9,
-    image10,
-    image11,
-    image12
+    image1, image2, image3, image4, image5, image6,
+    image7, image9, image10, image11, image12
   ];
 
   return (
     <>
-      <div style={{ 
-        minHeight: '100vh', 
+      {/* ✅ Add AlertBanner at the very top */}
+      <AlertBanner />
+
+      <div style={{
+        minHeight: '100vh',
         background: 'transparent',
         width: '100%',
-        overflowX: 'hidden' // מונע גלילה אופקית
+        overflowX: 'hidden'
       }}>
         {/* קונטיינר ראשי */}
-        <div style={{ 
-          maxWidth: '1200px', 
-          margin: '0 auto', 
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
           padding: '1rem',
           width: '100%',
           boxSizing: 'border-box'
         }}>
-          
+
           {/* לוגו ומשפט הסבר - מותאם למובייל */}
-          <div style={{ 
-            textAlign: 'center', 
+          <div style={{
+            textAlign: 'center',
             marginBottom: '2rem',
             padding: '0 0.5rem'
           }} className="fade-in">
             <div style={{ marginBottom: '1.5rem' }}>
-              <img 
+              <img
                 src={gemachImage}
                 alt="לוגו שמחת זקנתי"
                 style={{
                   margin: '0 auto',
-                  height: 'clamp(250px, 35vw, 450px)', // חזרה לגודל המקורי במחשב
+                  height: 'clamp(250px, 35vw, 450px)',
                   width: 'auto',
                   objectFit: 'contain',
                   filter: 'drop-shadow(0 15px 35px rgba(0,0,0,0.15))',
@@ -74,13 +69,13 @@ const Home = () => {
                 }}
               />
             </div>
-            
+
             <h1 style={{
               fontFamily: '"Assistant", "Heebo", system-ui, sans-serif',
-              fontSize: 'clamp(28px, 6vw, 52px)', // חזרה לגודל המקורי במחשב
+              fontSize: 'clamp(28px, 6vw, 52px)',
               fontWeight: '700',
               color: '#059669',
-              marginBottom: '1.5rem', // חזרה למרווח המקורי
+              marginBottom: '1.5rem',
               textShadow: '0 3px 6px rgba(0,0,0,0.12)',
               letterSpacing: '0.5px',
               lineHeight: '1.2',
@@ -88,14 +83,14 @@ const Home = () => {
             }}>
               גמ"ח לעיצוב ארועים
             </h1>
-            
+
             <p style={{
               fontFamily: '"Assistant", "Heebo", system-ui, sans-serif',
-              fontSize: 'clamp(18px, 3.5vw, 28px)', // חזרה לגודל המקורי במחשב
+              fontSize: 'clamp(18px, 3.5vw, 28px)',
               color: '#374151',
-              maxWidth: '900px', // חזרה לרוחב המקורי
+              maxWidth: '900px',
               margin: '0 auto',
-              lineHeight: '1.7', // חזרה לגודל המקורי
+              lineHeight: '1.7',
               fontWeight: '500',
               padding: '0 1rem'
             }}>
@@ -104,14 +99,14 @@ const Home = () => {
           </div>
 
           {/* גלריית תמונות מותאמת למובייל */}
-          <div style={{ 
-            marginBottom: '4rem', // חזרה למרווח המקורי במחשב
+          <div style={{
+            marginBottom: '4rem',
             width: '100%',
             overflowX: 'hidden'
           }} className="slide-in-left">
-            <div style={{ 
-              position: 'relative', 
-              width: '100%', 
+            <div style={{
+              position: 'relative',
+              width: '100%',
               margin: '0 auto',
               padding: '0 0.5rem'
             }}>
@@ -123,13 +118,13 @@ const Home = () => {
                 background: 'rgba(255,255,255,0.9)',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255,255,255,0.8)',
-                height: 'clamp(250px, 35vw, 400px)', // חזרה לגודל המקורי במחשב
+                height: 'clamp(250px, 35vw, 400px)',
                 width: '100%',
                 maskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)'
               }}>
-                
+
                 {/* קונטיינר התמונות הנעות */}
-                <div 
+                <div
                   style={{
                     display: 'flex',
                     height: '100%',
@@ -140,11 +135,11 @@ const Home = () => {
                 >
                   {/* התמונות המקוריות */}
                   {galleryImages.concat(galleryImages).map((image, index) => (
-                    <div 
-                      key={`img-${index}`} 
-                      style={{ 
+                    <div
+                      key={`img-${index}`}
+                      style={{
                         flexShrink: 0,
-                        width: 'clamp(180px, 18vw, 300px)', // חזרה לגודל המקורי במחשב
+                        width: 'clamp(180px, 18vw, 300px)',
                         height: '100%',
                         borderRadius: '12px',
                         overflow: 'hidden',
@@ -170,7 +165,7 @@ const Home = () => {
           </div>
 
           {/* מפה מותאמת למובייל */}
-          <div className="fade-in" style={{ 
+          <div className="fade-in" style={{
             padding: '0 0.5rem',
             width: '100%',
             boxSizing: 'border-box'
@@ -183,16 +178,16 @@ const Home = () => {
               padding: 'clamp(1rem, 3vw, 1.5rem)',
               border: '1px solid rgba(255,255,255,0.6)',
               width: '100%',
-              maxWidth: '900px', // חזרה לרוחב המקורי במחשב
+              maxWidth: '900px',
               margin: '0 auto',
               boxSizing: 'border-box'
             }}>
               <iframe
                 src="https://www.google.com/maps?q=31.7889462,34.79986&output=embed"
                 width="100%"
-                height="350" // חזרה לגובה המקורי במחשב
+                height="350"
                 style={{
-                  borderRadius: '15px', // חזרה לעיגול המקורי
+                  borderRadius: '15px',
                   border: 'none',
                   width: '100%',
                   display: 'block'
@@ -221,7 +216,7 @@ const Home = () => {
             transform: translateX(0);
           }
           100% {
-            transform: translateX(calc(-${galleryImages.length} * (clamp(180px, 18vw, 300px) + clamp(8px, 2vw, 16px)))); // עדכון האנימציה
+            transform: translateX(calc(-${galleryImages.length} * (clamp(180px, 18vw, 300px) + clamp(8px, 2vw, 16px))));
           }
         }
         

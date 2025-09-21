@@ -5,6 +5,7 @@ import { signOut } from 'firebase/auth';
 import { auth, db } from '@/firebase/firebase-config';
 import { useEffect, useState } from 'react';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { Bell } from 'lucide-react';
 
 const Navbar = () => {
   const { user, setUser } = useUser();
@@ -290,10 +291,11 @@ const Navbar = () => {
             )}
             {/* ניהול מוצרים רק למנהל ראשי */}
             {user?.role === 'MainAdmin' && (
-              <Link to="/manage-product" style={getLinkStyle('/manage-product')}>ניהול מוצרים</Link>
-            )}
-            {user?.role === 'MainAdmin' && (
-              <Link to="/manage-users" style={getLinkStyle('/manage-users')}>ניהול משתמשים</Link>
+              <>
+                <Link to="/manage-product" style={getLinkStyle('/manage-product')}>ניהול מוצרים</Link>
+                <Link to="/manage-users" style={getLinkStyle('/manage-users')}>ניהול משתמשים</Link>
+                <Link to="/alerts" style={getLinkStyle('/alerts')}>ניהול התראות</Link>
+              </>
             )}
             {/* נוהל השאלה למנהלים - בסוף */}
             {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (
@@ -367,10 +369,11 @@ const Navbar = () => {
               )}
               {/* ניהול מוצרים רק למנהל ראשי */}
               {user?.role === 'MainAdmin' && (
-                <Link to="/manage-product" style={getLinkStyle('/manage-product')} onClick={handleCloseMenu}>ניהול מוצרים</Link>
-              )}
-              {user?.role === 'MainAdmin' && (
-                <Link to="/manage-users" style={getLinkStyle('/manage-users')} onClick={handleCloseMenu}>ניהול משתמשים</Link>
+                <>
+                  <Link to="/manage-product" style={getLinkStyle('/manage-product')} onClick={handleCloseMenu}>ניהול מוצרים</Link>
+                  <Link to="/manage-users" style={getLinkStyle('/manage-users')} onClick={handleCloseMenu}>ניהול משתמשים</Link>
+                  <Link to="/alerts" style={getLinkStyle('/alerts')} onClick={handleCloseMenu}>ניהול התראות</Link>
+                </>
               )}
               {/* נוהל השאלה למנהלים - בסוף */}
               {(user?.role === 'GmachAdmin' || user?.role === 'MainAdmin') && (

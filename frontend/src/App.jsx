@@ -21,13 +21,14 @@ import BorrowingGuidelines from './components/BorrowingGuidelines';
 import AvailabilityNotification from './components/AvailabilityNotification';
 import { checkAndSendAllEmails } from './services/emailService';
 import './styles/global-background.css';
+import AlertsManagement from './components/AlertsManagement';
 
 const App = () => {
   // ✅ Auto-checking refs for email service
   const hasRunTodayRef = useRef(false);
   const intervalRef = useRef(null);
   const lastAutoCheckDateRef = useRef(null);
-  
+
   // 🔵 ניהול מחלקות CSS לפי דף
   const location = useLocation();
 
@@ -35,14 +36,14 @@ const App = () => {
   useEffect(() => {
     // הסרת כל המחלקות הקיימות
     document.body.classList.remove(
-      'home-page', 'about-page', 'catalog-page', 'login-page', 
-      'register-page', 'donations-page', 'guidelines-page', 
-      'new-loan-page', 'calendar-page', 'orders-page', 
+      'home-page', 'about-page', 'catalog-page', 'login-page',
+      'register-page', 'donations-page', 'guidelines-page',
+      'new-loan-page', 'calendar-page', 'orders-page',
       'history-page', 'manage-page'
     );
-    
+
     // הוספת מחלקה בהתאם לדף הנוכחי
-    switch(location.pathname) {
+    switch (location.pathname) {
       case '/':
         document.body.classList.add('home-page');
         break;
@@ -86,15 +87,15 @@ const App = () => {
         document.body.classList.add('other-page');
         break;
     }
-    
+
     console.log('🎨 דף נוכחי:', location.pathname, '- מחלקת CSS:', document.body.className);
-    
+
     // ניקוי כשהקומפוננט נמחק
     return () => {
       document.body.classList.remove(
-        'home-page', 'about-page', 'catalog-page', 'login-page', 
-        'register-page', 'donations-page', 'guidelines-page', 
-        'new-loan-page', 'calendar-page', 'orders-page', 
+        'home-page', 'about-page', 'catalog-page', 'login-page',
+        'register-page', 'donations-page', 'guidelines-page',
+        'new-loan-page', 'calendar-page', 'orders-page',
         'history-page', 'manage-page', 'other-page'
       );
     };
@@ -205,6 +206,7 @@ const App = () => {
     <UserProvider>
       <Navbar />
       <Routes>
+        <Route path="/alerts" element={<AlertsManagement />} />
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
