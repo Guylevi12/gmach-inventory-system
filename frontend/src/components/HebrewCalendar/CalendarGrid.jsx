@@ -1,4 +1,4 @@
-// src/components/CalendarGrid.jsx - תיקון ימי השבוע
+// src/components/CalendarGrid.jsx - תיקון ימי השבוע עם overdue orders
 import React, { useState, useEffect } from 'react';
 import './css/CalendarGrid.css';
 import { ChevronRight, ChevronLeft, Calendar, Ban, Save, X, Bell } from 'lucide-react';
@@ -6,12 +6,12 @@ import { closedDatesService } from '@/services/closedDatesService';
 import { useUser } from '../../UserContext';
 
 const monthNames = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
-// ✅ תיקון סדר ימי השבוע - התחלה ביום ראשון
+// תיקון סדר ימי השבוע - התחלה ביום ראשון
 const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
 const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
-// ✅ תיקון פונקציית ימי השבוע - התחלה ביום ראשון (0) עד שבת (6)
+// תיקון פונקציית ימי השבוע - התחלה ביום ראשון (0) עד שבת (6)
 const getFirstDayOfMonth = (date) => {
   return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 };
@@ -32,22 +32,22 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   const loadClosedDates = async () => {
     try {
       const dates = await closedDatesService.getClosedDates();
-      console.log('📅 ימים סגורים נטענו:', dates.map(d => ({ id: d.id, date: d.date })));
+      console.log('ימים סגורים נטענו:', dates.map(d => ({ id: d.id, date: d.date })));
       setClosedDates(dates);
     } catch (error) {
-      console.error('❌ שגיאה בטעינת ימים סגורים:', error);
+      console.error('שגיאה בטעינת ימים סגורים:', error);
     }
   };
 
   // בדיקה האם המשתמש הוא מנהל
   const isManager = () => {
     if (!user) {
-      console.log('❌ אין משתמש מחובר');
+      console.log('אין משתמש מחובר');
       return false;
     }
-    
+
     const hasPermission = user.role === 'MainAdmin';
-    console.log('✅ יש הרשאות מנהל:', hasPermission, 'תפקיד:', user.role);
+    console.log('יש הרשאות מנהל:', hasPermission, 'תפקיד:', user.role);
     return hasPermission;
   };
 
@@ -72,19 +72,25 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     });
   };
 
-  // ✅ בדיקה האם יש בעיות זמינות לתאריך זה
+  // בדיקה האם יש בעיות זמינות לתאריך זה
   const hasAvailabilityConflicts = (day) => {
     const dayEvents = getEventsForDate(day);
-    
+
     // בדיקה האם יש אירועים עם בעיות זמינות
     return dayEvents.some(event => {
       // חיפוש הזמנה בעייתית לפי orderId
-      const hasConflicts = events.some(e => 
-        e.orderId === event.orderId && 
+      const hasConflicts = events.some(e =>
+        e.orderId === event.orderId &&
         e.availabilityStatus === 'CONFLICT'
       );
       return hasConflicts;
     });
+  };
+
+  // בדיקה האם יש הזמנות שלא הוחזרו
+  const hasOverdueOrders = (day) => {
+    const dayEvents = getEventsForDate(day);
+    return dayEvents.some(event => event.isOverdue);
   };
 
   // בדיקה האם תאריך סגור
@@ -99,12 +105,12 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     targetDate.setHours(0, 0, 0, 0);
-    
+
     // לא ניתן לסגור תאריכים בעבר
     if (targetDate < today) {
       return false;
     }
-    
+
     const dayEvents = getEventsForDate(day);
     const hasRealEvents = dayEvents.some(e => e.type !== 'השאלה פעילה');
     return !hasRealEvents;
@@ -123,34 +129,34 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   const isToday = (day) => {
     const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     const today = new Date();
-    
+
     return targetDate.getDate() === today.getDate() &&
-           targetDate.getMonth() === today.getMonth() &&
-           targetDate.getFullYear() === today.getFullYear();
+      targetDate.getMonth() === today.getMonth() &&
+      targetDate.getFullYear() === today.getFullYear();
   };
 
-  // ✅ פונקציה לחישוב אם יש שינויים
+  // פונקציה לחישוב אם יש שינויים
   const hasChanges = () => {
     // אם יש ימים שנבחרו לסגירה - זה שינוי
     if (selectedDatesForClosure.size > 0) {
       return true;
     }
-    
+
     // בדיקה אם המצב הנוכחי שונה מהמצב המקורי
     const currentClosedDatesSet = new Set(closedDates.map(d => d.date || d.id));
-    
+
     // אם הגדלים שונים - יש שינוי
     if (currentClosedDatesSet.size !== originalClosedDates.size) {
       return true;
     }
-    
+
     // אם יש תאריכים שונים - יש שינוי
     for (const date of currentClosedDatesSet) {
       if (!originalClosedDates.has(date)) {
         return true;
       }
     }
-    
+
     return false;
   };
 
@@ -174,29 +180,29 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
 
   // טיפול בבחירת תאריכים לסגירה/ביטול סגירה - עם לוג מפורט
   const handleDateSelectionForClosure = async (day) => {
-    console.log(`🎯 לחיצה על יום ${day} במצב עריכה`);
+    console.log(`לחיצה על יום ${day} במצב עריכה`);
     const isClosed = isDateClosed(day);
-    console.log(`🔍 היום סגור: ${isClosed}, מצב עריכה: ${editMode}`);
-    
+    console.log(`היום סגור: ${isClosed}, מצב עריכה: ${editMode}`);
+
     // אם היום כבר סגור - בטל את הסגירה מיידית ועדכן את התצוגה!
     if (isClosed) {
       const dateStr = createLocalDate(currentDate.getFullYear(), currentDate.getMonth(), day);
-      console.log(`🔓 מבטל סגירה של ${dateStr} - עדכון מיידי + נשאר במצב עריכה`);
-      
+      console.log(`מבטל סגירה של ${dateStr} - עדכון מיידי + נשאר במצב עריכה`);
+
       // עדכון מיידי לפני הקריאה לשרת
       setClosedDates(prevDates => {
         const newDates = prevDates.filter(d => d.date !== dateStr && d.id !== dateStr);
-        console.log(`📋 עדכון מיידי: הוסרו ${prevDates.length - newDates.length} ימים`);
+        console.log(`עדכון מיידי: הוסרו ${prevDates.length - newDates.length} ימים`);
         return newDates;
       });
-      
+
       // כעת שלח לשרת (ללא רענון נוסף שיכול לאפס את המצב)
       await removeClosedDateInEditMode(dateStr);
-      
-      console.log(`✅ סיום טיפול ביום ${day} - מצב עריכה: ${editMode}`);
+
+      console.log(`סיום טיפול ביום ${day} - מצב עריכה: ${editMode}`);
       return;
     }
-    
+
     // אם היום לא סגור - בדוק אם ניתן לסגור
     if (!canCloseDate(day)) {
       if (isPastDate(day)) {
@@ -208,40 +214,40 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     }
 
     const dateStr = createLocalDate(currentDate.getFullYear(), currentDate.getMonth(), day);
-    console.log(`⭕ מסמן יום לבן ${dateStr} לסגירה`);
-    
+    console.log(`מסמן יום לבן ${dateStr} לסגירה`);
+
     const newSelected = new Set(selectedDatesForClosure);
     if (newSelected.has(dateStr)) {
       newSelected.delete(dateStr);
-      console.log(`❌ הוסר מהבחירה: ${dateStr}`);
+      console.log(`הוסר מהבחירה: ${dateStr}`);
     } else {
       newSelected.add(dateStr);
-      console.log(`✅ נוסף לבחירה: ${dateStr}`);
+      console.log(`נוסף לבחירה: ${dateStr}`);
     }
     setSelectedDatesForClosure(newSelected);
-    console.log(`📊 סה"כ נבחרו לסגירה: ${newSelected.size} ימים`);
+    console.log(`סה"כ נבחרו לסגירה: ${newSelected.size} ימים`);
   };
 
   // הסרת יום סגור במצב עריכה (נשאר במצב עריכה!) - ללא fetchItemsAndOrders
   const removeClosedDateInEditMode = async (dateStr) => {
     try {
-      console.log(`🔓 מבטל סגירה במצב עריכה: ${dateStr}`);
+      console.log(`מבטל סגירה במצב עריכה: ${dateStr}`);
       const success = await closedDatesService.removeClosedDate(dateStr);
       if (success) {
-        console.log(`✅ הסגירה של ${dateStr} בוטלה - נשאר במצב עריכה`);
-        
-        // ⚠️ רק רענון ימים סגורים - לא כל הנתונים!
+        console.log(`הסגירה של ${dateStr} בוטלה - נשאר במצב עריכה`);
+
+        // רק רענון ימים סגורים - לא כל הנתונים!
         await loadClosedDates();
-        // 🚫 לא קוראים ל-fetchItemsAndOrders כדי לא לאפס את מצב העריכה
-        
-        console.log('🔓 יום בוטל מהסגירה - נשאר במצב עריכה');
+        // לא קוראים ל-fetchItemsAndOrders כדי לא לאפס את מצב העריכה
+
+        console.log('יום בוטל מהסגירה - נשאר במצב עריכה');
       } else {
         // אם השרת נכשל, החזר את המצב
         await loadClosedDates();
         alert('שגיאה בביטול הסגירה');
       }
     } catch (error) {
-      console.error('❌ שגיאה בביטול סגירת יום:', error);
+      console.error('שגיאה בביטול סגירת יום:', error);
       // החזר את המצב אם יש שגיאה
       await loadClosedDates();
       alert('שגיאה בביטול הסגירה');
@@ -250,24 +256,24 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
 
   // הפעלת מצב עריכה - עם לוג ושמירת מצב מקורי
   const startEditMode = () => {
-    console.log('🔧 מפעיל מצב עריכה');
+    console.log('מפעיל מצב עריכה');
     setEditMode(true);
     setSelectedDatesForClosure(new Set());
-    
-    // ✅ שמירת המצב המקורי של ימים סגורים
+
+    // שמירת המצב המקורי של ימים סגורים
     const currentClosedDatesSet = new Set(closedDates.map(d => d.date || d.id));
     setOriginalClosedDates(currentClosedDatesSet);
-    
-    console.log('✅ מצב עריכה פעיל, נשמר מצב מקורי:', currentClosedDatesSet);
+
+    console.log('מצב עריכה פעיל, נשמר מצב מקורי:', currentClosedDatesSet);
   };
 
   // ביטול מצב עריכה - עם לוג וניקוי מצב מקורי
   const cancelEditMode = () => {
-    console.log('❌ מבטל מצב עריכה');
+    console.log('מבטל מצב עריכה');
     setEditMode(false);
     setSelectedDatesForClosure(new Set());
-    setOriginalClosedDates(new Set()); // ✅ ניקוי מצב מקורי
-    console.log('✅ יצאנו ממצב עריכה');
+    setOriginalClosedDates(new Set()); // ניקוי מצב מקורי
+    console.log('יצאנו ממצב עריכה');
   };
 
   // שמירת ימים סגורים - מתוקן לטיפול בכל סוגי השינויים
@@ -277,33 +283,33 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
       // אם יש ימים שנבחרו לסגירה - סגור אותם
       if (selectedDatesForClosure.size > 0) {
         const dates = Array.from(selectedDatesForClosure);
-        console.log('📅 שומר ימים סגורים:', dates);
-        
+        console.log('שומר ימים סגורים:', dates);
+
         const results = await closedDatesService.addMultipleClosedDates(
-          dates, 
-          user.uid, 
+          dates,
+          user.uid,
           'יום סגור - נקבע על ידי המנהל'
         );
 
         if (results.success.length > 0) {
-          alert(`✅ ${results.success.length} ימים נסגרו בהצלחה`);
+          alert(`${results.success.length} ימים נסגרו בהצלחה`);
           await loadClosedDates();
-          
-          // 🔄 רענון כל הנתונים אחרי סגירת ימים
+
+          // רענון כל הנתונים אחרי סגירת ימים
           if (fetchItemsAndOrders) {
             await fetchItemsAndOrders();
           }
         }
 
         if (results.failed.length > 0) {
-          alert(`⚠️ ${results.failed.length} ימים לא הצליחו להיסגר`);
+          alert(`${results.failed.length} ימים לא הצליחו להיסגר`);
         }
       } else {
-        // ✅ אין ימים לסגירה אבל יש שינויים (כמו ביטול ימים שכבר בוטלו)
-        console.log('✅ שינויים כבר בוצעו (ביטול ימים סגורים), מסיים מצב עריכה');
-        alert('✅ השינויים נשמרו בהצלחה!');
-        
-        // 🔄 רענון כל הנתונים גם אחרי ביטול ימים
+        // אין ימים לסגירה אבל יש שינויים (כמו ביטול ימים שכבר בוטלו)
+        console.log('שינויים כבר בוצעו (ביטול ימים סגורים), מסיים מצב עריכה');
+        alert('השינויים נשמרו בהצלחה!');
+
+        // רענון כל הנתונים גם אחרי ביטול ימים
         if (fetchItemsAndOrders) {
           await fetchItemsAndOrders();
         }
@@ -312,10 +318,10 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
       // יציאה ממצב עריכה תמיד בסוף
       setEditMode(false);
       setSelectedDatesForClosure(new Set());
-      setOriginalClosedDates(new Set()); // ✅ ניקוי מצב מקורי
-      
+      setOriginalClosedDates(new Set()); // ניקוי מצב מקורי
+
     } catch (error) {
-      console.error('❌ שגיאה בשמירת שינויים:', error);
+      console.error('שגיאה בשמירת שינויים:', error);
       alert('שגיאה בשמירת השינויים');
     } finally {
       setSaving(false);
@@ -343,10 +349,10 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   const firstDay = getFirstDayOfMonth(currentDate);
   const days = [];
 
-  // ✅ הדפסת debug לוודא שהחודש נכון
-  console.log('📅 CalendarGrid - בונה לוח לחודש:', currentDate.getMonth() + 1, 'שנה:', currentDate.getFullYear());
-  console.log('📅 ימים בחודש:', daysInMonth, 'יום ראשון:', firstDay);
-  
+  // הדפסת debug לוודא שהחודש נכון
+  console.log('CalendarGrid - בונה לוח לחודש:', currentDate.getMonth() + 1, 'שנה:', currentDate.getFullYear());
+  console.log('ימים בחודש:', daysInMonth, 'יום ראשון:', firstDay);
+
   // ימים ריקים בתחילת החודש
   for (let i = 0; i < firstDay; i++) {
     days.push(<div key={`empty-${i}`} className="day-cell empty"></div>);
@@ -365,8 +371,9 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     const canClose = canCloseDate(day);
     const isPast = isPastDate(day);
     const isCurrentDay = isToday(day);
-    const hasConflicts = hasAvailabilityConflicts(day); // ✅ בדיקת בעיות זמינות
-    
+    const hasConflicts = hasAvailabilityConflicts(day);
+    const hasOverdue = hasOverdueOrders(day); // בדיקת הזמנות שלא הוחזרו
+
     const dateStr = createLocalDate(currentDate.getFullYear(), currentDate.getMonth(), day);
     const isSelectedForClosure = selectedDatesForClosure.has(dateStr);
 
@@ -379,17 +386,19 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     if (isCurrentDay) dayClasses += ' today';
     if (editMode && (canClose || isClosed)) dayClasses += ' can-manage';
     if (isSelectedForClosure) dayClasses += ' selected-for-closure';
-    if (hasConflicts) dayClasses += ' availability-conflict'; // ✅ CSS class חדש
+    if (hasConflicts) dayClasses += ' availability-conflict';
+    if (hasOverdue) dayClasses += ' overdue-orders'; // CSS class חדש
 
-    // ✅ debug ליום 4 ליולי
+    // debug ליום 4 ליולי
     if (day === 4 && currentDate.getMonth() === 6) { // יולי = חודש 6
-      console.log('🎯 יום 4 ביולי - נוצר עם:', {
+      console.log('יום 4 ביולי - נוצר עם:', {
         day,
         month: currentDate.getMonth() + 1,
         year: currentDate.getFullYear(),
         dateStr,
         hasEvents: hasAnyEvent,
         hasConflicts,
+        hasOverdue,
         dayClasses
       });
     }
@@ -399,11 +408,11 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
         key={day}
         className={dayClasses}
         onClick={() => handleDateClick(day)}
-        data-day={day} // ✅ הוספת data-day לזיהוי הדגשה
-        data-month={currentDate.getMonth() + 1} // ✅ הוספת החודש לזיהוי
+        data-day={day}
+        data-month={currentDate.getMonth() + 1}
         style={{
-          cursor: editMode ? 
-            (canClose || isClosed ? 'pointer' : 'not-allowed') : 
+          cursor: editMode ?
+            (canClose || isClosed ? 'pointer' : 'not-allowed') :
             (dayEvents.some(e => e.type !== 'השאלה פעילה') ? 'pointer' : 'default')
         }}
       >
@@ -423,8 +432,15 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
           </div>
         )}
 
-        {/* ✅ אינדיקטור בעיות זמינות - עם פעמון */}
-        {hasConflicts && !isClosed && (
+        {/* אינדיקטור הזמנות שלא הוחזרו - עדיפות גבוהה */}
+        {hasOverdue && !isClosed && (
+          <div className="overdue-indicator" title="הזמנות שלא הוחזרו בזמן">
+            🚨
+          </div>
+        )}
+
+        {/* אינדיקטור בעיות זמינות - עם פעמון (רק אם אין overdue) */}
+        {hasConflicts && !isClosed && !hasOverdue && (
           <div className="conflict-indicator" title="בעיות זמינות - לחץ לפרטים">
             <Bell size={16} style={{ color: '#9333ea' }} />
           </div>
@@ -443,12 +459,12 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
         {!isClosed && (
           <div className="event-icons">
             {pickupEvents.length > 0 && (
-              <div className={`event-tag pickup-tag ${hasConflicts ? 'conflict' : ''}`} title="איסוף מוצרים">
+              <div className={`event-tag pickup-tag ${hasOverdue ? 'overdue' : hasConflicts ? 'conflict' : ''}`} title="איסוף מוצרים">
                 📦 {pickupEvents.length > 1 && pickupEvents.length}
               </div>
             )}
             {returnEvents.length > 0 && (
-              <div className={`event-tag return-tag ${hasConflicts ? 'conflict' : ''}`} title="החזרת מוצרים">
+              <div className={`event-tag return-tag ${hasOverdue ? 'overdue' : hasConflicts ? 'conflict' : ''}`} title="החזרת מוצרים">
                 🔄 {returnEvents.length > 1 && returnEvents.length}
               </div>
             )}
@@ -457,7 +473,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
 
         {/* מספר הזמנות */}
         {!isClosed && uniqueOrderCount > 0 && (
-          <div className={`event-count ${hasConflicts ? 'conflict' : ''}`} title={`${uniqueOrderCount} הזמנות`}>
+          <div className={`event-count ${hasOverdue ? 'overdue' : hasConflicts ? 'conflict' : ''}`} title={`${uniqueOrderCount} הזמנות`}>
             {uniqueOrderCount}
           </div>
         )}
@@ -471,11 +487,11 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
         <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
           <ChevronRight size={20} />
         </button>
-        
+
         <h2 className="calendar-title">
           <Calendar size={24} /> {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </h2>
-        
+
         <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>
           <ChevronLeft size={20} />
         </button>
@@ -486,7 +502,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
         <div className="calendar-controls">
           {!editMode ? (
             <div className="control-buttons">
-              <button 
+              <button
                 className="btn-edit-dates"
                 onClick={startEditMode}
                 title="בטל תאריכים"
@@ -501,15 +517,15 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
                 📝 מצב עריכה: בחר ימים לבנים לסגירה או ימים סגורים לביטול ({selectedDatesForClosure.size} נבחרו)
               </span>
               <div className="edit-buttons">
-                <button 
+                <button
                   className="btn-save"
                   onClick={saveClosedDates}
-                  disabled={saving || !hasChanges()} // ✅ שימוש בפונקציה החדשה
+                  disabled={saving || !hasChanges()}
                 >
                   <Save size={16} />
                   {saving ? 'שומר...' : 'שמור'}
                 </button>
-                <button 
+                <button
                   className="btn-cancel"
                   onClick={cancelEditMode}
                   disabled={saving}
@@ -523,7 +539,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
         </div>
       )}
 
-      {/* ✅ תיקון ימי השבוע - התחלה ביום ראשון */}
+      {/* תיקון ימי השבוע - התחלה ביום ראשון */}
       <div className="day-names">
         {dayNames.map(day => (
           <div key={day} className="day-name">{day}</div>
@@ -539,7 +555,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
           <span className="legend-item">📦 איסוף מוצרים</span>
           <span className="legend-item">🔄 החזרת מוצרים</span>
           {closedDates.length > 0 && <span className="legend-item">🔒 ימים סגורים ({closedDates.length})</span>}
-          {/* ✅ הוספת מקרא לבעיות זמינות */}
+          <span className="legend-item">🚨 הזמנות שלא הוחזרו</span>
           <span className="legend-item">🔔 בעיות זמינות</span>
           {editMode && <span className="legend-item">⭕ זמין לסגירה • 🔓 זמין לביטול</span>}
           <span className="legend-item">📅 היום</span>

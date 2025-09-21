@@ -1,4 +1,4 @@
-/* src/components/css/CalendarGrid.css - עודכן עם כפתור מחיקה */
+/* src/components/css/CalendarGrid.css - עודכן עם כפתור מחיקה ו-overdue orders */
 
 .calendar-container {
   max-width: 1200px;
@@ -56,7 +56,8 @@
   align-items: center;
 }
 
-.btn-edit-dates, .btn-clear-all {
+.btn-edit-dates,
+.btn-clear-all {
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
@@ -122,7 +123,8 @@
   gap: 8px;
 }
 
-.btn-save, .btn-cancel {
+.btn-save,
+.btn-cancel {
   padding: 6px 12px;
   border: none;
   border-radius: 4px;
@@ -282,6 +284,236 @@
   pointer-events: none;
 }
 
+/* 🚨 OVERDUE ORDERS - HIGHEST PRIORITY */
+.day-cell.overdue-orders {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  border: 2px solid #ef4444 !important;
+  animation: overdueWarning 3s ease-in-out infinite !important;
+  position: relative;
+}
+
+.day-cell.overdue-orders .event-tag {
+  background: #ef4444 !important;
+  color: white !important;
+  font-weight: bold !important;
+  border: 1px solid #dc2626 !important;
+}
+
+.day-cell.overdue-orders .event-count {
+  background: #dc2626 !important;
+  color: white !important;
+  font-weight: bold !important;
+  border: 1px solid #b91c1c !important;
+}
+
+.day-cell.overdue-orders .day-number {
+  color: #dc2626 !important;
+  font-weight: bold !important;
+}
+
+/* Overdue warning animation */
+@keyframes overdueWarning {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    transform: scale(1.02);
+  }
+}
+
+/* Overdue indicator */
+.overdue-indicator {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: #dc2626;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 2;
+  animation: overdueFlash 2s ease-in-out infinite;
+}
+
+@keyframes overdueFlash {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Priority system - overdue takes precedence over conflicts */
+.day-cell.overdue-orders.availability-conflict {
+  /* Overdue styling wins over conflict styling */
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  border: 2px solid #ef4444 !important;
+}
+
+/* Make sure overdue is visible even on past days */
+.day-cell.overdue-orders.past-day {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  opacity: 1 !important;
+}
+
+/* Hover effects for overdue orders */
+.day-cell.overdue-orders:hover {
+  background: linear-gradient(135deg, #fecaca 0%, #f87171 100%) !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* ✅ סטיילינג לימים עם בעיות זמינות - עדיפות נמוכה יותר מ-overdue */
+.day-cell.availability-conflict {
+  border: 2px solid #9333ea !important;
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #e9d5ff 100%) !important;
+  position: relative;
+  animation: conflictPulse 3s ease-in-out infinite;
+}
+
+/* ✅ אנימציית דופק לימים בעייתיים */
+@keyframes conflictPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(147, 51, 234, 0.1);
+    transform: scale(1.02);
+  }
+}
+
+/* ✅ אינדיקטור בעיות זמינות */
+.conflict-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: #9333ea;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 2;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-3px);
+  }
+
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+/* ✅ עיצוב מיוחד לאירועים בעייתיים */
+.event-tag.conflict {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%) !important;
+  color: white !important;
+  border: 1px solid #6d28d9 !important;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3) !important;
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Overdue event tags */
+.event-tag.overdue {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  color: white !important;
+  border: 1px solid #b91c1c !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-2px);
+  }
+
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+/* ✅ מונה הזמנות בעייתי */
+.event-count.conflict {
+  background: #9333ea !important;
+  color: white !important;
+  border: 2px solid #6d28d9 !important;
+  font-weight: bold !important;
+  animation: conflictGlow 2s ease-in-out infinite;
+}
+
+/* Overdue event count */
+.event-count.overdue {
+  background: #dc2626 !important;
+  color: white !important;
+  border: 2px solid #b91c1c !important;
+  font-weight: bold !important;
+  animation: overdueGlow 2s ease-in-out infinite;
+}
+
+@keyframes conflictGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(147, 51, 234, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 15px rgba(147, 51, 234, 0.8);
+  }
+}
+
+@keyframes overdueGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(220, 38, 38, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 15px rgba(220, 38, 38, 0.8);
+  }
+}
+
 /* 🎯 מצב עריכה */
 .day-cell.can-manage {
   border: 2px dashed #28a745 !important;
@@ -305,34 +537,6 @@
   right: 5px;
   font-size: 1rem;
   font-weight: bold;
-}
-
-/* 📱 תצוגה מותאמת למובייל */
-@media (max-width: 768px) {
-  .control-buttons {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .btn-edit-dates, .btn-clear-all {
-    justify-content: center;
-  }
-
-  .today-indicator {
-    font-size: 0.7rem;
-  }
-
-  .closed-indicator {
-    font-size: 1.5rem;
-  }
-
-  .closure-selector {
-    font-size: 0.9rem;
-  }
-
-  .day-cell.today .day-number {
-    font-size: 1rem;
-  }
 }
 
 .day-number {
@@ -482,7 +686,7 @@
   margin-top: 10px;
 }
 
-/* Responsive design */
+/* Mobile responsiveness for overdue and conflict indicators */
 @media (max-width: 768px) {
   .calendar-container {
     padding: 10px;
@@ -517,6 +721,59 @@
     font-size: 0.65rem;
   }
 
+  .overdue-indicator,
+  .conflict-indicator {
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    top: 1px;
+    left: 1px;
+  }
+
+  .overdue-indicator {
+    top: 2px;
+    left: 2px;
+  }
+
+  .conflict-indicator {
+    top: 4px;
+    left: 4px;
+  }
+
+  .day-cell.overdue-orders {
+    animation: overdueWarningMobile 2s ease-in-out infinite !important;
+  }
+
+  .day-cell.availability-conflict {
+    border: 1px solid #9333ea !important;
+  }
+
+  @keyframes overdueWarningMobile {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    50% {
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  @keyframes conflictPulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
+      transform: scale(1);
+    }
+
+    50% {
+      box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1);
+      transform: scale(1.01);
+    }
+  }
+
   .edit-controls {
     flex-direction: column;
     align-items: stretch;
@@ -535,234 +792,30 @@
   .calendar-controls {
     text-align: center;
   }
-}
-/* תוספות לקובץ src/components/css/CalendarGrid.css */
 
-/* ✅ סטיילינג לימים עם בעיות זמינות */
-.day-cell.availability-conflict {
-  border: 2px solid #9333ea !important;
-  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #e9d5ff 100%) !important;
-  position: relative;
-  animation: conflictPulse 3s ease-in-out infinite;
-}
-
-/* ✅ אנימציית דופק לימים בעייתיים */
-@keyframes conflictPulse {
-  0%, 100% { 
-    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
-    transform: scale(1);
+  .control-buttons {
+    flex-direction: column;
+    align-items: stretch;
   }
-  50% { 
-    box-shadow: 0 0 0 8px rgba(147, 51, 234, 0.1);
-    transform: scale(1.02);
+
+  .btn-edit-dates,
+  .btn-clear-all {
+    justify-content: center;
   }
-}
 
-/* ✅ אינדיקטור בעיות זמינות */
-.conflict-indicator {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  background: #9333ea;
-  color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: bold;
-  z-index: 2;
-  animation: bounce 2s ease-in-out infinite;
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
+  .today-indicator {
+    font-size: 0.7rem;
   }
-  40% {
-    transform: translateY(-3px);
+
+  .closed-indicator {
+    font-size: 1.5rem;
   }
-  60% {
-    transform: translateY(-2px);
+
+  .closure-selector {
+    font-size: 0.9rem;
   }
-}
 
-/* ✅ עיצוב מיוחד לאירועים בעייתיים */
-.event-tag.conflict {
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%) !important;
-  color: white !important;
-  border: 1px solid #6d28d9 !important;
-  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3) !important;
-  animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
-}
-
-/* ✅ מונה הזמנות בעייתי */
-.event-count.conflict {
-  background: #dc2626 !important;
-  color: white !important;
-  border: 2px solid #991b1b !important;
-  font-weight: bold !important;
-  animation: conflictGlow 2s ease-in-out infinite;
-}
-
-@keyframes conflictGlow {
-  0%, 100% { 
-    box-shadow: 0 0 5px rgba(220, 38, 38, 0.5);
+  .day-cell.today .day-number {
+    font-size: 1rem;
   }
-  50% { 
-    box-shadow: 0 0 15px rgba(220, 38, 38, 0.8);
-  }
-}
-
-/* ✅ רספונסיביות למובייל */
-@media (max-width: 768px) {
-  .conflict-indicator {
-    width: 16px;
-    height: 16px;
-    top: 2px;
-    left: 2px;
-  }
-  
-  /* =========================
-   עדכוני צבעים לסגול
-   ========================= */
-
-/* 1️⃣ CalendarGrid.css - החלף את הצבעים האדומים */
-
-/* ימים עם בעיות זמינות - במקום אדום */
-.day-cell.availability-conflict {
-  border: 2px solid #9333ea !important;
-  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #e9d5ff 100%) !important;
-  position: relative;
-  animation: conflictPulse 3s ease-in-out infinite;
-}
-
-/* אנימציית דופק לימים בעייתיים - במקום אדום */
-@keyframes conflictPulse {
-  0%, 100% { 
-    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
-    transform: scale(1);
-  }
-  50% { 
-    box-shadow: 0 0 0 8px rgba(147, 51, 234, 0.1);
-    transform: scale(1.02);
-  }
-}
-
-/* אינדיקטור בעיות זמינות - במקום אדום */
-.conflict-indicator {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  background: #9333ea;
-  color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: bold;
-  z-index: 2;
-  animation: bounce 2s ease-in-out infinite;
-}
-
-/* עיצוב מיוחד לאירועים בעייתיים - במקום אדום */
-.event-tag.conflict {
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%) !important;
-  color: white !important;
-  border: 1px solid #6d28d9 !important;
-  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3) !important;
-  animation: shake 0.5s ease-in-out;
-}
-
-/* מונה הזמנות בעייתי - במקום אדום */
-.event-count.conflict {
-  background: #9333ea !important;
-  color: white !important;
-  border: 2px solid #6d28d9 !important;
-  font-weight: bold !important;
-  animation: conflictGlow 2s ease-in-out infinite;
-}
-
-@keyframes conflictGlow {
-  0%, 100% { 
-    box-shadow: 0 0 5px rgba(147, 51, 234, 0.5);
-  }
-  50% { 
-    box-shadow: 0 0 15px rgba(147, 51, 234, 0.8);
-  }
-}
-
-/* עדכון למובייל */
-@media (max-width: 768px) {
-  .day-cell.availability-conflict {
-    border: 1px solid #9333ea !important;
-  }
-  
-  @keyframes conflictPulse {
-    0%, 100% { 
-      box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
-      transform: scale(1);
-    }
-    50% { 
-      box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1);
-      transform: scale(1.01);
-    }
-  }
-}
-
-/* עיצוב מיוחד כשיש גם יום סגור וגם בעיות זמינות */
-.day-cell.availability-conflict.closed-day {
-  background: repeating-linear-gradient(
-    45deg,
-    #faf5ff,
-    #faf5ff 10px,
-    #f3f4f6 10px,
-    #f3f4f6 20px
-  ) !important;
-  border: 2px solid #9333ea !important;
-}
-
-/* מצב hover מיוחד לימים בעייתיים */
-.day-cell.availability-conflict:hover {
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4) !important;
-  z-index: 5;
-  cursor: pointer !important;
-}
-
-/* הוסר חפיפות עם אלמנטים אחרים */
-.day-cell.availability-conflict .day-number {
-  color: #6d28d9 !important;
-  font-weight: bold !important;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-/* טקסט עזר בימים בעייתיים */
-.day-cell.availability-conflict::after {
-  content: "🔔";
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  font-size: 12px;
-  opacity: 0.8;
-}
-
-@media (max-width: 768px) {
-  .day-cell.availability-conflict::after {
-    font-size: 10px;
-    bottom: 1px;
-    right: 1px;
-  }
-}
 }

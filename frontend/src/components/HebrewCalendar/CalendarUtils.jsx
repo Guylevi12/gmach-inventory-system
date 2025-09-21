@@ -28,6 +28,8 @@ export const updateStockIfNeeded = async (orderSnap, db) => {
 };
 
 export const buildCalendarEvents = (orderSnap, itemsData) => {
+  const today = stripTime(new Date());
+
   return orderSnap.docs.flatMap(docSnap => {
     const order = docSnap.data();
 
@@ -50,6 +52,10 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
 
       pickupDate.setHours(0, 0, 0, 0);
       returnDate.setHours(0, 0, 0, 0);
+
+      // ✅ Check if order is overdue
+      const isOverdue = today > returnDate;
+      const overdueDays = isOverdue ? Math.ceil((today - returnDate) / (1000 * 60 * 60 * 24)) : 0;
 
       const daysDiff = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24));
 
@@ -79,9 +85,9 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
           date: new Date(currentDate),
           clientName: order.clientName,
           phone: order.phone,
-          email: order.email, // ADDED: Include email field
-          manualEmailSent: order.manualEmailSent || false, // ✅ ENHANCED: Track if manual email was sent
-          manualEmailSentAt: order.manualEmailSentAt || null, // ✅ ADDED: Track when email was sent
+          email: order.email,
+          manualEmailSent: order.manualEmailSent || false,
+          manualEmailSentAt: order.manualEmailSentAt || null,
           type: eventType,
           icon: eventIcon,
           description: eventDescription,
@@ -91,11 +97,14 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
           dayNumber: i + 1,
           totalDays: daysDiff + 1,
           isMultiDay: daysDiff > 0,
-          // ✅ הוספת מידע על בעיות זמינות
+          // ✅ Add overdue status
+          isOverdue: isOverdue,
+          overdueDays: overdueDays,
+          // הוספת מידע על בעיות זמינות
           availabilityStatus: order.availabilityStatus || 'OK',
           availabilityConflicts: order.availabilityConflicts || [],
           needsAttention: order.needsAttention || false,
-          // ✅ ADDED: Additional order fields that might be useful
+          // Additional order fields
           eventType: order.eventType || 'כללי',
           pickupLocation: order.pickupLocation || 'מיקום לפי תיאום',
           specialInstructions: order.specialInstructions || 'אין הוראות מיוחדות'
@@ -119,7 +128,7 @@ export const fetchItemsAndOrders = async (db, setAllItems, setItemsMap, setEvent
         itemId: data.ItemId,
         name: data.name,
         imageUrl: data.imageUrl,
-        quantity: data.quantity || 0, // 🔧 ADDED THIS LINE!
+        quantity: data.quantity || 0,
         isDeleted: data.isDeleted || false
       };
     }).filter(item => !item.isDeleted); // Filter out deleted items
