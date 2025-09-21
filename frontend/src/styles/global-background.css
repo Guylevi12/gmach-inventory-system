@@ -1,59 +1,42 @@
-/* src/styles/global-background.css - נקודות ישירות על הbody */
+/* src/styles/background.css - Fixed version */
 
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Heebo:wght@400;500;600;700;800&display=swap');
 
-/* 🎨 רקע אחיד לכל האתר */
+/* Reset any existing backgrounds */
+html,
 body {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
-  background-attachment: fixed !important;
-  min-height: 100vh !important;
-  font-family: "Assistant", "Heebo", system-ui, sans-serif !important;
+  background: none !important;
+  background-color: #f4e6e6 !important;
+  background-image: none !important;
   margin: 0 !important;
   padding: 0 !important;
+  min-height: 100vh !important;
+  font-family: "Assistant", "Heebo", system-ui, sans-serif !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
+}
+
+/* Pink background with gray dots for ALL pages */
+body {
+  background: #f4e6e6 !important;
   position: relative !important;
 }
 
-/* 🔵 נקודות טורקיז ישירות על הbody לדפים ספציפיים */
-body.about-page,
-body.catalog-page,
-body.login-page,
-body.register-page,
-body.donations-page,
-body.guidelines-page,
-body.new-loan-page,
-body.calendar-page,
-body.orders-page,
-body.history-page,
-body.manage-page,
-body.other-page {
-  background: 
-    linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%),
-    radial-gradient(circle at center, rgba(20, 184, 166, 0.7) 2px, transparent 2px),
-    radial-gradient(circle at center, rgba(20, 184, 166, 0.5) 3px, transparent 3px),
-    radial-gradient(circle at center, rgba(20, 184, 166, 0.6) 1px, transparent 1px) !important;
-  background-size: 
-    auto,
-    40px 40px, 
-    80px 80px, 
-    25px 25px !important;
-  background-position: 
-    0 0,
-    0 0, 
-    40px 40px, 
-    15px 15px !important;
-  background-repeat: repeat !important;
-  background-attachment: fixed !important;
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle, #9ca3af 4px, transparent 4px);
+  background-size: 50px 50px;
+  background-repeat: repeat;
+  z-index: -1;
+  pointer-events: none;
 }
 
-/* 🏠 דף הבית ללא נקודות */
-body.home-page {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
-  background-attachment: fixed !important;
-}
-
-/* 🔧 אחידות לכל הקונטיינרים */
+/* Ensure all containers are transparent to show background */
 .App,
 .main-content,
 .container,
@@ -63,15 +46,15 @@ body.home-page {
   background-color: transparent !important;
 }
 
-/* 📱 navbar עם רקע לבן */
-nav, 
+/* Keep navigation white */
+nav,
 .navbar {
   background: white !important;
   backdrop-filter: blur(10px) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* 🔲 כרטיסים ותיבות עם רקע לבן שקוף */
+/* Glass effect for cards */
 .glass-card {
   background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(10px) !important;
@@ -81,85 +64,7 @@ nav,
   transition: all 0.3s ease !important;
 }
 
-.glass-card:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
-}
-
-/* 🎭 אנימציות */
-.fade-in {
-  animation: fadeIn 1s ease-in;
-}
-
-@keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(20px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-.slide-in-left {
-  animation: slideInLeft 0.8s ease-out;
-}
-
-@keyframes slideInLeft {
-  from { 
-    opacity: 0; 
-    transform: translateX(-30px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateX(0); 
-  }
-}
-
-.slide-in-right {
-  animation: slideInRight 0.8s ease-out;
-}
-
-@keyframes slideInRight {
-  from { 
-    opacity: 0; 
-    transform: translateX(30px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateX(0); 
-  }
-}
-
-/* 📱 תמיכה במובייל */
-@media (max-width: 768px) {
-  body.about-page,
-  body.catalog-page,
-  body.login-page,
-  body.register-page,
-  body.donations-page,
-  body.guidelines-page,
-  body.new-loan-page,
-  body.calendar-page,
-  body.orders-page,
-  body.history-page,
-  body.manage-page,
-  body.other-page {
-    background-size: 
-      auto,
-      30px 30px, 
-      60px 60px, 
-      20px 20px !important;
-    background-attachment: scroll !important;
-  }
-  
-  .glass-card {
-    margin: 1rem !important;
-  }
-}
-
-/* 🔧 תיקון ספציפי לתפריט מובייל */
+/* Mobile menu fix */
 div[style*="position: fixed"][style*="right: 0"][style*="height: 100%"],
 .mobile-menu-sidebar,
 .mobile-sidebar-force-white {
@@ -169,7 +74,9 @@ div[style*="position: fixed"][style*="right: 0"][style*="height: 100%"],
   backdrop-filter: none !important;
 }
 
-/* 🧪 דריסה סופית לוודאות */
-html {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  body::before {
+    background-size: 40px 40px;
+  }
 }
