@@ -1,6 +1,6 @@
-// src/components/AvailabilityNotification.jsx - התראה צדדית פשוטה ללא X
+// src/components/AvailabilityNotification.jsx - התראה צדדית עם dismissal מותאם אישית
 import React, { useState, useEffect } from 'react';
-import { Bell, Calendar, AlertCircle } from 'lucide-react';
+import { Bell, Calendar, AlertCircle, X, Minimize2 } from 'lucide-react';
 import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
 import { useUser } from '../UserContext';
@@ -11,6 +11,40 @@ const AvailabilityNotification = () => {
   const navigate = useNavigate();
   const [conflicts, setConflicts] = useState([]);
   const [isVisible, setIsVisible] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [userDismissed, setUserDismissed] = useState(false);
+
+  // בדיקה האם זה מובייל
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // ✅ בדיקת dismissal ספציפי למשתמש (15 דקות במקום שעה)
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const dismissKey = `conflicts_dismissed_${user.uid}`;
+    const dismissTime = localStorage.getItem(dismissKey);
+
+    if (dismissTime) {
+      const minutesPassed = (Date.now() - parseInt(dismissTime)) / (1000 * 60);
+      if (minutesPassed < 15) { // 15 דקות במקום שעה
+        setUserDismissed(true);
+      } else {
+        // נקה אחרי 15 דקות
+        localStorage.removeItem(dismissKey);
+        setUserDismissed(false);
+      }
+    }
+  }, [user?.uid]);
 
   // בדיקה האם המשתמש רשאי לראות התראות
   const canSeeNotifications = user && (user.role === 'MainAdmin' || user.role === 'GmachAdmin');
@@ -33,11 +67,11 @@ const AvailabilityNotification = () => {
 
         snapshot.docs.forEach(doc => {
           const order = doc.data();
-          if (order.status === 'open' && 
-              order.availabilityStatus === 'CONFLICT' && 
-              order.availabilityConflicts && 
-              order.availabilityConflicts.length > 0) {
-            
+          if (order.status === 'open' &&
+            order.availabilityStatus === 'CONFLICT' &&
+            order.availabilityConflicts &&
+            order.availabilityConflicts.length > 0) {
+
             problematicOrders.push({
               id: doc.id,
               clientName: order.clientName,
@@ -50,18 +84,23 @@ const AvailabilityNotification = () => {
         });
 
         console.log(`🔔 עדכון בזמן אמת: נמצאו ${problematicOrders.length} הזמנות עם בעיות זמינות`);
-        
+
         setConflicts(problematicOrders);
         setIsVisible(problematicOrders.length > 0);
+
+        // ✅ אם יש בעיות חדשות, הצג את ההתראה שוב למשתמש הזה
+        if (problematicOrders.length > 0) {
+          setIsMinimized(false);
+          // אפס את ה-dismissal אם יש בעיות חדשות
+          setUserDismissed(false);
+        }
       },
       (error) => {
         console.error('❌ שגיאה במעקב בזמן אמת:', error);
-        // ✅ אם יש שגיאה, חזור לבדיקה ידנית
         loadConflictsManually();
       }
     );
 
-    // ✅ ניקוי המאזין כשהקומפוננט נמחק
     return () => {
       console.log('🔔 מפסיק מעקב בזמן אמת');
       unsubscribe();
@@ -77,11 +116,11 @@ const AvailabilityNotification = () => {
 
       ordersSnap.docs.forEach(doc => {
         const order = doc.data();
-        if (order.status === 'open' && 
-            order.availabilityStatus === 'CONFLICT' && 
-            order.availabilityConflicts && 
-            order.availabilityConflicts.length > 0) {
-          
+        if (order.status === 'open' &&
+          order.availabilityStatus === 'CONFLICT' &&
+          order.availabilityConflicts &&
+          order.availabilityConflicts.length > 0) {
+
           problematicOrders.push({
             id: doc.id,
             clientName: order.clientName,
@@ -100,14 +139,31 @@ const AvailabilityNotification = () => {
     }
   };
 
-  // אם אין הרשאות או אין בעיות - לא מציג כלום
-  if (!canSeeNotifications || conflicts.length === 0 || !isVisible) {
+  // אם אין הרשאות או אין בעיות או המשתמש סגר - לא מציג כלום
+  if (!canSeeNotifications || conflicts.length === 0 || !isVisible || userDismissed) {
     return null;
   }
 
   // ✅ פונקציה פשוטה לעבור להשאלות פתוחות
   const handleNavigateToCalendar = () => {
     navigate('/calendar');
+  };
+
+  // ✅ פונקציה לסגירת ההתראה - ספציפי למשתמש ל-15 דקות
+  const handleClose = () => {
+    if (user?.uid) {
+      const dismissKey = `conflicts_dismissed_${user.uid}`;
+      localStorage.setItem(dismissKey, Date.now().toString());
+      console.log(`✅ משתמש ${user.uid} סגר את ההתראה ל-15 דקות`);
+    }
+
+    setIsVisible(false);
+    setUserDismissed(true);
+  };
+
+  // פונקציה למזעור/הגדלת ההתראה
+  const handleMinimize = () => {
+    setIsMinimized(!isMinimized);
   };
 
   return (
@@ -130,6 +186,17 @@ const AvailabilityNotification = () => {
           }
         }
 
+        @keyframes slideInMobile {
+          from { 
+            transform: translateY(-100%); 
+            opacity: 0; 
+          }
+          to { 
+            transform: translateY(0); 
+            opacity: 1; 
+          }
+        }
+
         @keyframes pulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4); }
           50% { box-shadow: 0 0 0 8px rgba(147, 51, 234, 0.1); }
@@ -137,12 +204,24 @@ const AvailabilityNotification = () => {
 
         .notification-container {
           position: fixed;
-          bottom: 100px;
-          right: 20px;
           z-index: 10000;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           direction: rtl;
+        }
+
+        /* Desktop positioning */
+        .notification-container.desktop {
+          bottom: 100px;
+          right: 20px;
           animation: slideIn 0.5s ease-out;
+        }
+
+        /* Mobile positioning - top center for better visibility */
+        .notification-container.mobile {
+          top: 70px;
+          left: 10px;
+          right: 10px;
+          animation: slideInMobile 0.5s ease-out;
         }
 
         .notification-card {
@@ -151,9 +230,19 @@ const AvailabilityNotification = () => {
           border-radius: 16px;
           box-shadow: 0 8px 25px rgba(147, 51, 234, 0.2);
           overflow: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .notification-card.desktop {
           min-width: 280px;
           max-width: 350px;
           animation: pulse 3s ease-in-out infinite;
+        }
+
+        .notification-card.mobile {
+          width: 100%;
+          max-height: ${isMinimized ? '60px' : '80vh'};
+          animation: ${isMinimized ? 'none' : 'pulse 3s ease-in-out infinite'};
         }
 
         .notification-header {
@@ -163,7 +252,8 @@ const AvailabilityNotification = () => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          cursor: default;
+          cursor: ${isMobile ? 'pointer' : 'default'};
+          min-height: 60px;
         }
 
         .header-content {
@@ -173,16 +263,62 @@ const AvailabilityNotification = () => {
           flex: 1;
         }
 
+        .header-controls {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .control-button {
+          background: rgba(255, 255, 255, 0.2);
+          border: none;
+          border-radius: 6px;
+          color: white;
+          cursor: pointer;
+          padding: 8px;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 32px;
+          min-height: 32px;
+        }
+
+        .control-button:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: scale(1.1);
+        }
+
+        .control-button:active {
+          transform: scale(0.95);
+        }
+
         .bell-icon {
           animation: bellRing 2s ease-in-out infinite;
         }
 
         .notification-body {
-          padding: 16px;
           background: rgba(248, 250, 252, 0.8);
-          max-height: 300px;
+          transition: all 0.3s ease-out;
           overflow-y: auto;
-          transition: max-height 0.3s ease-out;
+        }
+
+        .notification-body.desktop {
+          padding: 16px;
+          max-height: 300px;
+        }
+
+        .notification-body.mobile {
+          padding: ${isMinimized ? '0' : '16px'};
+          max-height: ${isMinimized ? '0' : '60vh'};
+          opacity: ${isMinimized ? '0' : '1'};
+        }
+
+        .notification-body.minimized {
+          padding: 0;
+          max-height: 0;
+          overflow: hidden;
+          opacity: 0;
         }
 
         .conflict-item {
@@ -228,24 +364,92 @@ const AvailabilityNotification = () => {
           font-weight: 500;
         }
 
-        @media (max-width: 768px) {
-          .notification-container {
-            bottom: 80px;
-            right: 10px;
-            left: 10px;
+        .action-button {
+          background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 14px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          width: 100%;
+          margin-top: 12px;
+          box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          min-height: 48px;
+        }
+
+        .action-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(147, 51, 234, 0.4);
+        }
+
+        .action-button:active {
+          transform: translateY(0);
+        }
+
+        .instructions {
+          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+          border: 1px solid #f59e0b;
+          border-radius: 8px;
+          padding: 12px;
+          margin-top: 12px;
+          font-size: 0.8rem;
+          color: #92400e;
+          line-height: 1.4;
+        }
+
+        /* Mobile backdrop */
+        .mobile-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.1);
+          z-index: 9999;
+          opacity: ${isMinimized ? '0' : '1'};
+          visibility: ${isMinimized ? 'hidden' : 'visible'};
+          transition: all 0.3s ease;
+        }
+
+        /* Override for small screens */
+        @media (max-width: 480px) {
+          .notification-container.mobile {
+            top: 60px;
+            left: 5px;
+            right: 5px;
           }
           
-          .notification-card {
-            min-width: auto;
-            max-width: none;
+          .notification-header {
+            padding: 10px 12px;
+          }
+          
+          .control-button {
+            padding: 6px;
+            min-width: 28px;
+            min-height: 28px;
           }
         }
       `}</style>
 
-      <div className="notification-container">
-        <div className="notification-card">
-          {/* Header - ✅ ללא כפתור X */}
-          <div className="notification-header">
+      {/* Mobile backdrop */}
+      {isMobile && !isMinimized && (
+        <div className="mobile-backdrop" onClick={handleMinimize} />
+      )}
+
+      <div className={`notification-container ${isMobile ? 'mobile' : 'desktop'}`}>
+        <div className={`notification-card ${isMobile ? 'mobile' : 'desktop'}`}>
+          {/* Header with controls */}
+          <div
+            className="notification-header"
+            onClick={isMobile ? handleMinimize : undefined}
+          >
             <div className="header-content">
               <Bell size={20} className="bell-icon" />
               <div>
@@ -257,12 +461,37 @@ const AvailabilityNotification = () => {
                 </div>
               </div>
             </div>
+
+            <div className="header-controls">
+              {isMobile && (
+                <button
+                  className="control-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMinimize();
+                  }}
+                  title={isMinimized ? "הרחב" : "מזער"}
+                >
+                  <Minimize2 size={16} />
+                </button>
+              )}
+              <button
+                className="control-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClose();
+                }}
+                title="סגור התראה ל-15 דקות"
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
 
-          {/* Body - רשימת בעיות - ✅ תמיד מוצגת */}
-          <div className="notification-body">
+          {/* Body - רשימת בעיות */}
+          <div className={`notification-body ${isMobile ? 'mobile' : 'desktop'} ${isMinimized ? 'minimized' : ''}`}>
             {conflicts.map((order, index) => (
-              <div 
+              <div
                 key={order.id}
                 className="conflict-item"
                 title="פרטי ההזמנה הבעייתית"
@@ -271,54 +500,27 @@ const AvailabilityNotification = () => {
                   <AlertCircle size={14} style={{ color: '#9333ea' }} />
                   {order.clientName}
                 </div>
-                
+
                 <div className="date-info">
                   <Calendar size={12} />
                   {new Date(order.pickupDate).toLocaleDateString('he-IL')} - {new Date(order.returnDate).toLocaleDateString('he-IL')}
                 </div>
-                
+
                 <div className="conflicts-summary">
                   {order.conflicts.length} פריט{order.conflicts.length === 1 ? '' : 'ים'} עם בעיות זמינות
                 </div>
               </div>
             ))}
-            
+
             {/* הוראות לפתרון */}
-            <div style={{
-              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-              border: '1px solid #f59e0b',
-              borderRadius: '8px',
-              padding: '12px',
-              marginTop: '12px',
-              fontSize: '0.8rem',
-              color: '#92400e'
-            }}>
+            <div className="instructions">
               💡 <strong>איך לפתור:</strong> עבור להשאלות פתוחות → מצא ימים עם בעיות זמינות (מסומנים בסגול) → לחץ על יום → לחץ "ערוך הזמנה" → התאם כמויות
             </div>
 
-            {/* ✅ כפתור עבור להשאלות פתוחות */}
+            {/* כפתור עבור להשאלות פתוחות */}
             <button
+              className="action-button"
               onClick={handleNavigateToCalendar}
-              style={{
-                background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '0.9rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                width: '100%',
-                marginTop: '12px',
-                boxShadow: '0 4px 12px rgba(147, 51, 234, 0.3)',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
             >
               <Calendar size={16} />
               עבור להשאלות פתוחות
