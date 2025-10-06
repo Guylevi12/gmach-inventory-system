@@ -859,11 +859,12 @@ const EventModal = ({
           </div>
 
           {/* Footer */}
-          <div style={{
-            background: isOverdue ? '#fef2f2' : hasAvailabilityIssues ? '#faf5ff' : '#f9fafb',
-            padding: '1rem 1.5rem',
-            borderTop: hasOverdueOrders ? '1px solid #f87171' : hasAvailabilityIssues ? '1px solid #d8b4fe' : '1px solid #e5e7eb'
-          }}>
+<div style={{
+  background: hasOverdueOrders ? '#fef2f2' : hasAvailabilityIssues ? '#faf5ff' : '#f9fafb',
+  padding: '1rem 1.5rem',
+  borderTop: hasOverdueOrders ? '1px solid #f87171' : hasAvailabilityIssues ? '1px solid #d8b4fe' : '1px solid #e5e7eb'
+}}>
+
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',

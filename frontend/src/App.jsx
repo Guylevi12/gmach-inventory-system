@@ -1,4 +1,4 @@
-// src/App.jsx - מתוקן עם מחלקות CSS לכל דף (ללא ContactBubble)
+// src/App.jsx - כולל מנגנון אוטומטי לריענון גרסה + מחלקות CSS לכל דף (ללא ContactBubble)
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { UserProvider } from './UserContext';
@@ -23,7 +23,27 @@ import { checkAndSendAllEmails } from './services/emailService';
 import './styles/global-background.css';
 import AlertsManagement from './components/AlertsManagement';
 
+/* ✅ פונקציה שבודקת אם נפרסה גרסה חדשה ומרעננת את האתר אוטומטית */
+function useAutoReloadOnVersionChange() {
+  useEffect(() => {
+    const current = import.meta.env.VITE_APP_VERSION || "dev";
+    const last = localStorage.getItem("APP_VERSION");
+
+    // אם המשתמש כבר טען גרסה קודמת והשונה - מרעננים
+    if (last && last !== current) {
+      console.log("🔄 גרסה חדשה זוהתה — מרענן את האתר...");
+      window.location.reload(true);
+    }
+
+    // שומרים את הגרסה הנוכחית
+    localStorage.setItem("APP_VERSION", current);
+  }, []);
+}
+
 const App = () => {
+  /* ✅ הוק הריענון האוטומטי */
+  useAutoReloadOnVersionChange();
+
   // ✅ Auto-checking refs for email service
   const hasRunTodayRef = useRef(false);
   const intervalRef = useRef(null);
@@ -34,7 +54,6 @@ const App = () => {
 
   // 🔵 useEffect לניהול מחלקות CSS לפי עמוד
   useEffect(() => {
-    // הסרת כל המחלקות הקיימות
     document.body.classList.remove(
       'home-page', 'about-page', 'catalog-page', 'login-page',
       'register-page', 'donations-page', 'guidelines-page',
@@ -42,55 +61,26 @@ const App = () => {
       'history-page', 'manage-page'
     );
 
-    // הוספת מחלקה בהתאם לדף הנוכחי
     switch (location.pathname) {
-      case '/':
-        document.body.classList.add('home-page');
-        break;
-      case '/about':
-        document.body.classList.add('about-page');
-        break;
-      case '/catalog':
-        document.body.classList.add('catalog-page');
-        break;
-      case '/login':
-        document.body.classList.add('login-page');
-        break;
-      case '/register':
-        document.body.classList.add('register-page');
-        break;
-      case '/donations':
-        document.body.classList.add('donations-page');
-        break;
-      case '/borrowing-guidelines':
-        document.body.classList.add('guidelines-page');
-        break;
-      case '/new-loan':
-        document.body.classList.add('new-loan-page');
-        break;
-      case '/calendar':
-        document.body.classList.add('calendar-page');
-        break;
+      case '/': document.body.classList.add('home-page'); break;
+      case '/about': document.body.classList.add('about-page'); break;
+      case '/catalog': document.body.classList.add('catalog-page'); break;
+      case '/login': document.body.classList.add('login-page'); break;
+      case '/register': document.body.classList.add('register-page'); break;
+      case '/donations': document.body.classList.add('donations-page'); break;
+      case '/borrowing-guidelines': document.body.classList.add('guidelines-page'); break;
+      case '/new-loan': document.body.classList.add('new-loan-page'); break;
+      case '/calendar': document.body.classList.add('calendar-page'); break;
       case '/my-orders':
-      case '/requests':
-        document.body.classList.add('orders-page');
-        break;
-      case '/history':
-        document.body.classList.add('history-page');
-        break;
+      case '/requests': document.body.classList.add('orders-page'); break;
+      case '/history': document.body.classList.add('history-page'); break;
       case '/manage-product':
-      case '/manage-users':
-        document.body.classList.add('manage-page');
-        break;
-      default:
-        // עבור דפים אחרים (כמו request), נוסיף נקודות
-        document.body.classList.add('other-page');
-        break;
+      case '/manage-users': document.body.classList.add('manage-page'); break;
+      default: document.body.classList.add('other-page'); break;
     }
 
     console.log('🎨 דף נוכחי:', location.pathname, '- מחלקת CSS:', document.body.className);
 
-    // ניקוי כשהקומפוננט נמחק
     return () => {
       document.body.classList.remove(
         'home-page', 'about-page', 'catalog-page', 'login-page',
@@ -101,7 +91,7 @@ const App = () => {
     };
   }, [location.pathname]);
 
-  // ✅ Set up automatic email checking on app startup
+  // ✅ הפעלת בדיקות מייל אוטומטיות
   useEffect(() => {
     console.log('🚀 App: Setting up automatic email service...');
     setupAutomaticEmailChecking();
@@ -114,27 +104,23 @@ const App = () => {
     };
   }, []);
 
-  // ✅ Set up automatic email checking (runs regardless of page)
+  // ✅ הגדרת הפונקציה של בדיקות המיילים
   const setupAutomaticEmailChecking = () => {
-    // Function to check if we should auto-send emails
     const shouldAutoCheck = () => {
       const now = new Date();
       const today = now.toDateString();
 
-      // Reset daily flag if it's a new day
       if (lastAutoCheckDateRef.current !== today) {
         hasRunTodayRef.current = false;
         lastAutoCheckDateRef.current = today;
         console.log('🔄 App: Reset daily auto-check tracking for', today);
       }
 
-      // Only auto-check once per day
       if (hasRunTodayRef.current) {
         console.log('⏭️ App: Auto-check already completed today');
         return false;
       }
 
-      // Only check during business hours (8 AM - 8 PM)
       const hour = now.getHours();
       if (hour < 8 || hour > 20) {
         console.log(`⏰ App: Outside business hours (${hour}:00), skipping auto-check`);
@@ -144,21 +130,15 @@ const App = () => {
       return true;
     };
 
-    // Automatic email check function
     const performAutoCheck = async () => {
-      if (!shouldAutoCheck()) {
-        return;
-      }
+      if (!shouldAutoCheck()) return;
 
       try {
         console.log('🤖 App: Performing automatic reminder check...');
-
         const emailResults = await checkAndSendAllEmails();
 
         if (emailResults.totalSent > 0) {
           console.log(`✅ App: ${emailResults.totalSent} reminder emails sent automatically`);
-
-          // Optional: Request notification permission and show notification
           if (typeof window !== 'undefined' && window.Notification) {
             if (Notification.permission === 'default') {
               Notification.requestPermission();
@@ -173,32 +153,24 @@ const App = () => {
         } else {
           console.log('📭 App: No reminder emails to send today');
         }
-
-        // Mark that we've run today
         hasRunTodayRef.current = true;
-
       } catch (error) {
         console.error('❌ App: Error in automatic email check:', error);
       }
     };
 
-    // Initial auto-check (wait 1 minute after app startup to ensure everything is loaded)
     const initialTimeout = setTimeout(() => {
       console.log('🎯 App: Starting initial automatic email check...');
       performAutoCheck();
-    }, 60000); // 1 minute
+    }, 60000);
 
-    // Set up interval to check every 3 hours (but will only run once per day)
     intervalRef.current = setInterval(() => {
       console.log('🔄 App: Periodic automatic email check...');
       performAutoCheck();
-    }, 3 * 60 * 60 * 1000); // 3 hours
+    }, 3 * 60 * 60 * 1000);
 
-    // Cleanup timeout on unmount
     return () => {
-      if (initialTimeout) {
-        clearTimeout(initialTimeout);
-      }
+      if (initialTimeout) clearTimeout(initialTimeout);
     };
   };
 
