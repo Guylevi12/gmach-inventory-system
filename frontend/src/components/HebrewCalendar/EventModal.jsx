@@ -341,8 +341,6 @@ const EventModal = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 {hasOverdueOrders ? (
                   <span style={{ fontSize: '24px' }}>🚨</span>
-                ) : hasAvailabilityIssues ? (
-                  <Bell size={24} style={{ animation: 'bellRing 2s infinite' }} />
                 ) : (
                   <Calendar size={24} />
                 )}
@@ -351,9 +349,7 @@ const EventModal = ({
                   fontWeight: 'bold',
                   margin: 0
                 }}>
-                  {hasOverdueOrders ? '🚨 הזמנות שלא הוחזרו בזמן' :
-                    hasAvailabilityIssues ? '🔔 אירועים עם בעיות זמינות' :
-                      `אירועים ליום ${selectedDate?.toLocaleDateString('he-IL')}`}
+                  אירועים ליום {selectedDate?.toLocaleDateString('he-IL')}
                 </h3>
               </div>
               <button
@@ -381,44 +377,7 @@ const EventModal = ({
           </div>
 
           {/* ✅ התראת בעיות זמינות כללית */}
-          {hasAvailabilityIssues && !hasOverdueOrders && (
-            <div className="availability-warning">
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '0.75rem'
-              }}>
-                <Bell size={20} style={{ color: '#9333ea' }} />
-                <h4 style={{
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  margin: 0,
-                  color: '#581c87'
-                }}>
-                  בעיות זמינות זוהו!
-                </h4>
-              </div>
-              <p style={{
-                fontSize: '0.875rem',
-                color: '#4c1d95',
-                margin: '0 0 0.75rem 0',
-                lineHeight: '1.4'
-              }}>
-                חלק מההזמנות בתאריך זה דורשות עדכון בגלל שינויים במלאי.
-                לחץ על "ערוך הזמנה" להתאמת הכמויות.
-              </p>
-              <div style={{
-                background: 'rgba(243, 232, 255, 0.7)',
-                padding: '0.5rem',
-                borderRadius: '6px',
-                fontSize: '0.8rem',
-                color: '#4c1d95'
-              }}>
-                💡 הזמנות בעייתיות מסומנות בסגול למטה
-              </div>
-            </div>
-          )}
+          
 
           {/* Events List */}
           <div style={{
