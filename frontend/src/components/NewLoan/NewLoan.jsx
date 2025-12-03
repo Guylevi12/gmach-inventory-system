@@ -18,6 +18,7 @@ const NewLoan = ({ onOrderCreated }) => {
   const [availableItems, setAvailableItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchIdTerm, setSearchIdTerm] = useState('');
   const [saving, setSaving] = useState(false);
   const [isLoadingClientData, setIsLoadingClientData] = useState(false);
   const [closedDates, setClosedDates] = useState([]);
@@ -125,6 +126,7 @@ const NewLoan = ({ onOrderCreated }) => {
       setErrors({});
       setAvailableItems([]);
       setSearchTerm('');
+      setSearchIdTerm('');
       setShowCatalogPopup(false);
     }
   };
@@ -171,6 +173,7 @@ const NewLoan = ({ onOrderCreated }) => {
       });
       setAvailableItems([]);
       setSearchTerm('');
+      setSearchIdTerm('');
       setShowCatalogPopup(false);
       alert(`ההזמנה נשמרה! מס' הזמנה: ${nextSimpleId}`);
       if (onOrderCreated) await onOrderCreated();
@@ -283,6 +286,8 @@ const NewLoan = ({ onOrderCreated }) => {
         setShowCatalogPopup={setShowCatalogPopup}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        searchIdTerm={searchIdTerm}
+        setSearchIdTerm={setSearchIdTerm}
         setAvailableItems={setAvailableItems}
         availableItems={availableItems}
         toggleSelectItem={toggleSelectItem}

@@ -171,6 +171,8 @@ const NewLoanModal = ({
   setShowCatalogPopup,
   searchTerm,
   setSearchTerm,
+  searchIdTerm,
+  setSearchIdTerm,
   availableItems,
   toggleSelectItem,
   changeQty,
@@ -209,7 +211,7 @@ const NewLoanModal = ({
   // ✅ איפוס עמוד כאשר משתנה החיפוש
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, searchIdTerm]);
 
   // Initialize local state when modal opens or availableItems changes
   useEffect(() => {
@@ -346,8 +348,12 @@ const NewLoanModal = ({
   };
 
   // ✅ חישוב פריטים מסוננים
+  const nameTerm = searchTerm.toLowerCase();
+  const idTerm = searchIdTerm.trim().toLowerCase();
   const filteredItems = localItems.filter(it => 
-    it.name.toLowerCase().includes(searchTerm.toLowerCase())
+    it.name.toLowerCase().includes(nameTerm) &&
+    (idTerm === '' ||
+      String(it.ItemId || it.itemId || '').toLowerCase() === idTerm)
   );
 
   // ✅ חישוב פריטים לתצוגה בעמוד הנוכחי
@@ -384,20 +390,28 @@ const NewLoanModal = ({
             </button>
           )}
           
-          <input
-            type="text"
-            placeholder="חיפוש מוצר..."
-            value={searchTerm}
-            onChange={(e) => {
-              console.log('🔍 חיפוש משתנה ל:', e.target.value);
-              setSearchTerm(e.target.value);
-            }}
-            style={{
-              padding: '8px', border: '1px solid #ccc',
-              borderRadius: '6px', 
-              width: hideBarcodeScanner ? '100%' : '60%'  // ✅ רוחב מלא אם אין כפתור סריקה
-            }}
-          />
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: hideBarcodeScanner ? "100%" : "60%" }}>
+            <input
+              type="text"
+              placeholder="חיפוש מוצר לפי שם..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                padding: "8px", border: "1px solid #ccc",
+                borderRadius: "6px"
+              }}
+            />
+            <input
+              type="text"
+              placeholder="חיפוש מוצר לפי מספר מזהה..."
+              value={searchIdTerm}
+              onChange={(e) => setSearchIdTerm(e.target.value)}
+              style={{
+                padding: "8px", border: "1px solid #ccc",
+                borderRadius: "6px"
+              }}
+            />
+          </div>
         </div>
 
         <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>
@@ -405,21 +419,6 @@ const NewLoanModal = ({
         </h3>
 
         {/* ✅ תצוגת סטטיסטיקות חיפוש */}
-        {searchTerm && (
-          <div style={{
-            background: '#f0f9ff',
-            padding: '0.75rem',
-            borderRadius: '8px',
-            marginBottom: '1rem',
-            border: '1px solid #0ea5e9',
-            textAlign: 'center'
-          }}>
-            <p style={{ margin: 0, color: '#0369a1', fontSize: '0.9rem' }}>
-              🔍 נמצאו {filteredItems.length} מוצרים עבור "{searchTerm}"
-            </p>
-          </div>
-        )}
-
         {loadingItems ? (
           <p style={{ textAlign: 'center' }}>טוען מוצרים…</p>
         ) : (

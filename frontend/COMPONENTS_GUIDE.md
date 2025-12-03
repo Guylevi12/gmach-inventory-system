@@ -37,7 +37,7 @@ Use this file whenever you need a quick understanding of `src/components` instea
 ## New Loan flow details
 - `NewLoan/NewLoan.jsx`: orchestrates form, item catalog modal, date validation, availability calculation, assigns `simpleId`, writes to `orders`.
 - `NewLoanForm.jsx`: UI for client/volunteer info + dates; validates phone and dates (against closed dates).
-- `NewLoanModal.jsx`: item picker (filters available qty by overlapping open orders for chosen dates), supports quantity selection and search; persists previous selections when reopening.
+- `NewLoanModal.jsx`: item picker (filters available qty by overlapping open orders for chosen dates), supports quantity selection and dual search (by name and exact ItemId); persists previous selections when reopening.
 - `ScanResultModal.jsx`: helper for barcode scans in the loan flow.
 
 ## Calendar flow details
@@ -54,6 +54,7 @@ Use this file whenever you need a quick understanding of `src/components` instea
 - `ItemManager.jsx`: admin CRUD with pagination, active/deleted tabs, image normalization via `imageUtils`, migration guard (`imagesMigrationComplete` localStorage), shows “active orders” modal for in-use items.
 - `ItemFormModal.jsx`: modal form for add/edit, supports image URL/file, public/internal comments.
 - `ActiveOrdersModal.jsx`: lists open orders containing an item (quantities, dates, client, volunteer).
+- `EditItemModal.jsx`: dual search (by name and exact ItemId) when editing order items; availability calc per date range; highlights conflicts; bigger item thumbnails.
 
 ## Catalog/public view details
 - `Catalog.jsx`: public grid, search, pagination, modal (`ProductModal`) with `ImageGallery`; uses `normalizeItemImages`. Pagination logic duplicated here and in ItemManager.

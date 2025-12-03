@@ -10,6 +10,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
   });
   const [loading, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchIdTerm, setSearchIdTerm] = useState('');
   const [orderDates, setOrderDates] = useState({ pickupDate: null, returnDate: null });
   // ✅ הוספת state לזיהוי פריטים בעייתיים
   const [problematicItems, setProblematicItems] = useState(new Set());
@@ -237,8 +238,12 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
   };
 
   // Filter available items for search
+  const nameTerm = searchTerm.toLowerCase();
+  const idTerm = searchIdTerm.trim().toLowerCase();
   const filteredItems = allItems.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(nameTerm) &&
+    (idTerm === '' ||
+      String(item.ItemId || item.itemId || '').toLowerCase() === idTerm)
   );
 
   const handleBackdropClick = (e) => {
@@ -650,9 +655,39 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                   />
                   <input
                     type="text"
-                    placeholder="חפש פריט..."
+                    placeholder="חפש פריט לפי שם..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 2.8rem 0.75rem 0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      boxSizing: 'border-box'
+                    }}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ position: 'relative' }}>
+                  <Search
+                    size={18}
+                    style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#6b7280'
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="חפש פריט לפי מספר מזהה..."
+                    value={searchIdTerm}
+                    onChange={(e) => setSearchIdTerm(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '0.75rem 2.8rem 0.75rem 0.75rem',
