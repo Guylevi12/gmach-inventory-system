@@ -8,6 +8,9 @@ import { phoneAutoCompleteService } from '@/services/phoneAutoCompleteService';
 import { closedDatesService } from '@/services/closedDatesService';
 
 const NewLoan = ({ onOrderCreated }) => {
+  const DRAFT_KEY = 'newLoanDraft';
+  const DRAFT_TTL_MS = 60 * 60 * 1000; // 1 hour
+
   const [form, setForm] = useState({
     volunteerName: '', clientName: '', address: '',
     phone: '', email: '', eventType: '',
@@ -19,13 +22,86 @@ const NewLoan = ({ onOrderCreated }) => {
   const [loadingItems, setLoadingItems] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchIdTerm, setSearchIdTerm] = useState('');
+  const [draftSelectedItems, setDraftSelectedItems] = useState([]);
   const [saving, setSaving] = useState(false);
   const [isLoadingClientData, setIsLoadingClientData] = useState(false);
   const [closedDates, setClosedDates] = useState([]);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+
+  const persistDraft = (itemsOverride) => {
+    if (!draftLoaded) return;
+    try {
+      const sourceItems = (itemsOverride && itemsOverride.length > 0)
+        ? itemsOverride
+        : (availableItems.length > 0 ? availableItems : draftSelectedItems);
+
+      const selectedItems = sourceItems
+        .map(item => {
+          const qty = item.selectedQty ?? 0;
+          const isSelected = item.selected || qty > 0;
+          return {
+            id: item.id,
+            ItemId: item.ItemId,
+            selectedQty: isSelected ? Math.max(qty, 1) : 0,
+            _selected: isSelected
+          };
+        })
+        .filter(item => item._selected)
+        .map(({ id, ItemId, selectedQty }) => ({ id, ItemId, selectedQty }));
+
+      const payload = {
+        form,
+        selectedItems,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+
+      const normalize = (arr) => arr
+        .map(it => `${it.id}|${it.ItemId}|${it.selectedQty}`)
+        .sort()
+        .join(',');
+      if (normalize(selectedItems) !== normalize(draftSelectedItems)) {
+        setDraftSelectedItems(selectedItems);
+      }
+    } catch (e) {
+      console.warn('Failed to save draft', e);
+    }
+  };
+
+  // Load draft from localStorage (valid for 1 hour)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed.timestamp || Date.now() - parsed.timestamp > DRAFT_TTL_MS) {
+        localStorage.removeItem(DRAFT_KEY);
+        return;
+      }
+      if (parsed.form) {
+        setForm(prev => ({ ...prev, ...parsed.form }));
+      }
+      if (Array.isArray(parsed.selectedItems)) {
+        setDraftSelectedItems(parsed.selectedItems);
+      }
+    } catch (e) {
+      console.warn('Failed to load draft', e);
+      localStorage.removeItem(DRAFT_KEY);
+    } finally {
+      setDraftLoaded(true);
+    }
+  }, []);
 
   useEffect(() => {
     loadClosedDates();
   }, []);
+
+  // Persist draft (form + selected items) for 1 hour per browser session
+  useEffect(() => {
+    if (!draftLoaded) return;
+    persistDraft();
+  }, [form, availableItems, draftLoaded]);
 
   const loadClosedDates = async () => {
     try {
@@ -128,6 +204,8 @@ const NewLoan = ({ onOrderCreated }) => {
       setSearchTerm('');
       setSearchIdTerm('');
       setShowCatalogPopup(false);
+      setDraftSelectedItems([]);
+      localStorage.removeItem(DRAFT_KEY);
     }
   };
 
@@ -175,6 +253,8 @@ const NewLoan = ({ onOrderCreated }) => {
       setSearchTerm('');
       setSearchIdTerm('');
       setShowCatalogPopup(false);
+      setDraftSelectedItems([]);
+      localStorage.removeItem(DRAFT_KEY);
       alert(`ההזמנה נשמרה! מס' הזמנה: ${nextSimpleId}`);
       if (onOrderCreated) await onOrderCreated();
     } catch (err) {
@@ -225,10 +305,20 @@ const NewLoan = ({ onOrderCreated }) => {
         });
 
         const previousSelections = {};
+        // selections currently in state
         availableItems.forEach(item => {
           if (item.selected && item.selectedQty > 0) {
             previousSelections[item.id] = {
               selected: item.selected,
+              selectedQty: item.selectedQty
+            };
+          }
+        });
+        // selections restored from draft
+        draftSelectedItems.forEach(item => {
+          if (item.selectedQty > 0) {
+            previousSelections[item.id] = {
+              selected: true,
               selectedQty: item.selectedQty
             };
           }
@@ -255,18 +345,26 @@ const NewLoan = ({ onOrderCreated }) => {
     };
 
     fetchAvailable();
-  }, [showCatalogPopup, form.pickupDate, form.returnDate]);
+  }, [showCatalogPopup, form.pickupDate, form.returnDate, draftSelectedItems]);
 
   const toggleSelectItem = id => {
-    setAvailableItems(av => av.map(it =>
-      it.id === id ? { ...it, selected: !it.selected, selectedQty: !it.selected ? 1 : 0 } : it
-    ));
+    setAvailableItems(av => {
+      const next = av.map(it =>
+        it.id === id ? { ...it, selected: !it.selected, selectedQty: !it.selected ? 1 : 0 } : it
+      );
+      persistDraft(next);
+      return next;
+    });
   };
 
   const changeQty = (id, qty) => {
-    setAvailableItems(av => av.map(it =>
-      it.id === id ? { ...it, selected: qty > 0, selectedQty: qty } : it
-    ));
+    setAvailableItems(av => {
+      const next = av.map(it =>
+        it.id === id ? { ...it, selected: qty > 0, selectedQty: qty } : it
+      );
+      persistDraft(next);
+      return next;
+    });
   };
 
   return (
