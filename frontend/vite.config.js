@@ -14,4 +14,20 @@ export default defineConfig({
     port: 3000,
     host: true
   },
+  build: {
+    // Raise warning threshold a bit after splitting vendor chunks
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        // Split heavy deps to separate chunks; other deps stay bundled
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('firebase')) return 'firebase';
+            if (id.includes('react')) return 'react';
+          }
+          return undefined;
+        }
+      }
+    }
+  },
 });
