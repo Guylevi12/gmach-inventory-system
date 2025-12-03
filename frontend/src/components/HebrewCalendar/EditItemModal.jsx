@@ -503,8 +503,8 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                               src={itemData.imageUrl}
                               alt={item.name}
                               style={{
-                                width: '2.5rem',
-                                height: '2.5rem',
+                                width: '4.5rem',
+                                height: '4.5rem',
                                 objectFit: 'cover',
                                 borderRadius: '6px',
                                 flexShrink: 0,
@@ -669,9 +669,9 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
               {/* Available Items */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                gap: '0.75rem',
-                maxHeight: '10rem',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '1rem',
+                maxHeight: '12rem',
                 overflowY: 'auto',
                 overflowX: 'hidden'
               }}>
@@ -706,8 +706,8 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                             src={item.imageUrl}
                             alt={item.name}
                             style={{
-                              width: '2rem',
-                              height: '2rem',
+                              width: '6rem',
+                              height: '6rem',
                               objectFit: 'cover',
                               borderRadius: '6px',
                               flexShrink: 0,

@@ -317,6 +317,11 @@ const EventModal = ({
           className="modal-content"
           dir="rtl"
           onClick={(e) => e.stopPropagation()}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '90vh'
+          }}
         >
           {/* ✅ Header - עדכון עם עדיפות להזמנות שלא הוחזרו */}
           <div style={{
@@ -418,8 +423,10 @@ const EventModal = ({
           {/* Events List */}
           <div style={{
             padding: '1.5rem',
+            paddingBottom: '2.5rem',
             overflowY: 'auto',
-            maxHeight: 'calc(90vh - 200px)'
+            flex: 1,
+            minHeight: 0
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {groupedEvents.map((orderGroup, index) => {
@@ -757,7 +764,7 @@ const EventModal = ({
                           </button>
                         )}
 
-                        {orderGroup.events.some(e => e.icon === '📦') && (
+                        {orderGroup.events.some(e => e.icon === '📦' || e.icon === '🔄') && (
                           <button
                             onClick={() => setEditItemModal({
                               open: true,
