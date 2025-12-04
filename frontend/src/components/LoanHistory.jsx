@@ -78,6 +78,8 @@ const LoanHistory = () => {
   const [dateTo, setDateTo] = useState('');
   const [loading, setLoading] = useState(true);
   const [showStatsModal, setShowStatsModal] = useState(false);
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 12;
 
   useEffect(() => {
     const fetchClosedLoans = async () => {
@@ -205,7 +207,14 @@ const LoanHistory = () => {
       return searchMatch && dateMatch;
     });
     setFilteredLoans(filtered);
+    setPage(1); // reset pagination on filters change
   }, [searchTerm, dateFrom, dateTo, allLoans]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredLoans.length / PER_PAGE));
+  const currentPage = Math.min(page, pageCount);
+  const startIndex = (currentPage - 1) * PER_PAGE;
+  const endIndex = startIndex + PER_PAGE;
+  const paginatedLoans = filteredLoans.slice(startIndex, endIndex);
 
   const getConditionIcon = (condition) => {
     switch (condition) {
@@ -749,7 +758,7 @@ const LoanHistory = () => {
                 </p>
               </div>
             ) : (
-              filteredLoans.map(loan => (
+              paginatedLoans.map(loan => (
                 <div
                   key={loan.id}
                   onClick={() => setSelectedLoan(loan)}
@@ -839,11 +848,86 @@ const LoanHistory = () => {
                     </div>
                   </div>
                 </div>
-              ))
+                ))
+              )}
+            </div>
+
+            {filteredLoans.length > 0 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '1rem',
+                flexWrap: 'wrap',
+                marginTop: '1.25rem',
+                background: '#f3f4f6',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                border: '1px solid #e5e7eb'
+              }}>
+                <div style={{ color: '#374151', fontSize: '0.95rem' }}>
+                  מציג {startIndex + 1}-{Math.min(endIndex, filteredLoans.length)} מתוך {filteredLoans.length} השאלות סגורות
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button
+                    onClick={() => setPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    style={{
+                      padding: '0.5rem 0.9rem',
+                      borderRadius: '8px',
+                      border: '1px solid #d1d5db',
+                      background: currentPage === 1 ? '#e5e7eb' : '#fff',
+                      color: '#111827',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      minWidth: '80px'
+                    }}
+                  >
+                    הקודם
+                  </button>
+                  <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                    {Array.from({ length: pageCount }).map((_, idx) => {
+                      const pageNum = idx + 1;
+                      const isActive = pageNum === currentPage;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setPage(pageNum)}
+                          style={{
+                            padding: '0.45rem 0.75rem',
+                            borderRadius: '8px',
+                            border: isActive ? '1px solid #2563eb' : '1px solid #d1d5db',
+                            background: isActive ? '#2563eb' : '#fff',
+                            color: isActive ? 'white' : '#111827',
+                            cursor: 'pointer',
+                            minWidth: '42px',
+                            fontWeight: isActive ? '700' : '500'
+                          }}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
+                    disabled={currentPage === pageCount}
+                    style={{
+                      padding: '0.5rem 0.9rem',
+                      borderRadius: '8px',
+                      border: '1px solid #d1d5db',
+                      background: currentPage === pageCount ? '#e5e7eb' : '#fff',
+                      color: '#111827',
+                      cursor: currentPage === pageCount ? 'not-allowed' : 'pointer',
+                      minWidth: '80px'
+                    }}
+                  >
+                    הבא
+                  </button>
+                </div>
+              </div>
             )}
-          </div>
-        </>
-      )}
+          </>
+        )}
 
       {selectedLoan && (
         <div style={{

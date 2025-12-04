@@ -1,7 +1,7 @@
 // src/components/CalendarGrid.jsx - תיקון ימי השבוע עם overdue orders
 import React, { useState, useEffect } from 'react';
 import './css/CalendarGrid.css';
-import { ChevronRight, ChevronLeft, Calendar, Ban, Save, X, Bell } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Calendar, Ban, Save, X, Bell, Search } from 'lucide-react';
 import { closedDatesService } from '@/services/closedDatesService';
 import { useUser } from '../../UserContext';
 
@@ -23,6 +23,7 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
   const [selectedDatesForClosure, setSelectedDatesForClosure] = useState(new Set());
   const [saving, setSaving] = useState(false);
   const [originalClosedDates, setOriginalClosedDates] = useState(new Set());
+  const [searchName, setSearchName] = useState('');
 
   // טעינת ימים סגורים
   useEffect(() => {
@@ -60,6 +61,15 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
     return `${year_str}-${month_str}-${day_str}`;
   };
 
+  // Compare two dates by day (ignore time)
+  const isSameDay = (a, b) => {
+    const d1 = new Date(a);
+    const d2 = new Date(b);
+    d1.setHours(0, 0, 0, 0);
+    d2.setHours(0, 0, 0, 0);
+    return d1.getTime() === d2.getTime();
+  };
+
   // קבלת אירועים לתאריך ספציפי
   const getEventsForDate = (day) => {
     if (!Array.isArray(events)) return [];
@@ -70,6 +80,38 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
       const eventDateStr = closedDatesService.formatDateToString(event.date);
       return eventDateStr === targetDateStr;
     });
+  };
+
+  // Quick search: jump to "return items" event by client name and open modal
+  const handleSearchReturnEvent = (e) => {
+    e.preventDefault();
+    const term = searchName.trim().toLowerCase();
+    if (!term || !Array.isArray(events) || events.length === 0) {
+      return;
+    }
+
+    // Find all events for this client (pickup/return); prefer the return event if it exists
+    const clientEvents = events
+      .filter(ev => (ev.clientName || '').toLowerCase().includes(term))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (clientEvents.length === 0) {
+      alert('Return event not found for that name.');
+      return;
+    }
+
+    const RETURN_TYPE = 'x"x-x-x"x"';
+    const returnEvent =
+      clientEvents.find(ev => ev.type === RETURN_TYPE || ev.icon === 'dY",') ||
+      clientEvents[clientEvents.length - 1]; // fall back to latest event if return not found
+
+    const targetDate = new Date(returnEvent.date);
+    setCurrentDate(new Date(targetDate.getFullYear(), targetDate.getMonth(), 1));
+
+    const eventsForDay = events.filter(ev => isSameDay(ev.date, targetDate));
+    setSelectedEvents(eventsForDay);
+    setSelectedDate(targetDate);
+    setShowReport(true);
   };
 
   // בדיקה האם יש בעיות זמינות לתאריך זה
@@ -551,6 +593,62 @@ const CalendarGrid = ({ currentDate, events = [], setCurrentDate, setSelectedEve
       </div>
 
       <div className="calendar-footer">
+        <div
+          className="calendar-search"
+          style={{
+            marginBottom: '0.75rem',
+            background: '#f9fafb',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            padding: '0.75rem 1rem'
+          }}
+        >
+          <form onSubmit={handleSearchReturnEvent} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <Search
+                  size={16}
+                  style={{
+                    position: 'absolute',
+                    right: '0.65rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: '#6b7280'
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="חפש לפי שם לקוח"
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 2.2rem 0.65rem 0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid #d1d5db',
+                    fontSize: '0.95rem',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              <button
+                type="submit"
+                style={{
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.65rem 1rem',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                חיפוש
+              </button>
+            </div>
+          </form>
+        </div>
+
         <div className="calendar-legend">
           <span className="legend-item">📦 איסוף מוצרים</span>
           <span className="legend-item">🔄 החזרת מוצרים</span>
