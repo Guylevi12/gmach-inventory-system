@@ -22,11 +22,13 @@ import AvailabilityNotification from './components/AvailabilityNotification';
 import { checkAndSendAllEmails } from './services/emailService';
 import './styles/global-background.css';
 import AlertsManagement from './components/AlertsManagement';
+import Gallery from './components/Gallery';
 
 /* ✅ פונקציה שבודקת אם נפרסה גרסה חדשה ומרעננת את האתר אוטומטית */
 function useAutoReloadOnVersionChange() {
   useEffect(() => {
-    const current = import.meta.env.VITE_APP_VERSION || "dev";
+    // Force cache-bust / reload when version changes (bump default when shipping fixes)
+    const current = import.meta.env.VITE_APP_VERSION || "dev-2025-03-05";
     const last = localStorage.getItem("APP_VERSION");
 
     // אם המשתמש כבר טען גרסה קודמת והשונה - מרעננים
@@ -58,7 +60,7 @@ const App = () => {
       'home-page', 'about-page', 'catalog-page', 'login-page',
       'register-page', 'donations-page', 'guidelines-page',
       'new-loan-page', 'calendar-page', 'orders-page',
-      'history-page', 'manage-page'
+      'history-page', 'manage-page', 'gallery-page'
     );
 
     switch (location.pathname) {
@@ -74,6 +76,7 @@ const App = () => {
       case '/my-orders':
       case '/requests': document.body.classList.add('orders-page'); break;
       case '/history': document.body.classList.add('history-page'); break;
+      case '/gallery': document.body.classList.add('gallery-page'); break;
       case '/manage-product':
       case '/manage-users': document.body.classList.add('manage-page'); break;
       default: document.body.classList.add('other-page'); break;
@@ -86,7 +89,7 @@ const App = () => {
         'home-page', 'about-page', 'catalog-page', 'login-page',
         'register-page', 'donations-page', 'guidelines-page',
         'new-loan-page', 'calendar-page', 'orders-page',
-        'history-page', 'manage-page', 'other-page'
+        'history-page', 'manage-page', 'gallery-page', 'other-page'
       );
     };
   }, [location.pathname]);
@@ -194,6 +197,7 @@ const App = () => {
         <Route path="/manage-product" element={<ItemManager />} />
         <Route path="/manage-users" element={<ManageUsers />} />
         <Route path="/history" element={<LoanHistory />} />
+        <Route path="/gallery" element={<Gallery />} />
       </Routes>
 
       <AvailabilityNotification />

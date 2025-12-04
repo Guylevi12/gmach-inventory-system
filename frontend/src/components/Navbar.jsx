@@ -325,6 +325,7 @@ const Navbar = () => {
                 }}>הרשמה</Link>
               </>
             )}
+            <Link to="/gallery" style={{ ...getLinkStyle('/gallery'), order: 999 }}>גלריה</Link>
           </div>
         )}
 
@@ -405,6 +406,7 @@ const Navbar = () => {
                   }} onClick={handleCloseMenu}>הרשמה</Link>
                 </div>
               )}
+              <Link to="/gallery" style={{ ...getLinkStyle('/gallery'), order: 999 }} onClick={handleCloseMenu}>גלריה</Link>
             </div>
           </>
         )}
