@@ -24,9 +24,11 @@ export class AvailabilityChecker {
       
       // שלב 2: בדיקת זמינות לכל הזמנה
       const problematicOrders = [];
-      
+      const availabilityResults = [];
+
       for (const order of orders) {
         const conflicts = await this.checkOrderAvailability(order, orders, items);
+        availabilityResults.push({ order, conflicts });
         if (conflicts.length > 0) {
           problematicOrders.push({
             order,
@@ -38,12 +40,14 @@ export class AvailabilityChecker {
       console.log(`⚠️ נמצאו ${problematicOrders.length} הזמנות עם בעיות זמינות`);
       
       // שלב 3: עדכון סטטוס ההזמנות הבעייתיות
-      await this.updateOrdersWithConflicts(problematicOrders);
+      const syncSummary = await this.syncOrdersAvailabilityStatus(availabilityResults);
       
       return {
         success: true,
         totalOrders: orders.length,
         problematicOrders: problematicOrders.length,
+        resolvedOrders: syncSummary.resolvedOrders,
+        updatedOrders: syncSummary.updatedOrders,
         conflicts: problematicOrders
       };
       
@@ -200,6 +204,58 @@ export class AvailabilityChecker {
       await Promise.all(updates);
       console.log(`✅ עודכנו ${updates.length} הזמנות עם בעיות זמינות`);
     }
+  }
+
+  /**
+   * מסנכרן סטטוס זמינות לכל ההזמנות הפעילות:
+   * הזמנות עם בעיה יסומנו CONFLICT, והזמנות שתוקנו ינוקו ל-OK.
+   */
+  static async syncOrdersAvailabilityStatus(availabilityResults) {
+    const updates = [];
+    let resolvedOrders = 0;
+
+    for (const { order, conflicts } of availabilityResults) {
+      const hasConflicts = conflicts.length > 0;
+
+      if (hasConflicts) {
+        updates.push(
+          updateDoc(doc(db, 'orders', order.id), {
+            availabilityStatus: 'CONFLICT',
+            availabilityConflicts: conflicts,
+            conflictDetectedAt: new Date().toISOString(),
+            needsAttention: true,
+            lastAvailabilityCheck: serverTimestamp()
+          })
+        );
+        continue;
+      }
+
+      const hadConflictBefore =
+        order.availabilityStatus === 'CONFLICT' ||
+        (order.availabilityConflicts && order.availabilityConflicts.length > 0) ||
+        order.needsAttention === true;
+
+      if (hadConflictBefore) {
+        resolvedOrders += 1;
+        updates.push(
+          updateDoc(doc(db, 'orders', order.id), {
+            availabilityStatus: 'OK',
+            availabilityConflicts: [],
+            needsAttention: false,
+            lastAvailabilityCheck: serverTimestamp()
+          })
+        );
+      }
+    }
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+    }
+
+    return {
+      resolvedOrders,
+      updatedOrders: updates.length
+    };
   }
   
   /**

@@ -1,8 +1,8 @@
 // src/components/EventModal.jsx - עם הגבלות על כפתור האימייל + הזמנות שלא הוחזרו
 import React, { useState, useEffect } from 'react';
-import { deleteDoc, doc } from 'firebase/firestore';
+import { deleteDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
-import { Edit, Eye, Trash2, Calendar, Phone, Package, ClipboardCheck, Bell, Mail } from 'lucide-react';
+import { Edit, Eye, Trash2, Calendar, Phone, Package, ClipboardCheck, Bell, Mail, MessageSquare } from 'lucide-react';
 import { sendManualPickupEmail } from '@/services/emailService';
 
 const EventModal = ({
@@ -18,6 +18,13 @@ const EventModal = ({
 }) => {
   const [sendingEmail, setSendingEmail] = useState(null);
   const [sentEmails, setSentEmails] = useState(new Set());
+  const [notesModal, setNotesModal] = useState({
+    open: false,
+    orderId: null,
+    clientName: '',
+    notes: ''
+  });
+  const [savingNotes, setSavingNotes] = useState(false);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -193,6 +200,7 @@ const EventModal = ({
           clientName: event.clientName,
           phone: event.phone,
           email: event.email,
+          orderNotes: event.orderNotes || '',
           items: event.items,
           pickupDate: event.pickupDate,
           returnDate: event.returnDate,
@@ -234,6 +242,45 @@ const EventModal = ({
         console.error(err);
         alert("מחיקה נכשלה. נסה שוב.");
       }
+    }
+  };
+
+  const openNotesModal = (orderGroup) => {
+    setNotesModal({
+      open: true,
+      orderId: orderGroup.orderId,
+      clientName: orderGroup.clientName || '',
+      notes: orderGroup.orderNotes || ''
+    });
+  };
+
+  const closeNotesModal = () => {
+    if (!savingNotes) {
+      setNotesModal({ open: false, orderId: null, clientName: '', notes: '' });
+    }
+  };
+
+  const saveOrderNotes = async () => {
+    if (!notesModal.orderId || savingNotes) return;
+
+    try {
+      setSavingNotes(true);
+      await updateDoc(doc(db, 'orders', notesModal.orderId), {
+        orderNotes: notesModal.notes.trim(),
+        orderNotesUpdatedAt: serverTimestamp()
+      });
+
+      if (fetchItemsAndOrders) {
+        await fetchItemsAndOrders();
+      }
+
+      closeNotesModal();
+      alert('ההערות נשמרו בהצלחה.');
+    } catch (error) {
+      console.error('Error saving order notes:', error);
+      alert('שמירת ההערות נכשלה. נסה שוב.');
+    } finally {
+      setSavingNotes(false);
     }
   };
 
@@ -775,6 +822,25 @@ const EventModal = ({
                           הצג פרטים
                         </button>
 
+                        <button
+                          onClick={() => openNotesModal(orderGroup)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: orderGroup.orderNotes ? '#0ea5e9' : '#64748b',
+                            color: 'white',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          <MessageSquare size={16} />
+                          הערות
+                        </button>
+
                         {orderGroup.events.some(e => e.icon === '📦') && (
                           <button
                             onClick={() => handleDeleteOrder(orderGroup.orderId)}
@@ -817,12 +883,112 @@ const EventModal = ({
                           </button>
                         )}
                       </div>
+
+                      {orderGroup.orderNotes && (
+                        <div style={{
+                          marginTop: '0.75rem',
+                          padding: '0.75rem',
+                          borderRadius: '8px',
+                          border: '1px solid #bae6fd',
+                          background: '#f0f9ff',
+                          color: '#0c4a6e',
+                          fontSize: '0.85rem',
+                          textAlign: 'right',
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          <strong>הערות:</strong> {orderGroup.orderNotes}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
+
+          {notesModal.open && (
+            <div
+              onClick={closeNotesModal}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.45)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 100001,
+                padding: '1rem'
+              }}
+            >
+              <div
+                dir="rtl"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  width: '100%',
+                  maxWidth: '560px',
+                  background: 'white',
+                  borderRadius: '12px',
+                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+                  border: '1px solid #e5e7eb',
+                  overflow: 'hidden'
+                }}
+              >
+                <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #e5e7eb', background: '#f8fafc', fontWeight: '700', color: '#111827' }}>
+                  הערות להזמנה - {notesModal.clientName}
+                </div>
+                <div style={{ padding: '1rem 1.25rem' }}>
+                  <textarea
+                    value={notesModal.notes}
+                    onChange={(e) => setNotesModal(prev => ({ ...prev, notes: e.target.value }))}
+                    rows={6}
+                    placeholder="כתוב כאן הערות להזמנה..."
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: '1px solid #d1d5db',
+                      fontSize: '0.95rem',
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', padding: '1rem 1.25rem', borderTop: '1px solid #e5e7eb' }}>
+                  <button
+                    onClick={closeNotesModal}
+                    disabled={savingNotes}
+                    style={{
+                      background: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '0.5rem 1rem',
+                      cursor: savingNotes ? 'not-allowed' : 'pointer',
+                      opacity: savingNotes ? 0.7 : 1
+                    }}
+                  >
+                    ביטול
+                  </button>
+                  <button
+                    onClick={saveOrderNotes}
+                    disabled={savingNotes}
+                    style={{
+                      background: '#2563eb',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '0.5rem 1rem',
+                      cursor: savingNotes ? 'not-allowed' : 'pointer',
+                      opacity: savingNotes ? 0.7 : 1,
+                      fontWeight: '600'
+                    }}
+                  >
+                    {savingNotes ? 'שומר...' : 'שמור הערות'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
 <div style={{

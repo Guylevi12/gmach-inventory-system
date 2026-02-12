@@ -86,6 +86,8 @@ export const buildCalendarEvents = (orderSnap, itemsData) => {
           clientName: order.clientName,
           phone: order.phone,
           email: order.email,
+          orderNotes: order.orderNotes || '',
+          orderNotesUpdatedAt: order.orderNotesUpdatedAt || null,
           manualEmailSent: order.manualEmailSent || false,
           manualEmailSentAt: order.manualEmailSentAt || null,
           type: eventType,

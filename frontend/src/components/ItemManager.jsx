@@ -20,6 +20,7 @@ import {
 } from '../utils/imageUtils';
 import ImageGallery from './ImageGallery';
 import ActiveOrdersModal from './ActiveOrdersModal'; // ✅ יבוא הקומפוננטה החדשה
+import { AvailabilityChecker } from '@/services/availabilityChecker';
 
 // רכיב Pagination
 const Pagination = ({ 
@@ -492,6 +493,21 @@ const ItemManager = () => {
     }
   };
 
+  const recheckAvailabilityAfterInventoryChange = async () => {
+    try {
+      const result = await AvailabilityChecker.checkAllActiveOrders();
+      if (!result?.success) return;
+
+      if (result.resolvedOrders > 0) {
+        toast.success(`עודכנו אוטומטית ${result.resolvedOrders} הזמנות שנפתרו מבחינת מלאי.`);
+      } else if (result.problematicOrders > 0) {
+        toast.warn(`יש ${result.problematicOrders} הזמנות עם בעיות זמינות שדורשות עדכון.`);
+      }
+    } catch (error) {
+      console.error('Availability recheck failed:', error);
+    }
+  };
+
   // תחליפי את החלק הזה בפונקציה handleSubmit:
 
   const handleSubmit = async (e, formData = null) => {
@@ -533,6 +549,7 @@ const ItemManager = () => {
           updatedAt: serverTimestamp()
         });
         toast.success('המוצר עודכן בהצלחה');
+        await recheckAvailabilityAfterInventoryChange();
       } else if (!snap.empty) {
         const data = snap.docs[0].data();
         confirmAlert({
@@ -557,6 +574,7 @@ const ItemManager = () => {
                 });
                 
                 toast.success('הכמות עודכנה בהצלחה');
+                await recheckAvailabilityAfterInventoryChange();
                 fetchItems();
                 fetchDeletedItems();
               }
@@ -582,6 +600,7 @@ const ItemManager = () => {
         });
         
         toast.success(`המוצר "${itemData.name}" נוסף בהצלחה עם ${itemData.images?.length || 0} תמונות`);
+        await recheckAvailabilityAfterInventoryChange();
       }
 
       // Reset

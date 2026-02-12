@@ -846,6 +846,20 @@ const LoanHistory = () => {
                       <Package size={window.innerWidth < 768 ? 12 : 14} />
                       {loan.items?.reduce((sum, item) => sum + item.quantity, 0)} פריטים
                     </div>
+                    {loan.orderNotes && (
+                      <div style={{
+                        marginTop: '0.35rem',
+                        padding: '0.5rem 0.65rem',
+                        borderRadius: '8px',
+                        border: '1px solid #bae6fd',
+                        background: '#f0f9ff',
+                        color: '#0c4a6e',
+                        fontSize: window.innerWidth < 768 ? '0.72rem' : '0.82rem',
+                        whiteSpace: 'pre-wrap'
+                      }}>
+                        <strong>הערות:</strong> {loan.orderNotes}
+                      </div>
+                    )}
                   </div>
                 </div>
                 ))
@@ -1023,6 +1037,20 @@ const LoanHistory = () => {
               <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1f2937' }}>{selectedLoan.eventType}</span>
             </div>
           </div>
+
+          {selectedLoan.orderNotes && (
+            <div style={{
+              marginBottom: '2rem',
+              padding: '1rem 1.25rem',
+              borderRadius: '10px',
+              border: '1px solid #bae6fd',
+              background: '#f0f9ff',
+              color: '#0c4a6e'
+            }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.4rem' }}>הערות להזמנה</div>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{selectedLoan.orderNotes}</div>
+            </div>
+          )}
 
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{

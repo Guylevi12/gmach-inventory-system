@@ -14,6 +14,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
   const [orderDates, setOrderDates] = useState({ pickupDate: null, returnDate: null });
   // ✅ הוספת state לזיהוי פריטים בעייתיים
   const [problematicItems, setProblematicItems] = useState(new Set());
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -235,6 +236,21 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
 
   const handleClose = () => {
     setData({ open: false, eventId: null, items: [] });
+  };
+
+  const requestSaveConfirmation = () => {
+    if (!loading && formData.items.length > 0) {
+      setShowSaveConfirm(true);
+    }
+  };
+
+  const cancelSaveConfirmation = () => {
+    setShowSaveConfirm(false);
+  };
+
+  const confirmSaveChanges = async () => {
+    setShowSaveConfirm(false);
+    await saveChanges();
   };
 
   // Filter available items for search
@@ -834,7 +850,7 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
                   ביטול
                 </button>
                 <button
-                  onClick={saveChanges}
+                  onClick={requestSaveConfirmation}
                   disabled={loading || formData.items.length === 0}
                   style={{
                     background: formData.items.length === 0 ? '#9ca3af' : (problematicItems.size > 0 ? '#9333ea' : '#2563eb'),
@@ -874,6 +890,69 @@ const EditItemModal = ({ show, data, setData, allItems, setShowReport, fetchItem
           </div>
         </div>
       </div>
+
+      {showSaveConfirm && (
+        <div
+          onClick={cancelSaveConfirmation}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100001,
+            padding: '1rem'
+          }}
+        >
+          <div
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #e5e7eb',
+              overflow: 'hidden'
+            }}
+          >
+            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #e5e7eb', background: '#f8fafc', fontWeight: '700', color: '#111827' }}>
+              האם אתה בטוח לשמור את השינויים?
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', padding: '1rem 1.25rem' }}>
+              <button
+                onClick={cancelSaveConfirmation}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer'
+                }}
+              >
+                לא
+              </button>
+              <button
+                onClick={confirmSaveChanges}
+                style={{
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                כן
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

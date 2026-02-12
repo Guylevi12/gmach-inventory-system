@@ -1,4 +1,4 @@
-// src/components/ReturnInspectionModal.jsx - עם מערכת אישור פריטים ובדיקת זמינות
+﻿// src/components/ReturnInspectionModal.jsx - עם מערכת אישור פריטים ובדיקת זמינות
 import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/firebase-config';
@@ -17,6 +17,9 @@ const ReturnInspectionModal = ({
   const [confirmedItems, setConfirmedItems] = useState(new Set());
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [completeConfirmMessage, setCompleteConfirmMessage] = useState('');
+  const [showInventoryChangeWarning, setShowInventoryChangeWarning] = useState(false);
   // ✅ state חדש לניהול התראות זמינות
   const [availabilityAlert, setAvailabilityAlert] = useState(null);
 
@@ -37,6 +40,9 @@ const ReturnInspectionModal = ({
       setItemInspections(initialInspections);
       setConfirmedItems(new Set());
       setNotes('');
+      setShowCompleteConfirm(false);
+      setCompleteConfirmMessage('');
+      setShowInventoryChangeWarning(false);
       setAvailabilityAlert(null); // ✅ איפוס התראות
     }
   }, [show, order]);
@@ -95,7 +101,7 @@ const ReturnInspectionModal = ({
     return itemInspections.length > 0 && confirmedItems.size === itemInspections.length;
   };
 
-  const handleCompleteInspection = async () => {
+  const handleRequestCompleteInspection = () => {
     if (!allItemsConfirmed()) {
       alert('יש לאשר את כל הפריטים לפני השלמת הבדיקה');
       return;
@@ -110,13 +116,28 @@ const ReturnInspectionModal = ({
 סיכום:
 • פריטים שהושאלו: ${totalExpected}/${totalExpected}
 • פריטים שחזרו: ${totalReturned}/${totalExpected}
-• אחוז החזרה: ${returnPercentage}%
+• אחוז החזרה: ${returnPercentage}%`;
 
-ההזמנה תעבור לאיסוף ההזמנות הסגורות.`;
-
-    if (!window.confirm(confirmMessage)) {
+    // אם כל הפריטים חזרו, לא מציגים חלון אישור.
+    if (totalReturned >= totalExpected) {
+      setShowInventoryChangeWarning(false);
+      handleCompleteInspection();
       return;
     }
+
+    setCompleteConfirmMessage(confirmMessage);
+    setShowInventoryChangeWarning(true);
+    setShowCompleteConfirm(true);
+  };
+
+  const cancelCompleteConfirmation = () => {
+    setShowInventoryChangeWarning(false);
+    setShowCompleteConfirm(false);
+  };
+
+  const handleCompleteInspection = async () => {
+    setShowInventoryChangeWarning(false);
+    setShowCompleteConfirm(false);
 
     try {
       setSaving(true);
@@ -779,7 +800,7 @@ const ReturnInspectionModal = ({
                   ביטול
                 </button>
                 <button
-                  onClick={handleCompleteInspection}
+                  onClick={handleRequestCompleteInspection}
                   disabled={saving || !allItemsConfirmed()}
                   style={{
                     background: !allItemsConfirmed() ? '#9ca3af' : '#f59e0b',
@@ -820,8 +841,86 @@ const ReturnInspectionModal = ({
           </div>
         </div>
       </div>
+
+      {showCompleteConfirm && (
+        <div
+          onClick={cancelCompleteConfirmation}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100001,
+            padding: '1rem'
+          }}
+        >
+          <div
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '520px',
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #e5e7eb',
+              overflow: 'hidden'
+            }}
+          >
+            {showInventoryChangeWarning && (
+              <div style={{
+                background: '#dc2626',
+                color: 'white',
+                padding: '0.75rem 1.25rem',
+                fontWeight: '700',
+                textAlign: 'center'
+              }}>
+                זהירות ! המלאי עומד להשתנות
+              </div>
+            )}
+            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #e5e7eb', background: '#f8fafc', fontWeight: '700', color: '#111827' }}>
+              אישור השלמת בדיקת החזרה
+            </div>
+            <div style={{ padding: '1rem 1.25rem', color: '#374151', fontSize: '0.95rem', whiteSpace: 'pre-line' }}>
+              {completeConfirmMessage}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', padding: '1rem 1.25rem', borderTop: '1px solid #e5e7eb' }}>
+              <button
+                onClick={cancelCompleteConfirmation}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer'
+                }}
+              >
+                לא
+              </button>
+              <button
+                onClick={handleCompleteInspection}
+                style={{
+                  background: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                כן
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
 export default ReturnInspectionModal;
+

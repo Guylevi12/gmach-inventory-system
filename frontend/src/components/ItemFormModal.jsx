@@ -41,6 +41,8 @@ const ItemFormModal = ({
   const modalRef = useRef(null);
   const [images, setImages] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState(null);
 
   // Initialize images from editing item or create new array
   useEffect(() => {
@@ -60,11 +62,21 @@ const ItemFormModal = ({
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (modalRef.current && !modalRef.current.contains(e.target)) {
+        if (showSaveConfirm) {
+          setShowSaveConfirm(false);
+          return;
+        }
         onCancel();
       }
     };
     const handleEsc = (e) => {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === 'Escape') {
+        if (showSaveConfirm) {
+          setShowSaveConfirm(false);
+          return;
+        }
+        onCancel();
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEsc);
@@ -72,7 +84,7 @@ const ItemFormModal = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEsc);
     };
-  }, [onCancel]);
+  }, [onCancel, showSaveConfirm]);
 
   // Add image from URL
   const addImageFromUrl = () => {
@@ -166,8 +178,25 @@ const ItemFormModal = ({
       imageUrl: finalImages[0] || null
     };
     
+    if (editingItem) {
+      setPendingFormData(originalFormData);
+      setShowSaveConfirm(true);
+      return;
+    }
+
     // Pass this data to the parent component
     await onSubmit(e, originalFormData);
+  };
+
+  const handleConfirmSave = async () => {
+    if (!pendingFormData) return;
+    setShowSaveConfirm(false);
+    await onSubmit({ preventDefault: () => {} }, pendingFormData);
+    setPendingFormData(null);
+  };
+
+  const handleCancelSaveConfirm = () => {
+    setShowSaveConfirm(false);
   };
 
   return (
@@ -495,6 +524,74 @@ const ItemFormModal = ({
             </button>
           </div>
         </form>
+
+        {showSaveConfirm && (
+          <div
+            onClick={handleCancelSaveConfirm}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1001,
+              padding: '1rem'
+            }}
+          >
+            <div
+              dir="rtl"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                maxWidth: '420px',
+                background: 'white',
+                borderRadius: '12px',
+                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+                border: '1px solid #e5e7eb',
+                overflow: 'hidden'
+              }}
+            >
+              <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #e5e7eb', background: '#f8fafc', fontWeight: '700', color: '#111827' }}>
+                אישור שמירה
+              </div>
+              <div style={{ padding: '1rem 1.25rem', color: '#374151', fontSize: '0.95rem' }}>
+                האם אתה בטוח לשמור את השינויים?
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', padding: '1rem 1.25rem', borderTop: '1px solid #e5e7eb' }}>
+                <button
+                  type="button"
+                  onClick={handleCancelSaveConfirm}
+                  style={{
+                    background: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.5rem 1rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  לא
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmSave}
+                  style={{
+                    background: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.5rem 1rem',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  כן
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
