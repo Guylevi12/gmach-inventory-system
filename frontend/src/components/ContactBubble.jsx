@@ -13,7 +13,7 @@ const ContactBubble = () => {
 
   const phoneNumber1 = "054-257-5886"; // תיאום והגעה
   const phoneNumber1ForDialing = "0542575886";
-  const phoneNumber2 = "054-4473-388"; // מנהלת הגמ"ח
+  const phoneNumber2 = "0544773388"; // מנהלת הגמ"ח
   const phoneNumber2ForDialing = "0544473388";
   
   // תיקון פורמט מספר WhatsApp - הסרת רווחים ומקפים
